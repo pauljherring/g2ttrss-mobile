@@ -62,8 +62,11 @@ $(document).ready(function () {
              if (response['content'].error =='LOGIN_ERROR'){
                  window.alert("Username and/or Password were incorrect!");       
              }
-             if (response['content'].error =='API_DISABLED'){
-                 window.alert("The API Setting is disabled. Login on the desktop version and enable API in the Preferences.");       
+             if (response['content'].error =='API_DISABLED' || response['content'].error =='INCORRECT_USAGE'){
+                 window.alert("The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences.");
+             }
+             if (response['content'].error  !=q'' ){
+                 window.alert("Unexpected error received: ".concat(" ", response['content'].error));
              }
              else {
                  $.cookie('g2tt_sid', response['content'].session_id, {
