@@ -476,6 +476,7 @@ function apiCall(data, asynch) {
     data.sid = $.cookie('g2tt_sid');
     data = JSON.stringify(data);
     var request = $.ajax({
+        contentType: "application/json",
         url: global_ttrssUrl + "/api/",
         type: "post",
         dataType: "json",
