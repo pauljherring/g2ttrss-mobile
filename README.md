@@ -29,9 +29,10 @@ edit `js/g2tt-config.js` and change `global_ttrssUrl` (line 2) to point to the c
 If the webapp is installed in a subdirectory of TT-RSS, it could be wiped on an update to TT-RSS
 so after each update of TT-RSS, you may need to reinstall G2TTRSS.
 
-Use of this webapp requires TT-RSS's external APIs. They are enabled through TT-RSS's preferences:
- * in *Tiny Tiny RSS* go into `Actions` -> `Preferences`
- * `Configuration` -> `Enable external API`
+Use of this webapp requires TT-RSS's external APIs. They are enabled through the per-user TT-RSS's preferences:
+ * in *Tiny Tiny RSS* go into *Hamburger menu* -> `Preferences` -> `Preferences`
+ * `Configuration` -> `Enable API`
+ * `Configuration` -> `Allows accessing the API from browsers`
 
 
 Current features
