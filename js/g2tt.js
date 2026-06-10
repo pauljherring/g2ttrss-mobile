@@ -65,7 +65,7 @@ $(document).ready(function () {
              if (response['content'].error =='API_DISABLED' || response['content'].error =='INCORRECT_USAGE'){
                  window.alert("The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences.");
              }
-             if (response['content'].error  !=q'' ){
+             if (typeof response['content'].error  !=='undefined' ){
                  window.alert("Unexpected error received: ".concat(" ", response['content'].error));
              }
              else {
