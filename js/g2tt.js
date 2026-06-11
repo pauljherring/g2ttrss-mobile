@@ -26,12 +26,12 @@ global_ids = []; // List of all article IDs currently displayed
 global_parentId = '-4';
 
 $(document).ready(function () {
-		
+
     $('html').unbind('click').click(function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
         $('#menuUp').addClass('hidden');
-        
+
         $('.g2tt-menu').hide();
     });
 
@@ -59,23 +59,26 @@ $(document).ready(function () {
 
         request.done(function (response, textStatus, jqXHR) {
             //console.log(response['content']);
-             if (response['content'].error =='LOGIN_ERROR'){
-                 window.alert("Username and/or Password were incorrect!");       
-             }
-             if (response['content'].error =='API_DISABLED' || response['content'].error =='INCORRECT_USAGE'){
-                 window.alert("The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences.");
-             }
-             if (typeof response['content'].error  !=='undefined' ){
-                 window.alert("Unexpected error received: ".concat(" ", response['content'].error));
-             }
-             else {
-                 $.cookie('g2tt_sid', response['content'].session_id, {
-                     expires: 7
-                 });
-                 $('.login').addClass('hidden');
-                 $('#main').removeClass('hidden');
-                 load();
-             }
+            if (response['content'].error == 'LOGIN_ERROR') {
+                window.alert("Username and/or Password were incorrect!");
+            }
+            if (response['content'].error == 'API_DISABLED' || response['content'].error ==
+                'INCORRECT_USAGE') {
+                window.alert(
+                    "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
+                    );
+            }
+            if (typeof response['content'].error !== 'undefined') {
+                window.alert("Unexpected error received: ".concat(" ", response['content']
+                    .error));
+            } else {
+                $.cookie('g2tt_sid', response['content'].session_id, {
+                    expires: 7
+                });
+                $('.login').addClass('hidden');
+                $('#main').removeClass('hidden');
+                load();
+            }
         });
 
         // callback handler that will be called on failure
@@ -96,12 +99,12 @@ $(document).ready(function () {
         // prevent default posting of form
         event.preventDefault();
     });
-//end of #login function
+    //end of #login function
 
 
     // Show more items
     $('#load-more-items').unbind('click').click(function () {
-        if(pref_OrderBy == "date_reverse") {
+        if (pref_OrderBy == "date_reverse") {
             var last = $('.entry-row').last().attr('id');
         } else {
             var last = $('.entry-row').length;
@@ -112,12 +115,14 @@ $(document).ready(function () {
     // Menu button
     $('#header-menu').unbind('click').click(function (event) {
         $(this).toggleClass('m-button-pressed');
-	$('#menuDown').toggleClass('hidden');
+        $('#menuDown').toggleClass('hidden');
         $('#menuUp').toggleClass('hidden');
-        
+
         //Adjust the placement of the menu based on the height of the Nav bar
         //(for when category title is long)
-        $('.g2tt-menu').css({top: parseInt($('.nav-bar-container').height()) - 8 + "px"});
+        $('.g2tt-menu').css({
+            top: parseInt($('.nav-bar-container').height()) - 8 + "px"
+        });
         $('.g2tt-menu').toggle();
         event.stopPropagation();
     });
@@ -127,8 +132,7 @@ $(document).ready(function () {
         $(this).addClass('m-button-pressed');
         if ($('#subscriptions').is(':hidden')) {
             location.reload(true);
-        }
-        else {
+        } else {
             refreshCats();
         }
     });
@@ -149,8 +153,8 @@ $(document).ready(function () {
 
     // Order by menu selection
     $('#' + pref_OrderBy).addClass('g2tt-option-selected');
-	
-    
+
+
     $('.sortItem').unbind('click').click(function () {
         pref_OrderBy = $(this).attr('id');
         $.cookie('g2tt_orderBy', pref_OrderBy);
@@ -165,12 +169,12 @@ $(document).ready(function () {
         refreshCats();
         showFeeds();
     });
-    
+
     // ADDED - Subscribe to new Feeds
     $('#add-new-subscription').unbind('click').click(function () {
-	    $( "#dialog-form" ).dialog( "open" );
-	    getCategoriesForNewSubscribe();
-	    
+        $("#dialog-form").dialog("open");
+        getCategoriesForNewSubscribe();
+
     });
 
     // View mode feeds menu selection
@@ -187,11 +191,11 @@ $(document).ready(function () {
     });
 
     // Sort feeds A-Z
-    if(pref_FeedSort == '1') {
+    if (pref_FeedSort == '1') {
         $('.feedsSort').addClass('g2tt-option-selected');
     }
     $('.feedsSort').unbind('click').click(function () {
-        if(pref_FeedSort == '1') {
+        if (pref_FeedSort == '1') {
             pref_FeedSort = '0';
         } else {
             pref_FeedSort = '1';
@@ -204,7 +208,7 @@ $(document).ready(function () {
     $('#sub-list-back').unbind('click').click(function () {
         refreshCats();
         getFeeds(global_backCat.pop());
-            $('#add-new-subscription').removeClass('hidden');
+        $('#add-new-subscription').removeClass('hidden');
 
     });
 
@@ -237,7 +241,7 @@ $(document).ready(function () {
             $.removeCookie('g2tt_feed');
             $.removeCookie('g2tt_isCat');
             $.removeCookie('g2tt_viewMode');
-// Not used            $.removeCookie('g2tt_textType');
+            // Not used            $.removeCookie('g2tt_textType');
             $.removeCookie('g2tt_orderBy');
             $.removeCookie('g2tt_sid');
             location.reload(true);
@@ -256,8 +260,8 @@ $(document).ready(function () {
         $('.search-box').addClass('hidden');
     });
     // Enter in search field searches
-    $('#search-input').keypress(function(e) {
-        if(e.which == 13) {
+    $('#search-input').keypress(function (e) {
+        if (e.which == 13) {
             jQuery(this).blur();
             jQuery('#search-submit').focus().click();
             return false;
@@ -272,104 +276,105 @@ $(document).ready(function () {
 
     load();
 
-//Added for Subscribe to New Feeds 
-$('.ui-loader').remove();
-  
-    var feedURL = $( "#feedURL" ),
-      //password = $( "#password" ),
-      allFields = $( [] ).add( feedURL ),
-      tips = $( ".validateTips" );
- 
-    function updateTips( t ) {
-      tips
-        .text( t )
-        .addClass( "ui-state-highlight" ).removeClass("hidden");
-      setTimeout(function() {
-        tips.removeClass( "ui-state-highlight", 1500 );
-      }, 500 );
+    //Added for Subscribe to New Feeds 
+    $('.ui-loader').remove();
+
+    var feedURL = $("#feedURL"),
+        //password = $( "#password" ),
+        allFields = $([]).add(feedURL),
+        tips = $(".validateTips");
+
+    function updateTips(t) {
+        tips
+            .text(t)
+            .addClass("ui-state-highlight").removeClass("hidden");
+        setTimeout(function () {
+            tips.removeClass("ui-state-highlight", 1500);
+        }, 500);
     }
- 
-    function checkLength( o, n, min, max ) {
-      if ( o.val().length > max || o.val().length < min ) {
-        o.addClass( "ui-state-error" );
-        updateTips( "Length of " + n + " must be between " +
-          min + " and " + max + "." );
-        return false;
-      } else {
-        return true;
-      }
-    }
-    
-    function firstToUpperCase( str ) {
-    return str.substr(0, 5).toLowerCase() + str.substr(5);
-    }
- 
-    function checkRegexp( o, regexp, n ) {
-    var makeOvalidHttp = o.val().trim();
-    console.log(firstToUpperCase(makeOvalidHttp) );
-      if ( !( regexp.test( firstToUpperCase(makeOvalidHttp) ) ) ) {
-        o.addClass( "ui-state-error" );
-        updateTips( n );
-        return false;
-      } else {
-        return true;
-      }
-    }
- 
-    $( "#dialog-form" ).dialog({
-    
-      autoOpen: false,
-      //height: 300,
-      dialogClass: "dialog-nav-bar",
-      draggable: false,
-      resizable: false,
-      //position: { my: "left top", at: "left top" } ,
-      position: [ 5,10] ,
-      width: 300,
-      modal: true,
-      buttons: {
-        "Subscribe": function() {
-		  var bValid = true;
-		  allFields.removeClass( "ui-state-error" );
-		  tips.addClass( "hidden");
-	 
-		  bValid = bValid && checkLength( feedURL, "URL", 5, 1000 );
-		  bValid = bValid && checkRegexp( feedURL, /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/, 
-		  "URL must be a valid URL. Make sure the URL is correct and re-submit" );
-		  
-		  // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
-	 
-		  if ( bValid ) {
-			    var catIDnum = $( "#catItems option:selected" ).val();
-			    var feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
-			    
-			    var multipleFeedSelected = $( "#feedsAvail option:selected" ).val();
-			    //console.log('When subscribe is chosen again ' + multipleFeedSelected);
-			    
-			    if (multipleFeedSelected == null) {
-				$('#feedURL').val(feedURLTrimmed);
-				var subscriberesult = subscribe( feedURLTrimmed, catIDnum);
-				// console.log(subscriberesult);
-			    } else {
-				$('#feedURL').val(multipleFeedSelected);
-				var subscriberesult = subscribe( multipleFeedSelected, catIDnum);
-				//console.log(subscriberesult);
-			    }
-			    
-		
-		    
-		  }
-        },
-        Cancel: function() {
-          $( this ).dialog( "close" );
+
+    function checkLength(o, n, min, max) {
+        if (o.val().length > max || o.val().length < min) {
+            o.addClass("ui-state-error");
+            updateTips("Length of " + n + " must be between " +
+                min + " and " + max + ".");
+            return false;
+        } else {
+            return true;
         }
-      },
-      close: function() {
-        allFields.val( "" ).removeClass( "ui-state-error" );
-      }
+    }
+
+    function firstToUpperCase(str) {
+        return str.substr(0, 5).toLowerCase() + str.substr(5);
+    }
+
+    function checkRegexp(o, regexp, n) {
+        var makeOvalidHttp = o.val().trim();
+        console.log(firstToUpperCase(makeOvalidHttp));
+        if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
+            o.addClass("ui-state-error");
+            updateTips(n);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    $("#dialog-form").dialog({
+
+        autoOpen: false,
+        //height: 300,
+        dialogClass: "dialog-nav-bar",
+        draggable: false,
+        resizable: false,
+        //position: { my: "left top", at: "left top" } ,
+        position: [5, 10],
+        width: 300,
+        modal: true,
+        buttons: {
+            "Subscribe": function () {
+                var bValid = true;
+                allFields.removeClass("ui-state-error");
+                tips.addClass("hidden");
+
+                bValid = bValid && checkLength(feedURL, "URL", 5, 1000);
+                bValid = bValid && checkRegexp(feedURL,
+                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/,
+                    "URL must be a valid URL. Make sure the URL is correct and re-submit");
+
+                // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
+
+                if (bValid) {
+                    var catIDnum = $("#catItems option:selected").val();
+                    var feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
+
+                    var multipleFeedSelected = $("#feedsAvail option:selected").val();
+                    //console.log('When subscribe is chosen again ' + multipleFeedSelected);
+
+                    if (multipleFeedSelected == null) {
+                        $('#feedURL').val(feedURLTrimmed);
+                        var subscriberesult = subscribe(feedURLTrimmed, catIDnum);
+                        // console.log(subscriberesult);
+                    } else {
+                        $('#feedURL').val(multipleFeedSelected);
+                        var subscriberesult = subscribe(multipleFeedSelected, catIDnum);
+                        //console.log(subscriberesult);
+                    }
+
+
+
+                }
+            },
+            Cancel: function () {
+                $(this).dialog("close");
+            }
+        },
+        close: function () {
+            allFields.val("").removeClass("ui-state-error");
+        }
     });
 
-//Added for Subscribe to New Feeds 
+    //Added for Subscribe to New Feeds 
 
     // Hotkeys
     $(document).bind('keydown', 'j', expandNextEntry);
@@ -400,7 +405,7 @@ function refreshCats() {
                 feeds[counters[i]['id']] = (counters[i]);
             }
         }
-        $('.sub-row').each(function (i,j) {
+        $('.sub-row').each(function (i, j) {
             var id = $(this).attr('id').substring(10);
             var is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
@@ -455,8 +460,8 @@ function showFeeds() {
     $('#add-new-subscription').removeClass('hidden');
     if (global_parentId != '-4') {
         $('#sub-list-back').removeClass('hidden');
-            //added to show + for hiding new subscriptions
-            $('#add-new-subscription').addClass('hidden');
+        //added to show + for hiding new subscriptions
+        $('#add-new-subscription').addClass('hidden');
 
     }
     $('#nav-title').html('');
@@ -536,20 +541,23 @@ function getHeadlines(since) {
         $.each(headlines, function (index, headline) {
             global_ids.push(headline.id);
             var email_subject = headline.title;
-            var email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' + headline.title + '</a></h2>' + headline.content;
+            var email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
+                headline.title + '</a></h2>' + headline.content;
 
             var $content = $(headline.content);
             var alt = null;
-            if($content.length == 1 && $content.is("img") && (alt = ($content.attr("title") || $content.attr("alt")))){
-              $content = $("<div>" + $content[0].outerHTML + "<div>" + alt + "</div></div>");
+            if ($content.length == 1 && $content.is("img") && (alt = ($content.attr("title") || $content
+                    .attr("alt")))) {
+                $content = $("<div>" + $content[0].outerHTML + "<div>" + alt + "</div></div>");
             } else {
-              var $container = $("<div></div>");
-              $container.append($content);
-              $content = $container;
+                var $container = $("<div></div>");
+                $container.append($content);
+                $content = $container;
             }
 
             var date = new Date(headline.updated * 1000);
-            var entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ? " read" : "") + "'> \
+            var entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
+                    " read" : "") + "'> \
             <div class='entry-container'> \
             <div class='entry-top-bar'> \
             <span class='link entry-next'> \
@@ -564,7 +572,7 @@ function getHeadlines(since) {
             <div class='entry-header'> \
 		<div class='entry-icons'> \
 			<i class='favStarDiv fa fa-star-o fa-2x starBorder'> </i> \
-			<i class='favStar fa fa-star fa-2x "+ ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
+			<i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
 		</div> \
             <div class='entry-header-body'> \
             <div class='text'> \
@@ -572,7 +580,8 @@ function getHeadlines(since) {
             <a href='" + headline.link + "' \
             class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
             <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
-            <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;')? headline.excerpt : $(headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
+            <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
+                    headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
             </div> \
             <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
             </div> \
@@ -588,7 +597,8 @@ function getHeadlines(since) {
             <i class='fa fa-book read-state link unselectable' title='Toggle read'>&nbsp;Mark unread</i> \
             <span class='link unselectable' title='Sent by mail'> \
             <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
-            <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" + encodeURIComponent(email_body) + "'>E-Mail</a> \
+            <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
+                encodeURIComponent(email_body) + "'>E-Mail</a> \
             </span> \
             <wbr /> \
             </div> \
@@ -635,8 +645,8 @@ function getHeadlines(since) {
             $(this).toggleClass('item-star').toggleClass('item-star-active');
         });
         */
-        
-         // Mark NewFont (star) entry
+
+        // Mark NewFont (star) entry
         $('.favStarDiv').unbind('click').click(function () {
             var data = new Object();
             data.op = "updateArticle";
@@ -644,7 +654,7 @@ function getHeadlines(since) {
             data.mode = 2;
             data.field = 0;
             var response = apiCall(data);
-            
+
             $(this).next().toggleClass('starNotActive').toggleClass('starActive');
             //console.log(newstar);
         });
@@ -666,7 +676,8 @@ function getTopCategories() {
         $('.closed-sub-folder').unbind('click').click(function () {
             global_backCat.push("-4");
             $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find('.item-count-value').html());
+            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
+                '.item-count-value').html());
         });
     } else {
         $('body').addClass('loading').addClass('sub-tree');
@@ -680,7 +691,8 @@ function getTopCategories() {
         request.done(function (response, textStatus, jqXHR) {
             unread = response['content'].unread;
 
-            var entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" : " no-unread-sub-row") + "' id='tree-item--4'> \
+            var entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
+                " no-unread-sub-row") + "' id='tree-item--4'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder-open fa-lg'></i> </div> \
         <div class='text sub-item'>All articles</div> \
@@ -718,7 +730,8 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                var entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ? " unread-sub" : " no-unread-sub-row") + " nested-sub' id='tree-item-" + cat.id + "'> \
+                var entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ?
+                    " unread-sub" : " no-unread-sub-row") + " nested-sub' id='tree-item-" + cat.id + "'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder fa-lg'></i></div> \
         <div class='text sub-item'>" + cat.title + "</div> \
@@ -734,7 +747,8 @@ function getTopCategories() {
             $('.closed-sub-folder').unbind('click').click(function () {
                 global_backCat.push("-4");
                 $('#subscriptions-list').children().addClass('hidden');
-                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find('.item-count-value').html());
+                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
+                    .find('.item-count-value').html());
             });
 
             // Done loading
@@ -752,8 +766,8 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     }
     $('#nav-title').html('');
     $('#sub-list-back').removeClass('hidden');
-        //added to show + for adding new subscriptions
-        $('#add-new-subscription').addClass('hidden');
+    //added to show + for adding new subscriptions
+    $('#add-new-subscription').addClass('hidden');
 
     if ($('#sub-' + parent_id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
@@ -761,7 +775,8 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('.closed-sub-folder').unbind('click').click(function () {
             global_backCat.push(parent_id);
             $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find('.item-count-value').html());
+            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
+                '.item-count-value').html());
         });
     } else {
         $('body').addClass('loading').addClass('sub-tree');
@@ -785,7 +800,8 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
             $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
 
-            var entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ? " unread-sub" : " no-unread-sub-row") + "' id='tree-item-" + parent_id + "'> \
+            var entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ?
+                " unread-sub" : " no-unread-sub-row") + "' id='tree-item-" + parent_id + "'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder-open fa-lg'></i> </div> \
         <div class='text sub-item'>" + parent_title + "</div> \
@@ -797,7 +813,9 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             $('#sub-' + parent_id).prepend(entry);
 
             $.each(feeds, function (index, feed) {
-                var entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" : " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") + " nested-sub' id='tree-item-" + feed.id + "'> \
+                var entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" :
+                        " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") +
+                    " nested-sub' id='tree-item-" + feed.id + "'> \
         <div class='icon-cell'> \
         <i class='fa fa-rss-square'></i> </div> \
         <div class='text sub-item'>" + feed.title + "</div> \
@@ -813,7 +831,8 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             $('.closed-sub-folder').unbind('click').click(function () {
                 global_backCat.push(parent_id);
                 $('#subscriptions-list').children().addClass('hidden');
-                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find('.item-count-value').html());
+                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
+                    .find('.item-count-value').html());
             });
 
             $('.open-sub-folder[id!="tree-item--4"]').unbind('click').click(function () {
@@ -868,7 +887,7 @@ function getTitle() {
 }
 
 function load() {
-   if (typeof ($.cookie('g2tt_sid')) === 'undefined') {
+    if (typeof ($.cookie('g2tt_sid')) === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
     } else if (pref_StartInCat == '1') {
@@ -891,7 +910,7 @@ function getData() {
     getHeadlines();
 }
 
-var keepUnread = new function() {
+var keepUnread = new function () {
     var COOKIE_NAME = 'g2tt_keepUnread_ids';
     this.keepUnreadIdMap = undefined;
 
@@ -910,7 +929,7 @@ var keepUnread = new function() {
         var keepUnreadIds = getIdMap();
         if (ids.length > 0) {
             for (var id in keepUnreadIds) {
-                id = id|0;//id must be numeric
+                id = id | 0; //id must be numeric
                 if ($.inArray(id, ids) < 0) {
                     this.removeId(id);
                 }
@@ -930,7 +949,7 @@ var keepUnread = new function() {
 
             if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
                 var idList = savedKeepUnread_ids.split(',');
-                for (var i=0; i < idList.length; i++) {
+                for (var i = 0; i < idList.length; i++) {
                     this.keepUnreadIdMap[idList[i]] = true;
                 }
             }
@@ -942,9 +961,9 @@ var keepUnread = new function() {
     this.removeFromArray = function (ids) {
         var keepUnreadIds = getIdMap();
         for (var id in keepUnreadIds) {
-            id = id|0;//id must be numeric
+            id = id | 0; //id must be numeric
             var index = $.inArray(id, ids);
-            if ( index >= 0) {
+            if (index >= 0) {
                 ids.splice(index, 1);
             }
         }
@@ -965,24 +984,24 @@ var keepUnread = new function() {
 
 //ADDED for subscribing to new feeds
 
-function subscribe( feedurl, categoryID) {
-	
+function subscribe(feedurl, categoryID) {
+
 
     var subscribeResult = "";
     var data = new Object();
-            data.op = "subscribeToFeed";
-            data.feed_url = feedurl;
-            data.category_id = categoryID;
-            //data.sid = session_id;
-            $('#indicator').removeClass('hidden');
-            var request = apiCall(data);
-            
-         
-//    return request;
-     //var request = apiCall(data);
+    data.op = "subscribeToFeed";
+    data.feed_url = feedurl;
+    data.category_id = categoryID;
+    //data.sid = session_id;
+    $('#indicator').removeClass('hidden');
+    var request = apiCall(data);
+
+
+    //    return request;
+    //var request = apiCall(data);
 
     request.done(function (response, textStatus, jqXHR) {
-	var content = response['content'];
+        var content = response['content'];
         var message = response['content'].status.message;
         var status = response['content'].status;
         var statusCode = response['content'].status.code;
@@ -990,115 +1009,121 @@ function subscribe( feedurl, categoryID) {
         var feeds = response['content'].status.feeds;
         var feedUrls = [];
         var feedUrlsTitles = [];
-		
-	for (var key in feeds) {
-	    if (feeds.hasOwnProperty(key)) {
-		    
-	      feedUrls.push(key);
-	      feedUrlsTitles.push(feeds[key]);  
-	    }
-	}
-        
-        
-        //console.log(statusCode);
-        switch(statusCode) {
-        case 0:
-	//0 - OK, Feed already exists
-        	//var status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
-        	$('#indicator').addClass('hidden');
-        	window.alert('Feed already exists in your feed list.');
-        	
-        	//uncomment next line if you'd like it to close pop-up when they press OK.
-		//$( "#dialog-form" ).dialog( "close" );
-        	
-        	break;
-	case 1: 
-	//1 - OK, Feed added
-		$('#indicator').addClass('hidden');
-		var tips = $( ".validateTips" );
-		tips.text( 'Your Feed was Added' )
-		.addClass( "ui-state-highlight" ).removeClass("hidden");
-		$('#multipleFeedNotice').addClass('hidden');
-             	$('#multipleFeedsSelect').addClass('hidden');
-		setTimeout(function() {
-		//tips.removeClass( "ui-state-highlight", 1500 );
-		
-		$('#feedURL').val("");
-		}, 100 );
 
-        	//uncomment next line if you'd like it to close pop-up when subscription is added.
-		//$( "#dialog-form" ).dialog( "close" );
-		break;
-	case 2: 
-	//2 - Invalid URL
-		$('#indicator').addClass('hidden');
-		$('#multipleFeedNotice').addClass('hidden');
-		$('#multipleFeedsSelect').addClass('hidden');
-		window.alert('Invalid URL submitted. Please check URL and try again.');
+        for (var key in feeds) {
+            if (feeds.hasOwnProperty(key)) {
 
-		break;
-	case 3:
-	//3 - URL content is HTML, no feeds available
-		$('#indicator').addClass('hidden');
-		$('#multipleFeedNotice').addClass('hidden');
-		$('#multipleFeedsSelect').addClass('hidden');
-		window.alert('URL content is HTML, no feeds available. Please check that URL has feeds and try again.');
-		
-		break;
-	case 4: 
-	//4 - URL content is HTML which contains multiple feeds.
-		$('#indicator').addClass('hidden');
-		$('#multipleFeedNotice').removeClass('hidden');
-             	$('#multipleFeedsSelect').removeClass('hidden');
-             	        console.log(feeds);
-		//$('#feedsAvail').append( $('<option></option>').val('').html('Choose available feed') );
-
-             	$.each(feeds, function(url, title){
-		$('#feedsAvail').append( $('<option></option>').val(url).html(title) );
-		
-		});
-             	console.log('Populate Multiple FeedsNew');
-		break;
-	case 5: 
-	//5 - Couldn't download the URL content.
-		$('#indicator').addClass('hidden');
-		$('#multipleFeedNotice').addClass('hidden');
-		$('#multipleFeedsSelect').addClass('hidden');
-		window.alert('Unable to download the URL content. Please check your internet connection or the URL and try again.');
-		
-		break;
-	case 6:
-	//6 - Content is an invalid XML.
-		$('#indicator').addClass('hidden');
-		$('#multipleFeedNotice').addClass('hidden');
-		$('#multipleFeedsSelect').addClass('hidden');
-		window.alert('Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.');
-		
-		break;
+                feedUrls.push(key);
+                feedUrlsTitles.push(feeds[key]);
+            }
         }
-        
-        
-        
-        
+
+
+        //console.log(statusCode);
+        switch (statusCode) {
+            case 0:
+                //0 - OK, Feed already exists
+                //var status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
+                $('#indicator').addClass('hidden');
+                window.alert('Feed already exists in your feed list.');
+
+                //uncomment next line if you'd like it to close pop-up when they press OK.
+                //$( "#dialog-form" ).dialog( "close" );
+
+                break;
+            case 1:
+                //1 - OK, Feed added
+                $('#indicator').addClass('hidden');
+                var tips = $(".validateTips");
+                tips.text('Your Feed was Added')
+                    .addClass("ui-state-highlight").removeClass("hidden");
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                setTimeout(function () {
+                    //tips.removeClass( "ui-state-highlight", 1500 );
+
+                    $('#feedURL').val("");
+                }, 100);
+
+                //uncomment next line if you'd like it to close pop-up when subscription is added.
+                //$( "#dialog-form" ).dialog( "close" );
+                break;
+            case 2:
+                //2 - Invalid URL
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert('Invalid URL submitted. Please check URL and try again.');
+
+                break;
+            case 3:
+                //3 - URL content is HTML, no feeds available
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
+                    );
+
+                break;
+            case 4:
+                //4 - URL content is HTML which contains multiple feeds.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').removeClass('hidden');
+                $('#multipleFeedsSelect').removeClass('hidden');
+                console.log(feeds);
+                //$('#feedsAvail').append( $('<option></option>').val('').html('Choose available feed') );
+
+                $.each(feeds, function (url, title) {
+                    $('#feedsAvail').append($('<option></option>').val(url).html(title));
+
+                });
+                console.log('Populate Multiple FeedsNew');
+                break;
+            case 5:
+                //5 - Couldn't download the URL content.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'Unable to download the URL content. Please check your internet connection or the URL and try again.'
+                    );
+
+                break;
+            case 6:
+                //6 - Content is an invalid XML.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.'
+                    );
+
+                break;
+        }
+
+
+
+
         return response;
-        
-        	/**
-	 * @return array (code => Status code, message => error message if available)
-	 *
-	 *                 0 - OK, Feed already exists
-	 *                 1 - OK, Feed added
-	 *                 2 - Invalid URL
-	 *                 3 - URL content is HTML, no feeds available
-	 *                 4 - URL content is HTML which contains multiple feeds.
-	 *                     Here you should call extractfeedurls in rpc-backend
-	 *                     to get all possible feeds.
-	 *                 5 - Couldn't download the URL content.
-	 *                 6 - Content is an invalid XML.
-	 */
-        
-        
+
+        /**
+         * @return array (code => Status code, message => error message if available)
+         *
+         *                 0 - OK, Feed already exists
+         *                 1 - OK, Feed added
+         *                 2 - Invalid URL
+         *                 3 - URL content is HTML, no feeds available
+         *                 4 - URL content is HTML which contains multiple feeds.
+         *                     Here you should call extractfeedurls in rpc-backend
+         *                     to get all possible feeds.
+         *                 5 - Couldn't download the URL content.
+         *                 6 - Content is an invalid XML.
+         */
+
+
     });
-    	//$('#indicator').addClass('hidden');
+    //$('#indicator').addClass('hidden');
 
 }
 
@@ -1111,94 +1136,102 @@ function unSubscribe(url, session_id, feed_id) {
         sid: session_id,
         feed_id: feed_id
     };
-            
-      $.ajax({
-          type: "POST",
-          url: url + "/api/",
-          contentType: "application/json",
-          data: JSON.stringify(data),
-          dataType: "json",
-          async:false,
-          success: function(data)
-          {
-              subscribeResult = data.content.status;
 
-          },
-          error: function()
-          {
-            showAlert("Network Error, Please Check Network","ttRss");
-          }
-      });
+    $.ajax({
+        type: "POST",
+        url: url + "/api/",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        dataType: "json",
+        async: false,
+        success: function (data) {
+            subscribeResult = data.content.status;
+
+        },
+        error: function () {
+            showAlert("Network Error, Please Check Network", "ttRss");
+        }
+    });
     return subscribeResult;
 }
 
 function getCategoriesForNewSubscribe() {
- var data = new Object();
- data.op = "getFeedTree";
- data.include_empty = true;
-//        data.op = "getCategories";
-        data.enable_nested = false;
-        var catsForNew = apiCall(data);
+    var data = new Object();
+    data.op = "getFeedTree";
+    data.include_empty = true;
+    //        data.op = "getCategories";
+    data.enable_nested = false;
+    var catsForNew = apiCall(data);
 
-        catsForNew.done(function (response, textStatus, jqXHR) {
-            catsForNew = response['content'];
-           // console.log(catsForNew);
-            
-            $('#catItems').find('option').remove();
-            $('#catItems').append( $('<option></option>').val(0).html('Uncategorized') );
-            
-            $.each(catsForNew, function (index, cat) {
-            	$.each(cat.items, function (index, catObject){
-            	//console.log(index);
-            	var catObjectIds = [];
-            	if (catObject.bare_id != -1 && catObject.bare_id != 0 ) {
-            	catObjectIds.push({"parent_id":catObject.bare_id,"child_id":catObject.bare_id,"Name":catObject.name});
-            	}
-            //	console.log(catObjectIds);
-            //	console.log(catObject);
-			$.each(catObject.items, function(index, subcatObject){
-					var subcatObjectIds = [];
-					
-					if (subcatObject.type == "category") {
-					//subcatObjectIds.push({"parent_id":catObject.bare_id,"child_id":subcatObject.bare_id,"Name":subcatObject.name});
-					catObjectIds.push({"parent_id":catObject.bare_id,"child_id":subcatObject.bare_id,"Name":subcatObject.name});
-					//console.log(subcatObjectIds.Name);
-					//console.log(catObject,subcatObject);
+    catsForNew.done(function (response, textStatus, jqXHR) {
+        catsForNew = response['content'];
+        // console.log(catsForNew);
 
-					}
-			//console.log(subcatObject);
-			});
-			
-			//put Uncategorized first
-			
-			
-			$.each(catObjectIds, function(index, objects){
-			
-				$.each(objects, function(parent_id, child_id, Name ) {
-					//	console.log(parent_id);
-					//$('#catItems').append( $('<option></option>').val(val).html(text) )
-				}); 
-			if (objects.parent_id == objects.child_id) {
-				
-			$('#catItems').append( $('<option></option>').val(objects.parent_id).html(objects.Name) );
-			} else {
-			var newOptionCat = $('#catItems').append( $('<option></option>').val(objects.child_id).html('&lfloor; ' + objects.Name) );
-				//newOptionCat.prepend('&lfloor;');
-			}
-			
-			
-			//console.log(objects.parent_id);
-			//console.log(objects.child_id);
-			//console.log(objects.Name);
-			});
-			
-		});
-           
+        $('#catItems').find('option').remove();
+        $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
+
+        $.each(catsForNew, function (index, cat) {
+            $.each(cat.items, function (index, catObject) {
+                //console.log(index);
+                var catObjectIds = [];
+                if (catObject.bare_id != -1 && catObject.bare_id != 0) {
+                    catObjectIds.push({
+                        "parent_id": catObject.bare_id,
+                        "child_id": catObject.bare_id,
+                        "Name": catObject.name
+                    });
+                }
+                //	console.log(catObjectIds);
+                //	console.log(catObject);
+                $.each(catObject.items, function (index, subcatObject) {
+                    var subcatObjectIds = [];
+
+                    if (subcatObject.type == "category") {
+                        //subcatObjectIds.push({"parent_id":catObject.bare_id,"child_id":subcatObject.bare_id,"Name":subcatObject.name});
+                        catObjectIds.push({
+                            "parent_id": catObject.bare_id,
+                            "child_id": subcatObject.bare_id,
+                            "Name": subcatObject.name
+                        });
+                        //console.log(subcatObjectIds.Name);
+                        //console.log(catObject,subcatObject);
+
+                    }
+                    //console.log(subcatObject);
+                });
+
+                //put Uncategorized first
+
+
+                $.each(catObjectIds, function (index, objects) {
+
+                    $.each(objects, function (parent_id, child_id, Name) {
+                        //	console.log(parent_id);
+                        //$('#catItems').append( $('<option></option>').val(val).html(text) )
+                    });
+                    if (objects.parent_id == objects.child_id) {
+
+                        $('#catItems').append($('<option></option>').val(objects
+                            .parent_id).html(objects.Name));
+                    } else {
+                        var newOptionCat = $('#catItems').append($('<option></option>')
+                            .val(objects.child_id).html('&lfloor; ' + objects.Name));
+                        //newOptionCat.prepend('&lfloor;');
+                    }
+
+
+                    //console.log(objects.parent_id);
+                    //console.log(objects.child_id);
+                    //console.log(objects.Name);
+                });
+
             });
 
-            
-            
         });
+
+
+
+    });
 
 }
 
@@ -1215,7 +1248,7 @@ function expandEntry($entryRow) {
     $entryRow.addClass('current-entry');
 
     // Mark as read
-    if (! $entryRow.hasClass('read')) {
+    if (!$entryRow.hasClass('read')) {
         $entryRow.addClass('read');
         var data = new Object();
         data.op = "updateArticle";
@@ -1246,14 +1279,14 @@ function toggleCurrentEntryAsExpanded($entryRow) {
 }
 
 function expandNextEntry() {
-    if (! $('.current-entry').length) {
+    if (!$('.current-entry').length) {
         $nextEntry = $('.entry-row').eq(0);
 
     } else {
         $nextEntry = $('.current-entry').next();
     }
 
-    if (! $nextEntry.is('.entry-row')) {
+    if (!$nextEntry.is('.entry-row')) {
         return;
     }
 
@@ -1261,13 +1294,13 @@ function expandNextEntry() {
 }
 
 function expandPreviousEntry() {
-    if (! $('.current-entry').length) {
+    if (!$('.current-entry').length) {
         return
     }
 
     $previous = $('.current-entry').prev();
 
-    if (! $previous.is('.entry-row')) {
+    if (!$previous.is('.entry-row')) {
         return;
     }
 
@@ -1275,40 +1308,40 @@ function expandPreviousEntry() {
 }
 
 function jumpNextEntry() {
-    if (! $('.current-entry').length) {
+    if (!$('.current-entry').length) {
         $nextEntry = $('.entry-row').eq(0);
 
     } else {
         $nextEntry = $('.current-entry').next();
     }
 
-    if (! $nextEntry.is('.entry-row')) {
+    if (!$nextEntry.is('.entry-row')) {
         return;
     }
 
     $('.current-entry').removeClass('current-entry');
     $nextEntry.addClass('current-entry');
 
-    if (! isElementInViewport($('.current-entry'))) {
+    if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView(false);
     }
 }
 
 function jumpPreviousEntry() {
-    if (! $('.current-entry').length) {
+    if (!$('.current-entry').length) {
         return
     }
 
     $previous = $('.current-entry').prev();
 
-    if (! $previous.is('.entry-row')) {
+    if (!$previous.is('.entry-row')) {
         return;
     }
 
     $('.current-entry').removeClass('current-entry');
     $previous.addClass('current-entry');
 
-    if (! isElementInViewport($('.current-entry'))) {
+    if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView();
     }
 }
@@ -1316,12 +1349,12 @@ function jumpPreviousEntry() {
 function toggleEntryAsRead($entryRow) {
     $entryRow.toggleClass('read');
 
-    if (! $entryRow.hasClass('read')) {
+    if (!$entryRow.hasClass('read')) {
         $entryRow.find(".read-state").html("&nbsp;Mark read");
         for (var i = 0; i < global_ids.length; i++) {
             var articleId = $entryRow.attr('id');
             if (global_ids[i] == articleId) {
-                global_ids.splice(i,1);
+                global_ids.splice(i, 1);
                 keepUnread.addId(articleId);
             }
         }
@@ -1347,7 +1380,7 @@ function toggleCurrentEntryAsRead($entryRow) {
 }
 
 // source: http://stackoverflow.com/a/7557433/1135429
-function isElementInViewport (el) {
+function isElementInViewport(el) {
     //special bonus for those using jQuery
     if (typeof jQuery === "function" && el instanceof jQuery) {
         el = el[0];
