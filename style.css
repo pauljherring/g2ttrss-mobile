@@ -1706,7 +1706,11 @@ fieldset {
 }
 
 #catItems-button span {
-    display: none;
+    display: none !important;
+}
+
+#catItems {
+    display: block !important;
 }
 
 #feedsAvail-button span {
@@ -1796,4 +1800,10 @@ fieldset {
     color: #8E95E9;
     float: right;
     margin-right: 4px;
+}
+
+/* 1.12 fixes/hacks */
+.ui-dialog {
+    background: inherit !important;
+    */
 }

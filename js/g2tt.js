@@ -66,7 +66,7 @@ $(document).ready(function () {
                 'INCORRECT_USAGE') {
                 window.alert(
                     "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
-                    );
+                );
             }
             if (typeof response['content'].error !== 'undefined') {
                 window.alert("Unexpected error received: ".concat(" ", response['content']
@@ -172,9 +172,9 @@ $(document).ready(function () {
 
     // ADDED - Subscribe to new Feeds
     $('#add-new-subscription').unbind('click').click(function () {
-        $("#dialog-form").dialog("open");
+        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
         getCategoriesForNewSubscribe();
-
+        $("#dialog-form").dialog("open");
     });
 
     // View mode feeds menu selection
@@ -1063,7 +1063,7 @@ function subscribe(feedurl, categoryID) {
                 $('#multipleFeedsSelect').addClass('hidden');
                 window.alert(
                     'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
-                    );
+                );
 
                 break;
             case 4:
@@ -1087,7 +1087,7 @@ function subscribe(feedurl, categoryID) {
                 $('#multipleFeedsSelect').addClass('hidden');
                 window.alert(
                     'Unable to download the URL content. Please check your internet connection or the URL and try again.'
-                    );
+                );
 
                 break;
             case 6:
@@ -1097,7 +1097,7 @@ function subscribe(feedurl, categoryID) {
                 $('#multipleFeedsSelect').addClass('hidden');
                 window.alert(
                     'Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.'
-                    );
+                );
 
                 break;
         }
@@ -1218,11 +1218,6 @@ function getCategoriesForNewSubscribe() {
                             .val(objects.child_id).html('&lfloor; ' + objects.Name));
                         //newOptionCat.prepend('&lfloor;');
                     }
-
-
-                    //console.log(objects.parent_id);
-                    //console.log(objects.child_id);
-                    //console.log(objects.Name);
                 });
 
             });

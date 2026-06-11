@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -8,19 +9,31 @@
     <link rel="manifest" href="site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>TT-RSS Mobile</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="//code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
-    <!-- added for jquery dialog ui -->
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="js/jquery.cookie.js"></script>
-    <!-- added for jquery dialog ui -->
+
+    <!-- Core - https://stackoverflow.com/a/24777954-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <!-- Migration (if any) -->
+
+    <!-- Mobile -->
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js""></script>
+
+    <!-- UI (needs to be after mobile, regardless of the SO article) -->
+    <link rel=" stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
+        < script src = "//ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js" >
+    </script>
+
+
+    <!-- Own -->
+    <script type=" text/javascript" src="js/jquery.cookie.js"></script>
     <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery.ui.all.css">
+
     <script type="text/javascript" src="js/g2tt-config.js"></script>
     <script type="text/javascript" src="js/g2tt.js"></script>
-    <!-- added for font-awesome icons -->
+
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-    <!-- added for font-awesome icons -->
+
     <!-- moved to end of head to make sure any CSS from jquery-ui and font-awesome can be overwritten -->
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
