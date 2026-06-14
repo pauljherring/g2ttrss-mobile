@@ -1,4 +1,4 @@
-/* 
+/*
 #addNewSubscription {}
 */
 
@@ -20,6 +20,7 @@
     box-shadow: 0 1px 0 #e1e9fc;
     float: left;
     position: relative;
+    cursor: pointer;
 }
 
 .m-button-pressed {
@@ -131,7 +132,7 @@
     top: 8px;
 }
 
-/* 
+/*
 #header-menu.m-button-pressed .m-button-contents {}
 */
 
@@ -375,6 +376,7 @@ body.landscape {
     font-size: 15px;
     font-weight: bold;
     color: #24b;
+    cursor: pointer;
 }
 
 .loading .load-more-message {
@@ -531,7 +533,7 @@ a:visited,
 }
 
 .expanded .entry-container .entry-header-body {
-    background-color: #fff
+    background-color: #fff;
 }
 
 .expanded .entry-container .entry-header-body .text {
@@ -543,7 +545,8 @@ a:visited,
 }
 
 .entry-container .entry-header-body {
-    padding-left: 25px
+    padding-left: 25px;
+    cursor: pointer;
 }
 
 .entry-container .entry-header {
@@ -912,6 +915,10 @@ a:visited,
     overflow: hidden;
 }
 
+.text.sub-item {
+    cursor: pointer;
+}
+
 .sub-link {
     text-decoration: none
 }
@@ -961,6 +968,10 @@ a:visited,
     line-height: 21px;
     white-space: nowrap;
     position: relative;
+}
+
+.g2tt-menuitem-content {
+    cursor: pointer;
 }
 
 .g2tt-menuitem-checkbox {
