@@ -49,8 +49,8 @@ $(document).ready(function () {
 
         var data = {
             'op': 'login',
-            'user': values['Username'],
-            'password': values['Passwd'],
+            'user': values.Username,
+            'password': values.Passwd,
         };
 
         $inputs.prop("disabled", true);
@@ -58,21 +58,21 @@ $(document).ready(function () {
         var request = apiCall(data);
 
         request.done(function (response, textStatus, jqXHR) {
-            //console.log(response['content']);
-            if (response['content'].error == 'LOGIN_ERROR') {
+            //console.log(response.content);
+            if (response.content.error == 'LOGIN_ERROR') {
                 window.alert("Username and/or Password were incorrect!");
             }
-            if (response['content'].error == 'API_DISABLED' || response['content'].error ==
+            if (response.content.error == 'API_DISABLED' || response.content.error ==
                 'INCORRECT_USAGE') {
                 window.alert(
                     "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
                 );
             }
-            if (typeof response['content'].error !== 'undefined') {
-                window.alert("Unexpected error received: ".concat(" ", response['content']
+            if (typeof response.content.error !== 'undefined') {
+                window.alert("Unexpected error received: ".concat(" ", response.content
                     .error));
             } else {
-                $.cookie('g2tt_sid', response['content'].session_id, {
+                $.cookie('g2tt_sid', response.content.session_id, {
                     expires: 7
                 });
                 $('.login').addClass('hidden');
@@ -104,10 +104,11 @@ $(document).ready(function () {
 
     // Show more items
     $('#load-more-items').off('click').on('click', function () {
+        var last;
         if (pref_OrderBy == "date_reverse") {
-            var last = $('.entry-row').last().attr('id');
+            last = $('.entry-row').last().attr('id');
         } else {
-            var last = $('.entry-row').length;
+            last = $('.entry-row').length;
         }
         getHeadlines(last);
     });
@@ -218,11 +219,12 @@ $(document).ready(function () {
         $('.load-more-message').html('Marking as read...');
         //remove those that need to be kept unread
         keepUnread.removeFromArray(global_ids);
-        var data = new Object();
-        data.op = "updateArticle";
-        data.article_ids = global_ids.join(',');
-        data.mode = 0;
-        data.field = 2;
+        var data = {
+            op: "updateArticle",
+            article_ids: global_ids.join(','),
+            mode: 0,
+            field: 2
+        };
         var request = apiCall(data);
 
         request.done(function (response) {
@@ -233,8 +235,9 @@ $(document).ready(function () {
 
     // Logout
     $('#menu-logout').off('click').on('click', function () {
-        var data = new Object();
-        data.op = "logout";
+        var data = {
+            op: "logout"
+        };
         var request = apiCall(data);
 
         request.done(function (response) {
@@ -353,12 +356,10 @@ $(document).ready(function () {
 
                     if (multipleFeedSelected == null) {
                         $('#feedURL').val(feedURLTrimmed);
-                        var subscriberesult = subscribe(feedURLTrimmed, catIDnum);
-                        // console.log(subscriberesult);
+                        subscribe(feedURLTrimmed, catIDnum);
                     } else {
                         $('#feedURL').val(multipleFeedSelected);
-                        var subscriberesult = subscribe(multipleFeedSelected, catIDnum);
-                        //console.log(subscriberesult);
+                        subscribe(multipleFeedSelected, catIDnum);
                     }
 
 
@@ -388,21 +389,22 @@ $(document).ready(function () {
 
 
 function refreshCats() {
-    var data = new Object();
-    data.op = "getCounters";
-    data.output_mode = "fc";
+    var data = {
+        op: "getCounters",
+        output_mode: "fc"
+    };
     var request = apiCall(data);
 
     request.done(function (response) {
-        var counters = response['content'];
+        var counters = response.content;
         var cats = [];
         var feeds = [];
 
         for (var i = 0; i < counters.length; i++) {
-            if (counters[i]['kind'] == 'cat') {
-                cats[counters[i]['id']] = (counters[i]);
+            if (counters[i].kind == 'cat') {
+                cats[counters[i].id] = (counters[i]);
             } else {
-                feeds[counters[i]['id']] = (counters[i]);
+                feeds[counters[i].id] = (counters[i]);
             }
         }
         $('.sub-row').each(function (i, j) {
@@ -410,8 +412,8 @@ function refreshCats() {
             var is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
             if (id == "-4" || id == "-1") {
-                $(this).find('.item-count-value').html(feeds['global-unread']['counter']);
-                if (feeds['global-unread']['counter'] == '0') {
+                $(this).find('.item-count-value').html(feeds['global-unread'].counter);
+                if (feeds['global-unread'].counter == '0') {
                     $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                     $('#subscriptions').removeClass('show-unread').addClass('show-all');
                 } else {
@@ -421,16 +423,16 @@ function refreshCats() {
                     }
                 }
             } else if (is_cat) {
-                $(this).find('.item-count-value').html(cats[id]['counter']);
-                if (cats[id]['counter'] == '0') {
+                $(this).find('.item-count-value').html(cats[id].counter);
+                if (cats[id].counter == '0') {
                     $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                 } else {
                     $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
                 }
             } else {
                 if (typeof feeds[id] !== 'undefined') {
-                    $(this).find('.item-count-value').html(feeds[id]['counter']);
-                    if (feeds[id]['counter'] == '0') {
+                    $(this).find('.item-count-value').html(feeds[id].counter);
+                    if (feeds[id].counter == '0') {
                         $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                     } else {
                         $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
@@ -506,17 +508,16 @@ function getHeadlines(since) {
     //Anytime we get headlines, check if there is a search filter
     var search = $('#search-input').val();
 
-    var data = new Object();
-    data.op = "getHeadlines";
-    data.feed_id = pref_Feed;
-    //data.limit = 25;
-    //uses config.js to get feed limit
-    data.limit = pref_Feed_limit;
-    data.show_excerpt = 1;
-    data.show_content = 1;
-    data.include_attachments = 0;
-    data.view_mode = pref_ViewMode;
-    data.is_cat = pref_IsCat;
+    var data = {
+        op: "getHeadlines",
+        feed_id: pref_Feed,
+        limit: pref_Feed_limit,
+        show_excerpt: 1,
+        show_content: 1,
+        include_attachments: 0,
+        view_mode: pref_ViewMode,
+        is_cat: pref_IsCat
+    };
     data.include_nested = true;
     data.order_by = pref_OrderBy;
     if (pref_OrderBy == "date_reverse") {
@@ -528,12 +529,12 @@ function getHeadlines(since) {
     var headlines = apiCall(data);
 
     headlines.done(function (response, textStatus, jqXHR) {
-        if (response['status'] != 0) {
+        if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
             return;
         }
-        headlines = response['content'];
+        headlines = response.content;
 
         if (headlines.length != data.limit) {
             $('#load-more-items').hide();
@@ -638,11 +639,12 @@ function getHeadlines(since) {
         /*
         // Mark (star) entry
         $('.star').off('click').on('click', function () {
-            var data = new Object();
-            data.op = "updateArticle";
-            data.article_ids = $(this).closest('.entry-row').attr('id');
-            data.mode = 2;
-            data.field = 0;
+            var data = {
+                op: "updateArticle",
+                article_ids: $(this).closest('.entry-row').attr('id'),
+                mode: 2,
+                field: 0
+            };
             var response = apiCall(data);
             $(this).toggleClass('item-star').toggleClass('item-star-active');
         });
@@ -650,11 +652,12 @@ function getHeadlines(since) {
 
         // Mark NewFont (star) entry
         $('.favStarDiv').off('click').on('click', function () {
-            var data = new Object();
-            data.op = "updateArticle";
-            data.article_ids = $(this).closest('.entry-row').attr('id');
-            data.mode = 2;
-            data.field = 0;
+            var data = {
+                op: "updateArticle",
+                article_ids: $(this).closest('.entry-row').attr('id'),
+                mode: 2,
+                field: 0
+            };
             var response = apiCall(data);
 
             $(this).next().toggleClass('starNotActive').toggleClass('starActive');
@@ -687,11 +690,12 @@ function getTopCategories() {
 
         $('#subscriptions-list').append("<div id='sub--4'></div>");
 
-        var data = new Object();
-        data.op = "getUnread";
+        var data = {
+            op: "getUnread"
+        };
         var request = apiCall(data);
         request.done(function (response, textStatus, jqXHR) {
-            unread = response['content'].unread;
+            unread = response.content.unread;
 
             var entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
                 " no-unread-sub-row") + "' id='tree-item--4'> \
@@ -714,13 +718,14 @@ function getTopCategories() {
             });
         });
 
-        var data = new Object();
-        data.op = "getCategories";
-        data.enable_nested = true;
+        data = {
+            op: "getCategories",
+            enable_nested: true
+        };
         var cats = apiCall(data);
 
         cats.done(function (response, textStatus, jqXHR) {
-            cats = response['content'];
+            cats = response.content;
 
             cats.sort(function (a, b) {
                 var db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
@@ -784,14 +789,15 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
 
-        var data = new Object();
-        data.op = "getFeeds";
-        data.cat_id = parent_id;
-        data.include_nested = true;
+        var data = {
+            op: "getFeeds",
+            cat_id: parent_id,
+            include_nested: true
+        };
         var feeds = apiCall(data);
 
         feeds.done(function (response, textStatus, jqXHR) {
-            feeds = response['content'];
+            feeds = response.content;
             feeds.sort(function (a, b) {
                 var alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
                 if (pref_FeedSort == '1') {
@@ -861,7 +867,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 }
 
 function getTitle() {
-    var data = new Object();
+    var data = {};
     if (pref_IsCat == "true") {
         data.op = "getCategories";
     } else {
@@ -872,12 +878,12 @@ function getTitle() {
     var request = apiCall(data);
 
     request.done(function (response, textStatus, jqXHR) {
-        if (response['status'] != 0) {
+        if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
             return;
         }
-        items = response['content'];
+        items = response.content;
 
         $.each(items, function (index, item) {
             if (item.id == pref_Feed) {
@@ -931,7 +937,7 @@ var keepUnread = new function () {
         var keepUnreadIds = getIdMap();
         if (ids.length > 0) {
             for (var id in keepUnreadIds) {
-                id = id | 0; //id must be numeric
+                id = id || 0; //id must be numeric
                 if ($.inArray(id, ids) < 0) {
                     this.removeId(id);
                 }
@@ -963,7 +969,7 @@ var keepUnread = new function () {
     this.removeFromArray = function (ids) {
         var keepUnreadIds = getIdMap();
         for (var id in keepUnreadIds) {
-            id = id | 0; //id must be numeric
+            id = id || 0; //id must be numeric
             var index = $.inArray(id, ids);
             if (index >= 0) {
                 ids.splice(index, 1);
@@ -973,7 +979,7 @@ var keepUnread = new function () {
     this.save = function () {
         var strVal = '';
         var keepIdMap = getIdMap();
-        for (articleId in keepIdMap) {
+        for (var articleId in keepIdMap) {
             if (strVal.length > 0) {
                 strVal += ',';
             }
@@ -981,7 +987,7 @@ var keepUnread = new function () {
         }
         $.cookie(COOKIE_NAME, strVal);
     };
-}
+};
 
 
 //ADDED for subscribing to new feeds
@@ -990,10 +996,11 @@ function subscribe(feedurl, categoryID) {
 
 
     var subscribeResult = "";
-    var data = new Object();
-    data.op = "subscribeToFeed";
-    data.feed_url = feedurl;
-    data.category_id = categoryID;
+    var data = {
+        op: "subscribeToFeed",
+        feed_url: feedurl,
+        category_id: categoryID
+    };
     //data.sid = session_id;
     $('#indicator').removeClass('hidden');
     var request = apiCall(data);
@@ -1003,12 +1010,12 @@ function subscribe(feedurl, categoryID) {
     //var request = apiCall(data);
 
     request.done(function (response, textStatus, jqXHR) {
-        var content = response['content'];
-        var message = response['content'].status.message;
-        var status = response['content'].status;
-        var statusCode = response['content'].status.code;
+        var content = response.content;
+        var message = response.content.status.message;
+        var status = response.content.status;
+        var statusCode = response.content.status.code;
         //var feeds = [];
-        var feeds = response['content'].status.feeds;
+        var feeds = response.content.status.feeds;
         var feedUrls = [];
         var feedUrlsTitles = [];
 
@@ -1158,15 +1165,15 @@ function unSubscribe(url, session_id, feed_id) {
 }
 
 function getCategoriesForNewSubscribe() {
-    var data = new Object();
-    data.op = "getFeedTree";
-    data.include_empty = true;
-    //        data.op = "getCategories";
-    data.enable_nested = false;
+    var data = {
+        op: "getFeedTree",
+        include_empty: true,
+        enable_nested: false
+    };
     var catsForNew = apiCall(data);
 
     catsForNew.done(function (response, textStatus, jqXHR) {
-        catsForNew = response['content'];
+        catsForNew = response.content;
         // console.log(catsForNew);
 
         $('#catItems').find('option').remove();
@@ -1247,11 +1254,12 @@ function expandEntry($entryRow) {
     // Mark as read
     if (!$entryRow.hasClass('read')) {
         $entryRow.addClass('read');
-        var data = new Object();
-        data.op = "updateArticle";
-        data.article_ids = $entryRow.attr('id');
-        data.mode = 0;
-        data.field = 2;
+        var data = {
+            op: "updateArticle",
+            article_ids: $entryRow.attr('id'),
+            mode: 0,
+            field: 2
+        };
         var response = apiCall(data);
     }
 }
@@ -1292,7 +1300,7 @@ function expandNextEntry() {
 
 function expandPreviousEntry() {
     if (!$('.current-entry').length) {
-        return
+        return;
     }
 
     $previous = $('.current-entry').prev();
@@ -1326,7 +1334,7 @@ function jumpNextEntry() {
 
 function jumpPreviousEntry() {
     if (!$('.current-entry').length) {
-        return
+        return;
     }
 
     $previous = $('.current-entry').prev();
@@ -1362,11 +1370,12 @@ function toggleEntryAsRead($entryRow) {
         keepUnread.removeId(articleId);
     }
 
-    var data = new Object();
-    data.op = "updateArticle";
-    data.article_ids = $entryRow.attr('id');
-    data.mode = 2;
-    data.field = 2;
+    var data = {
+        op: "updateArticle",
+        article_ids: $entryRow.attr('id'),
+        mode: 2,
+        field: 2
+    };
     var response = apiCall(data);
 }
 
