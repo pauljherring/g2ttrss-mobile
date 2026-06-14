@@ -573,7 +573,7 @@ function getHeadlines(since) {
             </div> \
             <div class='entry-header'> \
 		<div class='entry-icons'> \
-			<i class='favStarDiv fa fa-star-o fa-2x starBorder'> </i> \
+			<i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
 			<i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
 		</div> \
             <div class='entry-header-body'> \

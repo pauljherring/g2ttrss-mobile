@@ -563,7 +563,7 @@ a:visited,
 }
 
 .entry-actions span {
-    white-space: nowrap
+    white-space: nowrap;
 }
 
 .entry-container .entry-icons .star {
@@ -642,7 +642,8 @@ a:visited,
 }
 
 .entry-actions .link {
-    text-decoration: none
+    text-decoration: none;
+    width: fit-content;
 }
 
 .entry-actions .plusone-holder {
@@ -1784,13 +1785,11 @@ fieldset {
 
 .starBorder {
     color: #a0b6e6;
-    font-weight: bold;
     z-index: 10;
 }
 
 .starNotActive {
     color: white;
-
 }
 
 .starActive {

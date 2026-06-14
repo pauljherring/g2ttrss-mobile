@@ -17,18 +17,17 @@
     <!-- <script src="//code.jquery.com/jquery-migrate-4.0.2.js"></script> -->
 
     <!-- UI -->
-    <link rel=" stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.css">
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
 
 
     <!-- Own -->
-    <script type=" text/javascript" src="js/jquery.cookie.js"></script>
+    <script type="text/javascript" src="js/jquery.cookie.js"></script>
     <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
 
     <script type="text/javascript" src="js/g2tt-config.js"></script>
     <script type="text/javascript" src="js/g2tt.js"></script>
-
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
     <!-- moved to end of head to make sure any CSS from jquery-ui and font-awesome can be overwritten -->
     <link rel="stylesheet" type="text/css" href="style.css">
@@ -115,9 +114,9 @@
                                 </td>
                                 <td class="nav-table-right">
                                     <div class="m-button" id="header-menu"> <span class="m-button-contents"><i
-                                                id="menuDown" class="fa fa-angle-double-down fa-2x"></i></span>
+                                                id="menuDown" class="fa fa-angle-double-down fa-lg"></i></span>
                                         <span class="m-button-contents"><i id="menuUp"
-                                                class="fa fa-angle-double-up fa-2x hidden"></i></span>
+                                                class="fa fa-angle-double-up fa-lg hidden"></i></span>
                                     </div>
                                     <div class="m-button" id="header-refresh"> <span class="m-button-contents"><i
                                                 class="fa fa-repeat fa-lg"></i></span>
@@ -145,28 +144,28 @@
                     <div class="g2tt-menuitem g2tt-option showItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="all">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show all
                         </div>
                     </div>
                     <div class="g2tt-menuitem g2tt-option showItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="unread">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show unread
                         </div>
                     </div>
                     <div class="g2tt-menuitem g2tt-option showItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="marked">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show starred
                         </div>
                     </div>
                     <div class="g2tt-menuitem g2tt-option showItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="published">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show published
                         </div>
                     </div>
@@ -175,14 +174,14 @@
                     <div class="g2tt-menuitem g2tt-option sortItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="feed_dates">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Sort by newest
                         </div>
                     </div>
                     <div class="g2tt-menuitem g2tt-option sortItem articlesMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="date_reverse">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Sort by oldest
                         </div>
                     </div>
@@ -201,14 +200,14 @@
                     <div class="g2tt-menuitem g2tt-option feedsItem feedsMenu hidden" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="feeds-all">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show all
                         </div>
                     </div>
                     <div class="g2tt-menuitem g2tt-option feedsItem feedsMenu hidden" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="feeds-unread">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Show unread
                         </div>
                     </div>
@@ -218,7 +217,7 @@
                     <div class="g2tt-menuitem g2tt-option feedsSort feedsMenu hidden" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="feeds-alpha">
                         <div class="g2tt-menuitem-content">
-                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check fa-lg"></i>
+                            <div class="g2tt-menuitem-checkbox"><i class="fa fa-check"></i>
                             </div>Sort A-Z
                         </div>
                     </div>
