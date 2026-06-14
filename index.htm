@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link rel="manifest" href="site.webmanifest" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta charset="UTF-8">
+    <meta name="description" content="'Google' to TTRSS mobile webpage.">
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>TT-RSS Mobile</title>
 
     <!-- Core - https://stackoverflow.com/a/24777954-->
@@ -23,16 +26,15 @@
 
 
     <!-- Own -->
-    <script type="text/javascript" src="js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="js/jquery.hotkeys.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+    <script src="js/jquery.hotkeys.js"></script>
 
-    <script type="text/javascript" src="js/g2tt-config.js"></script>
-    <script type="text/javascript" src="js/g2tt.js"></script>
+    <script src="js/g2tt-config.js"></script>
+    <script src="js/g2tt.js"></script>
 
     <!-- moved to end of head to make sure any CSS from jquery-ui and font-awesome can be overwritten -->
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-
 <body class="landscape" style="zoom: 100%;">
     <div id="bodyFull" data-role="page" style="background-color:white">
         <div id="addNewSubscription" style="display: none;">
@@ -57,7 +59,7 @@
                         <div id="multipleFeedsSelect" class="hidden">
                             <label for="feedsAvail">Available Feeds</label>
                             <select id="feedsAvail" name="feedsAvail">
-                                <optgroup label="Choose available feed">
+                                <optgroup label="Choose available feed"></optgroup>
                             </select>
                         </div>
                     </fieldset>
@@ -67,27 +69,27 @@
         <div class='login content clearfix hidden'>
             <div class='sign-in'>
                 <div class='signin-box'>
-                    <h2>Sign in </h2>
+                    <h1>Sign in </h1>
                     <form id='login' class=''>
                         <div class='username-div'>
                             <label for='Username'> <strong class='username-label'>Username</strong>
                             </label>
-                            <input type='username' spellcheck='false' autocorrect="off" autocapitalize="none"
-                                name='Username' id='Username' value='' />
+                            <input type='text' spellcheck='false' autocorrect="off" autocapitalize="none"
+                                name='Username' id='Username' value='' autocomplete="username" placeholder="Username">
                         </div>
                         <div class='passwd-div'>
                             <label for='Passwd'> <strong class='passwd-label'>Password</strong>
                             </label>
-                            <input type='password' name='Passwd' id='Passwd' />
+                            <input type='password' name='Passwd' id='Passwd' autocomplete="current-password" placeholder="Password">
                             <input type='submit' class='g-button g-button-submit' style="width:100%" name='signIn'
-                                id='signIn' value='Sign in' />
+                                id='signIn' value='Sign in'>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
         <div id='main'>
-            <div class="nav-bar-container">
+            <main class="nav-bar-container">
                 <div class="nav-bar">
                     <table class="nav-table">
                         <tbody>
@@ -126,8 +128,8 @@
                         </tbody>
                     </table>
                     <div class="search-box hidden">
-                        <form id="search-form" action="">
-                            <input id="search-input" type="text" />
+                        <form id="search-form">
+                            <input id="search-input" type="text">
                             <div class="m-button" id="search-submit"> <span class="m-button-contents">Search</span>
                             </div>
                             <div class="m-button" id="search-cancel"> <span class="m-button-contents">Close</span>
@@ -222,14 +224,14 @@
                         </div>
                     </div>
                     <div class="g2tt-menuseparator feedsMenu" style="user-select: none; -webkit-user-select: none;"
-                        role="separator" id="seperator4">
+                        role="separator" id="seperator5">
                     </div>
                     <div class="g2tt-menuitem feedsMenu" role="menuitem"
                         style="user-select: none; -webkit-user-select: none;" id="menu-logout">
                         <div class="g2tt-menuitem-content">Logout</div>
                     </div>
                 </div>
-            </div>
+            </main>
             <div id="feed" class="">
                 <div class="samedir">
                     <div id="entries" class="mobilelist" style="visibility: visible;">
