@@ -1705,6 +1705,13 @@ fieldset {
     margin-top: 5px;
 }
 
+fieldset select {
+    margin-bottom: 12px;
+    width: 95%;
+    padding: .4em;
+
+}
+
 .ui-dialog .ui-state-error {
     padding: .3em;
 }

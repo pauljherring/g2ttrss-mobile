@@ -35,6 +35,7 @@
     <!-- moved to end of head to make sure any CSS from jquery-ui and font-awesome can be overwritten -->
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body class="landscape" style="zoom: 100%;">
     <div id="bodyFull" data-role="page" style="background-color:white">
         <div id="addNewSubscription" style="display: none;">
@@ -66,6 +67,60 @@
                 </form>
             </div>
         </div>
+        <div id="settings-form" title="Settings">
+            <p class="validateTips hidden"></p>
+            <form>
+                <fieldset>
+                    <label for="global_ttrssUrl">TTRSS url</label>
+                    <div style="position:relative;">
+                        <input type="text" name="global_ttrssUrl" id="global_ttrssUrl"
+                            class="text ui-widget-content ui-corner-all">
+                    </div>
+                    <label for="pref_Feed">Default Feed</label>
+                    <select id="pref_Feed" name="pref_Feed">
+                        <optgroup label="Please choose from list"></optgroup>
+                    </select>
+                    <label for="pref_StartInCat">Start in category/feed</label>
+                    <select id="pref_StartInCat" name="pref_StartInCat">
+                        <option value="0">Start showing feeds</option>
+                        <option value="1">Start in category</option>
+                    </select>
+
+
+                    <select id="pref_Feed" name="pref_Feed">
+                        <optgroup label="Please choose from list"></optgroup>
+                    </select>
+                    <label for="pref_Feed_Limit">Feed Limit per load</label>
+                    <div style="position:relative;">
+                        <input type="text" name="pref_Feed_Limit" id="pref_Feed_Limit"
+                            class="text ui-widget-content ui-corner-all">
+                    </div>
+                    <label for="pref_ViewMode">View Mode</label>
+                    <select id="pref_ViewMode" name="pref_ViewMode">
+                        <option value="all">Show all</option>
+                        <option value="unread">Show unread</option>
+                        <option value="marked">Show starred</option>
+                        <option value="published">Show published</option>
+                    </select>
+                    <label for="pref_OrderBy">Order By</label>
+                    <select id="pref_OrderBy" name="pref_OrderBy">
+                        <option value="date_reverse">Sort by newest</option>
+                        <option value="feed_dates">Sort by oldest</option>
+                    </select>
+                    <label for="pref_FeedSort">Feed Sort</label>
+                    <select id="pref_FeedSort" name="pref_FeedSort">
+                        <option value="0">Do not sort feeds</option>
+                        <option value="alpha">Sort A-Z</option>
+                    </select>
+                    <label for="pref_StartInCat">Start in category</label>
+                    <select id="pref_StartInCat" name="pref_StartInCat">
+                        <option value="0">Start showing feeds</option>
+                        <option value="1">Start in category</option>
+                    </select>
+                </fieldset>
+            </form>
+        </div>
+
         <div class='login content clearfix hidden'>
             <div class='sign-in'>
                 <div class='signin-box'>
@@ -80,7 +135,8 @@
                         <div class='passwd-div'>
                             <label for='Passwd'> <strong class='passwd-label'>Password</strong>
                             </label>
-                            <input type='password' name='Passwd' id='Passwd' autocomplete="current-password" placeholder="Password">
+                            <input type='password' name='Passwd' id='Passwd' autocomplete="current-password"
+                                placeholder="Password">
                             <input type='submit' class='g-button g-button-submit' style="width:100%" name='signIn'
                                 id='signIn' value='Sign in'>
                         </div>
@@ -96,20 +152,21 @@
                             <tr>
                                 <td class="nav-table-left">
                                     <div class="m-button back-to-feeds" id="back-to-feeds"> <span
-                                            class="m-button-contents">&laquo;
-                                            Feeds</span>
+                                        class="m-button-contents">&laquo;
+                                        Feeds</span>
                                     </div>
                                     <div class="m-button hidden" id="sub-list-back"> <span
-                                            class="m-button-contents">&laquo; Back</span>
+                                        class="m-button-contents">&laquo; Back</span>
                                     </div>
                                     <div class="m-button hidden" id="back-to-stream"> <span
-                                            class="m-button-contents">&laquo; Back</span>
+                                        class="m-button-contents">&laquo; Back</span>
                                     </div>
-                                    <!-- added for new subscriptions -->
                                     <div class="m-button hidden" id="add-new-subscription"> <span
-                                            class="m-button-contents"><i class="fa fa-plus"></i></span>
+                                        class="m-button-contents"><i class="fa fa-plus"></i></span>
                                     </div>
-                                    <!-- added for new subscriptions -->
+                                    <div class="m-button hidden" id="change-settings"> <span
+                                        class="m-button-contents"><i class="fa fa-cog"></i></span>
+                                    </div>
                                 </td>
                                 <td class="nav-table-middle">
                                     <div id="nav-title"></div>

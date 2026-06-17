@@ -9,11 +9,6 @@ if (typeof ($.cookie('g2tt_isCat')) !== 'undefined') {
 if (typeof ($.cookie('g2tt_viewMode')) !== 'undefined') {
     pref_ViewMode = $.cookie('g2tt_viewMode');
 }
-/* Not used
-if (typeof ($.cookie('g2tt_textType')) !== 'undefined') {
-    pref_textType = $.cookie('g2tt_textType');
-}
-*/
 if (typeof ($.cookie('g2tt_orderBy')) !== 'undefined') {
     pref_OrderBy = $.cookie('g2tt_orderBy');
 }
@@ -178,6 +173,70 @@ $(document).ready(function () {
         $("#dialog-form").dialog("open");
     });
 
+    // function getFeeds(parent_id, feeds) {
+    //      var data = {
+    //          op: "getFeeds",
+    //          cat_id: parent_id,
+    //          include_nested: true
+    //      };
+    //      var request = apiCall(data);
+    //      request.done(function (response, textStatus, jqXHR) {
+    //          if (typeof response.content.error !== 'undefined') {
+    //              window.alert("Unexpected error received: ".concat(" ", response.content
+    //                  .error));
+    //          } else {
+    //              feeds = response.content;
+    //          }
+    //      });
+    //      request.fail(function (jqXHR, textStatus, errorThrown) {
+    //          // log the error to the console
+    //          console.error("Error occurred while getting feeds: ", errorThrown);
+    //      });
+    //      request.always(function () {
+    //          // reenable the inputs
+    //          // $inputs.prop("disabled", false);
+    //      });
+    //      console.log(feeds);
+    //      return {};
+    //  }
+
+     $('#change-settings').off('click').on('click', function () {
+         var data = {
+             op: "getCategories",
+             enable_nested: true,
+             include_empty: true
+         };
+         var request = apiCall(data);
+         request.done(function (response, textStatus, jqXHR) {
+             if (typeof response.content.error !== 'undefined') {
+                 window.alert("Unexpected error received: ".concat(" ", response.content
+                     .error));
+             } else {
+                 response.content.sort(function (a, b) {
+                     return a.order_id - b.order_id;
+                 });
+                 var feeds;
+                 $.each(response.content, function (index, category) {
+                    //  console.log(category);
+                    //  console.log(getFeeds(category.id, feeds));
+                    //  console.log(feeds);
+                     $('#pref_Feed').append("<option value='" + category.id + "'>" + category.title + "</option>");
+                 });
+             }
+         });
+         request.fail(function (jqXHR, textStatus, errorThrown) {
+             // log the error to the console
+             console.error("Error occurred while getting categories: ", errorThrown);
+         });
+         request.always(function () {
+             // reenable the inputs
+             // $inputs.prop("disabled", false);
+         });
+
+
+         $("#settings-form").dialog("open");
+     });
+
     // View mode feeds menu selection
     $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
     $('#subscriptions').addClass('show-' + pref_ViewMode);
@@ -210,6 +269,7 @@ $(document).ready(function () {
         refreshCats();
         getFeeds(global_backCat.pop());
         $('#add-new-subscription').removeClass('hidden');
+        $('#change-settings').removeClass('hidden');
 
     });
 
@@ -244,7 +304,6 @@ $(document).ready(function () {
             $.removeCookie('g2tt_feed');
             $.removeCookie('g2tt_isCat');
             $.removeCookie('g2tt_viewMode');
-            // Not used            $.removeCookie('g2tt_textType');
             $.removeCookie('g2tt_orderBy');
             $.removeCookie('g2tt_sid');
             location.reload(true);
@@ -376,6 +435,28 @@ $(document).ready(function () {
     });
 
     //Added for Subscribe to New Feeds
+    $("#settings-form").dialog({
+        autoOpen: false,
+        //height: 300,
+        dialogClass: "dialog-nav-bar",
+        draggable: false,
+        resizable: false,
+        //position: { my: "left top", at: "left top" } ,
+        position: [5, 10],
+        width: 300,
+        modal: true,
+        buttons: {
+            "Save": function () {
+                $(this).dialog("close");
+            },
+            Cancel: function () {
+                $(this).dialog("close");
+            }
+        },
+        close: function () {
+            allFields.val("").removeClass("ui-state-error");
+        }
+    });
 
     // Hotkeys
     $(document).off('keydown', 'j', expandNextEntry).on('keydown', 'j', expandNextEntry);
@@ -462,10 +543,12 @@ function showFeeds() {
     $('.feedsMenu').removeClass('hidden');
     //added to show + for adding new subscriptions
     $('#add-new-subscription').removeClass('hidden');
+    $('#change-settings').removeClass('hidden');
     if (global_parentId != '-4') {
         $('#sub-list-back').removeClass('hidden');
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
+        $('#change-settings').addClass('hidden');
 
     }
     $('#nav-title').html('');
@@ -476,6 +559,8 @@ function showArticles() {
     $('#subscriptions').addClass('hidden');
     //added to hide + for add new subscriptions
     $('#add-new-subscription').addClass('hidden');
+    $('#change-settings').addClass('hidden');
+
 
     $('.back-to-feeds').removeClass('hidden');
     $('.articlesMenu').removeClass('hidden');
@@ -775,6 +860,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     $('#sub-list-back').removeClass('hidden');
     //added to show + for adding new subscriptions
     $('#add-new-subscription').addClass('hidden');
+    $('#change-settings').addClass('hidden');
 
     if ($('#sub-' + parent_id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
@@ -1214,10 +1300,10 @@ function getCategoriesForNewSubscribe() {
 
                 $.each(catObjectIds, function (index, objects) {
 
-                    $.each(objects, function (parent_id, child_id, Name) {
-                        //	console.log(parent_id);
-                        //$('#catItems').append( $('<option></option>').val(val).html(text) )
-                    });
+                    // $.each(objects, function (parent_id, child_id, Name) {
+                    //     //	console.log(parent_id);
+                    //     //$('#catItems').append( $('<option></option>').val(val).html(text) )
+                    // });
                     if (objects.parent_id == objects.child_id) {
 
                         $('#catItems').append($('<option></option>').val(objects
