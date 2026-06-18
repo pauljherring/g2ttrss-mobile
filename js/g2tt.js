@@ -1,4 +1,11 @@
-pref_IsCat = false;
+var pref_Feed;
+var pref_IsCat;
+var pref_ViewMode;
+var pref_OrderBy;
+var pref_FeedSort
+var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in -config
+var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in -config
+var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in -config
 
 if (typeof ($.cookie('g2tt_feed')) !== 'undefined') {
     pref_Feed = $.cookie('g2tt_feed');
@@ -9,11 +16,6 @@ if (typeof ($.cookie('g2tt_isCat')) !== 'undefined') {
 if (typeof ($.cookie('g2tt_viewMode')) !== 'undefined') {
     pref_ViewMode = $.cookie('g2tt_viewMode');
 }
-/* Not used
-if (typeof ($.cookie('g2tt_textType')) !== 'undefined') {
-    pref_textType = $.cookie('g2tt_textType');
-}
-*/
 if (typeof ($.cookie('g2tt_orderBy')) !== 'undefined') {
     pref_OrderBy = $.cookie('g2tt_orderBy');
 }
@@ -21,9 +23,9 @@ if (typeof ($.cookie('g2tt_feedSort')) !== 'undefined') {
     pref_FeedSort = $.cookie('g2tt_feedSort');
 }
 
-global_backCat = []; // Feed view always starts with all items
-global_ids = []; // List of all article IDs currently displayed
-global_parentId = '-4';
+var global_backCat = []; // Feed view always starts with all items
+var global_ids = []; // List of all article IDs currently displayed
+var global_parentId = '-4';
 
 $(document).ready(function () {
 
@@ -57,7 +59,7 @@ $(document).ready(function () {
 
         var request = apiCall(data);
 
-        request.done(function (response, textStatus, jqXHR) {
+        request.done(function (response, _textStatus, _jqXHR) {
             //console.log(response.content);
             if (response.content.error == 'LOGIN_ERROR') {
                 window.alert("Username and/or Password were incorrect!");
@@ -227,7 +229,7 @@ $(document).ready(function () {
         };
         var request = apiCall(data);
 
-        request.done(function (response) {
+        request.done(function (_response) {
             $('#entries').empty();
             getHeadlines();
         });
@@ -240,7 +242,7 @@ $(document).ready(function () {
         };
         var request = apiCall(data);
 
-        request.done(function (response) {
+        request.done(function (_response) {
             $.removeCookie('g2tt_feed');
             $.removeCookie('g2tt_isCat');
             $.removeCookie('g2tt_viewMode');
@@ -342,7 +344,8 @@ $(document).ready(function () {
 
                 bValid = bValid && checkLength(feedURL, "URL", 5, 1000);
                 bValid = bValid && checkRegexp(feedURL,
-                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/,
+                    // /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/,
+                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-/]))?$/,
                     "URL must be a valid URL. Make sure the URL is correct and re-submit");
 
                 // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
@@ -407,7 +410,7 @@ function refreshCats() {
                 feeds[counters[i].id] = (counters[i]);
             }
         }
-        $('.sub-row').each(function (i, j) {
+        $('.sub-row').each(function (_i, _j) {
             var id = $(this).attr('id').substring(10);
             var is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
@@ -528,7 +531,7 @@ function getHeadlines(since) {
     data.search = search;
     var headlines = apiCall(data);
 
-    headlines.done(function (response, textStatus, jqXHR) {
+    headlines.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
@@ -548,7 +551,7 @@ function getHeadlines(since) {
                 headline.title + '</a></h2>' + headline.content;
 
             var $content = $(headline.content);
-            var alt = null;
+            var alt;
             if ($content.length == 1 && $content.is("img") && (alt = ($content.attr("title") || $content
                     .attr("alt")))) {
                 $content = $("<div>" + $content[0].outerHTML + "<div>" + alt + "</div></div>");
@@ -658,7 +661,7 @@ function getHeadlines(since) {
                 mode: 2,
                 field: 0
             };
-            var response = apiCall(data);
+            var _response = apiCall(data);
 
             $(this).next().toggleClass('starNotActive').toggleClass('starActive');
             //console.log(newstar);
@@ -693,11 +696,11 @@ function getTopCategories() {
         var data = {
             op: "getUnread"
         };
-        var request = apiCall(data);
-        request.done(function (response, textStatus, jqXHR) {
-            unread = response.content.unread;
+        let request = apiCall(data);
+        request.done(function (response, _textStatus, _jqXHR) {
+            let unread = response.content.unread;
 
-            var entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
+            let entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
                 " no-unread-sub-row") + "' id='tree-item--4'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder-open fa-lg'></i> </div> \
@@ -724,7 +727,7 @@ function getTopCategories() {
         };
         var cats = apiCall(data);
 
-        cats.done(function (response, textStatus, jqXHR) {
+        cats.done(function (response, _textStatus, _jqXHR) {
             cats = response.content;
 
             cats.sort(function (a, b) {
@@ -796,7 +799,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         };
         var feeds = apiCall(data);
 
-        feeds.done(function (response, textStatus, jqXHR) {
+        feeds.done(function (response, _textStatus, _jqXHR) {
             feeds = response.content;
             feeds.sort(function (a, b) {
                 var alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
@@ -877,13 +880,13 @@ function getTitle() {
 
     var request = apiCall(data);
 
-    request.done(function (response, textStatus, jqXHR) {
+    request.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
             return;
         }
-        items = response.content;
+        let items = response.content;
 
         $.each(items, function (index, item) {
             if (item.id == pref_Feed) {
@@ -993,42 +996,40 @@ var keepUnread = new function () {
 //ADDED for subscribing to new feeds
 
 function subscribe(feedurl, categoryID) {
-
-
-    var subscribeResult = "";
+    $('#indicator').removeClass('hidden');
     var data = {
         op: "subscribeToFeed",
         feed_url: feedurl,
         category_id: categoryID
     };
-    //data.sid = session_id;
-    $('#indicator').removeClass('hidden');
     var request = apiCall(data);
 
-
-    //    return request;
-    //var request = apiCall(data);
-
-    request.done(function (response, textStatus, jqXHR) {
-        var content = response.content;
-        var message = response.content.status.message;
-        var status = response.content.status;
+    request.done(function (response, _textStatus, _jqXHR) {
         var statusCode = response.content.status.code;
-        //var feeds = [];
         var feeds = response.content.status.feeds;
         var feedUrls = [];
         var feedUrlsTitles = [];
 
         for (var key in feeds) {
-            if (feeds.hasOwnProperty(key)) {
-
+            if (Object.hasOwn(feeds, key)) {
                 feedUrls.push(key);
                 feedUrlsTitles.push(feeds[key]);
             }
         }
 
-
-        //console.log(statusCode);
+        /**
+         * @return array (code => Status code, message => error message if available)
+         *
+         *                 0 - OK, Feed already exists
+         *                 1 - OK, Feed added
+         *                 2 - Invalid URL
+         *                 3 - URL content is HTML, no feeds available
+         *                 4 - URL content is HTML which contains multiple feeds.
+         *                     Here you should call extractfeedurls in rpc-backend
+         *                     to get all possible feeds.
+         *                 5 - Couldn't download the URL content.
+         *                 6 - Content is an invalid XML.
+         */
         switch (statusCode) {
             case 0:
                 //0 - OK, Feed already exists
@@ -1110,26 +1111,7 @@ function subscribe(feedurl, categoryID) {
 
                 break;
         }
-
-
-
-
         return response;
-
-        /**
-         * @return array (code => Status code, message => error message if available)
-         *
-         *                 0 - OK, Feed already exists
-         *                 1 - OK, Feed added
-         *                 2 - Invalid URL
-         *                 3 - URL content is HTML, no feeds available
-         *                 4 - URL content is HTML which contains multiple feeds.
-         *                     Here you should call extractfeedurls in rpc-backend
-         *                     to get all possible feeds.
-         *                 5 - Couldn't download the URL content.
-         *                 6 - Content is an invalid XML.
-         */
-
 
     });
     //$('#indicator').addClass('hidden');
@@ -1138,31 +1120,31 @@ function subscribe(feedurl, categoryID) {
 
 
 //haven't implemented yet.
-function unSubscribe(url, session_id, feed_id) {
-    var subscribeResult = "";
-    var data = {
-        op: "unsubscribeFeed",
-        sid: session_id,
-        feed_id: feed_id
-    };
+// function unSubscribe(url, session_id, feed_id) {
+//     var subscribeResult = "";
+//     var data = {
+//         op: "unsubscribeFeed",
+//         sid: session_id,
+//         feed_id: feed_id
+//     };
 
-    $.ajax({
-        type: "POST",
-        url: url + "/api/",
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        dataType: "json",
-        async: false,
-        success: function (data) {
-            subscribeResult = data.content.status;
+//     $.ajax({
+//         type: "POST",
+//         url: url + "/api/",
+//         contentType: "application/json",
+//         data: JSON.stringify(data),
+//         dataType: "json",
+//         async: false,
+//         success: function (data) {
+//             subscribeResult = data.content.status;
 
-        },
-        error: function () {
-            showAlert("Network Error, Please Check Network", "ttRss");
-        }
-    });
-    return subscribeResult;
-}
+//         },
+//         error: function () {
+//             showAlert("Network Error, Please Check Network", "ttRss");
+//         }
+//     });
+//     return subscribeResult;
+// }
 
 function getCategoriesForNewSubscribe() {
     var data = {
@@ -1172,16 +1154,13 @@ function getCategoriesForNewSubscribe() {
     };
     var catsForNew = apiCall(data);
 
-    catsForNew.done(function (response, textStatus, jqXHR) {
+    catsForNew.done(function (response, _textStatus, _jqXHR) {
         catsForNew = response.content;
-        // console.log(catsForNew);
-
         $('#catItems').find('option').remove();
         $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
 
         $.each(catsForNew, function (index, cat) {
             $.each(cat.items, function (index, catObject) {
-                //console.log(index);
                 var catObjectIds = [];
                 if (catObject.bare_id != -1 && catObject.bare_id != 0) {
                     catObjectIds.push({
@@ -1190,43 +1169,26 @@ function getCategoriesForNewSubscribe() {
                         "Name": catObject.name
                     });
                 }
-                //	console.log(catObjectIds);
-                //	console.log(catObject);
                 $.each(catObject.items, function (index, subcatObject) {
-                    var subcatObjectIds = [];
-
                     if (subcatObject.type == "category") {
-                        //subcatObjectIds.push({"parent_id":catObject.bare_id,"child_id":subcatObject.bare_id,"Name":subcatObject.name});
                         catObjectIds.push({
                             "parent_id": catObject.bare_id,
                             "child_id": subcatObject.bare_id,
                             "Name": subcatObject.name
                         });
-                        //console.log(subcatObjectIds.Name);
-                        //console.log(catObject,subcatObject);
-
                     }
-                    //console.log(subcatObject);
                 });
 
                 //put Uncategorized first
-
-
                 $.each(catObjectIds, function (index, objects) {
-
-                    $.each(objects, function (parent_id, child_id, Name) {
-                        //	console.log(parent_id);
-                        //$('#catItems').append( $('<option></option>').val(val).html(text) )
-                    });
                     if (objects.parent_id == objects.child_id) {
-
                         $('#catItems').append($('<option></option>').val(objects
                             .parent_id).html(objects.Name));
-                    } else {
-                        var newOptionCat = $('#catItems').append($('<option></option>')
-                            .val(objects.child_id).html('&lfloor; ' + objects.Name));
-                        //newOptionCat.prepend('&lfloor;');
                     }
+                    //  else {
+                    //     var newOptionCat = $('#catItems').append($('<option></option>')
+                    //         .val(objects.child_id).html('&lfloor; ' + objects.Name));
+                    // }
                 });
 
             });
@@ -1239,93 +1201,91 @@ function getCategoriesForNewSubscribe() {
 
 }
 
-function expandEntry($entryRow) {
-    if ($entryRow.hasClass('expanded')) {
+function expandEntry(entryRow) {
+    if (entryRow.hasClass('expanded')) {
         return;
     }
 
     $('.expanded').removeClass('expanded');
-    $entryRow.addClass('expanded');
-    $('html,body').scrollTop($entryRow.offset().top);
+    entryRow.addClass('expanded');
+    $('html,body').scrollTop(entryRow.offset().top);
 
     $('.current-entry').removeClass('current-entry');
-    $entryRow.addClass('current-entry');
+    entryRow.addClass('current-entry');
 
     // Mark as read
-    if (!$entryRow.hasClass('read')) {
-        $entryRow.addClass('read');
+    if (!entryRow.hasClass('read')) {
+        entryRow.addClass('read');
         var data = {
             op: "updateArticle",
-            article_ids: $entryRow.attr('id'),
+            article_ids: entryRow.attr('id'),
             mode: 0,
             field: 2
         };
-        var response = apiCall(data);
+        var _response = apiCall(data);
     }
 }
 
-function collapseEntry($entryRow) {
-    $entryRow.removeClass('expanded');
+function collapseEntry(entryRow) {
+    entryRow.removeClass('expanded');
 }
 
-function toggleEntryAsExpanded($entryRow) {
-    if ($entryRow.hasClass('expanded')) {
-        collapseEntry($entryRow);
+function toggleEntryAsExpanded(entryRow) {
+    if (entryRow.hasClass('expanded')) {
+        collapseEntry(entryRow);
 
     } else {
-        expandEntry($entryRow);
+        expandEntry(entryRow);
     }
 }
 
-function toggleCurrentEntryAsExpanded($entryRow) {
+function toggleCurrentEntryAsExpanded(_entryRow) {
     if ($('.current-entry').length) {
         toggleEntryAsExpanded($('.current-entry'));
     }
 }
 
 function expandNextEntry() {
+    let nextEntry;
     if (!$('.current-entry').length) {
-        $nextEntry = $('.entry-row').eq(0);
-
+        nextEntry = $('.entry-row').eq(0);
     } else {
-        $nextEntry = $('.current-entry').next();
+        nextEntry = $('.current-entry').next();
     }
 
-    if (!$nextEntry.is('.entry-row')) {
+    if (!nextEntry.is('.entry-row')) {
         return;
     }
 
-    expandEntry($nextEntry);
+    expandEntry(nextEntry);
 }
 
 function expandPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-
-    $previous = $('.current-entry').prev();
-
-    if (!$previous.is('.entry-row')) {
+    let previous = $('.current-entry').prev();
+    if (!previous.is('.entry-row')) {
         return;
     }
-
-    expandEntry($previous);
+    expandEntry(previous);
 }
 
 function jumpNextEntry() {
+    let nextEntry;
     if (!$('.current-entry').length) {
-        $nextEntry = $('.entry-row').eq(0);
+        nextEntry = $('.entry-row').eq(0);
 
     } else {
-        $nextEntry = $('.current-entry').next();
+        nextEntry = $('.current-entry').next();
     }
 
-    if (!$nextEntry.is('.entry-row')) {
+    if (!nextEntry.is('.entry-row')) {
         return;
     }
 
     $('.current-entry').removeClass('current-entry');
-    $nextEntry.addClass('current-entry');
+    nextEntry.addClass('current-entry');
 
     if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView(false);
@@ -1336,50 +1296,48 @@ function jumpPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-
-    $previous = $('.current-entry').prev();
-
-    if (!$previous.is('.entry-row')) {
+    let previous = $('.current-entry').prev();
+    if (!previous.is('.entry-row')) {
         return;
     }
-
     $('.current-entry').removeClass('current-entry');
-    $previous.addClass('current-entry');
+    previous.addClass('current-entry');
 
     if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView();
     }
 }
 
-function toggleEntryAsRead($entryRow) {
-    $entryRow.toggleClass('read');
+function toggleEntryAsRead(entryRow) {
+    entryRow.toggleClass('read');
 
-    if (!$entryRow.hasClass('read')) {
-        $entryRow.find(".read-state").html("&nbsp;Mark read");
+    var articleId;``
+    if (!entryRow.hasClass('read')) {
+        entryRow.find(".read-state").html("&nbsp;Mark read");
         for (var i = 0; i < global_ids.length; i++) {
-            var articleId = $entryRow.attr('id');
+            articleId = entryRow.attr('id');
             if (global_ids[i] == articleId) {
                 global_ids.splice(i, 1);
                 keepUnread.addId(articleId);
             }
         }
     } else {
-        $entryRow.find(".read-state").html("&nbsp;Mark unread");
-        var articleId = $entryRow.attr('id');
+        entryRow.find(".read-state").html("&nbsp;Mark unread");
+        articleId = entryRow.attr('id');
         global_ids.push(articleId);
         keepUnread.removeId(articleId);
     }
 
     var data = {
         op: "updateArticle",
-        article_ids: $entryRow.attr('id'),
+        article_ids: entryRow.attr('id'),
         mode: 2,
         field: 2
     };
-    var response = apiCall(data);
+    var _response = apiCall(data);
 }
 
-function toggleCurrentEntryAsRead($entryRow) {
+function toggleCurrentEntryAsRead(_entryRow) {
     if ($('.current-entry').length) {
         toggleEntryAsRead($('.current-entry'));
     }
