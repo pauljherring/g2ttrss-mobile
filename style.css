@@ -113,7 +113,6 @@
 
 #header-menu .m-button-contents {
     position: absolute;
-    top: 3px;
 }
 
 #header-refresh .m-button-contents {
@@ -128,7 +127,6 @@
 
 #add-new-subscription .m-button-contents {
     position: absolute;
-    right: 9px;
     top: 8px;
 }
 
