@@ -168,74 +168,99 @@ $(document).ready(function () {
 
     // ADDED - Subscribe to new Feeds
     $('#add-new-subscription').off('click').on('click', function () {
-        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
         getCategoriesForNewSubscribe();
         $("#dialog-form").dialog("open");
     });
 
-    // function getFeeds(parent_id, feeds) {
-    //      var data = {
-    //          op: "getFeeds",
-    //          cat_id: parent_id,
-    //          include_nested: true
-    //      };
-    //      var request = apiCall(data);
-    //      request.done(function (response, textStatus, jqXHR) {
-    //          if (typeof response.content.error !== 'undefined') {
-    //              window.alert("Unexpected error received: ".concat(" ", response.content
-    //                  .error));
-    //          } else {
-    //              feeds = response.content;
-    //          }
-    //      });
-    //      request.fail(function (jqXHR, textStatus, errorThrown) {
-    //          // log the error to the console
-    //          console.error("Error occurred while getting feeds: ", errorThrown);
-    //      });
-    //      request.always(function () {
-    //          // reenable the inputs
-    //          // $inputs.prop("disabled", false);
-    //      });
-    //      console.log(feeds);
-    //      return {};
-    //  }
+    function getPrefFeed(depth, parent, htmlparent) {
+        var data = {
+            op: "getFeeds",
+            cat_id: parent.id,
+            include_nested: true
+        };
+        var request = apiCall(data);
+        var feeds;
+        request.done(function (response, textStatus, jqXHR) {
+            if (typeof response.content.error !== 'undefined') {
+                window.alert("Unexpected error received: ".concat(" ", response.content.error));
+            }
+            response.content.sort(function (a, b) {
+                return a.order_id - b.order_id;
+            });
 
-     $('#change-settings').off('click').on('click', function () {
-         var data = {
-             op: "getCategories",
-             enable_nested: true,
-             include_empty: true
-         };
-         var request = apiCall(data);
-         request.done(function (response, textStatus, jqXHR) {
-             if (typeof response.content.error !== 'undefined') {
-                 window.alert("Unexpected error received: ".concat(" ", response.content
-                     .error));
-             } else {
-                 response.content.sort(function (a, b) {
-                     return a.order_id - b.order_id;
-                 });
-                 var feeds;
-                 $.each(response.content, function (index, category) {
-                    //  console.log(category);
-                    //  console.log(getFeeds(category.id, feeds));
-                    //  console.log(feeds);
-                     $('#pref_Feed').append("<option value='" + category.id + "'>" + category.title + "</option>");
-                 });
-             }
-         });
-         request.fail(function (jqXHR, textStatus, errorThrown) {
-             // log the error to the console
-             console.error("Error occurred while getting categories: ", errorThrown);
-         });
-         request.always(function () {
-             // reenable the inputs
-             // $inputs.prop("disabled", false);
-         });
+            $.each(response.content, function (index, category) {
+                // console.log("xParent: " + parent.title + " (" + parent.id + "), Category: " + category.id + ", " + category.title);
+                padding = "&nbsp;&nbsp;&nbsp;".repeat(depth) + "L_";
+                is_cat = (typeof category.is_cat !== 'undefined' && category.is_cat)?"is_cat=true" :"is_cat=false";
+                selected = (pref_Feed == category.id) ? "selected" : "";
+                child = $("<option id='pref_Feed-" + category.id + "' value='" + category.id + "' " + is_cat + " " + selected + "> " + padding + " " + category.title + "</option>");
+                if (typeof category.is_cat !== 'undefined' && category.is_cat) {
+                    getPrefFeed(depth + 1, category, child);
+                }
+                if (selected > '') {
+                    console.log("Selected feed: " + category.title + " (ID: " + category.id + ", Is Cat: " + category.is_cat + ")");
+                }
+                htmlparent.after(child);
+                htmlparent = child;
+            });
+        });
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            // log the error to the console
+            console.error("Error occurred while getting feeds: ", errorThrown);
+        });
+        request.always(function () {
+            // reenable the inputs
+            // $inputs.prop("disabled", false);
+        });
+        return feeds;
+    }
+
+    $('#change-settings').off('click').on('click', function () {
+        console.log("Pref_Feed: " + pref_Feed); 
+        $("#global_ttrssUrl").val(global_ttrssUrl);
+        $("#pref_Feed_limit").val(pref_Feed_limit);
+        var data = {
+            op: "getCategories",
+            enable_nested: true,
+            include_empty: true
+        };
+        var request = apiCall(data);
+        request.done(function (response, textStatus, jqXHR) {
+            if (typeof response.content.error !== 'undefined') {
+                window.alert("Unexpected error received: ".concat(" ", response.content
+                    .error));
+            } else {
+                response.content.sort(function (a, b) {
+                    return a.order_id - b.order_id;
+                });
+
+                $.each(response.content, function (index, category) {
+                    is_cat = "is_cat=true";
+                    selected = (pref_Feed == category.id) ? "selected" : "";
+                    let categorynode = $("<option id='pref_Feed-" + category.id +
+                        "' value='" + category.id + "' " + is_cat + " " + selected + ">" + category.title +
+                        "</option>");
+                    $('#pref_Feed').append(categorynode);
+                    getPrefFeed(1, category, categorynode);
+                    if (selected > '') {
+                        console.log("Selected feed: " + category.title + " (ID: " + category.id + ", Is Cat: " + category.is_cat + ")");
+                    }
+
+                });
+            }
+        });
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            // log the error to the console
+            console.error("Error occurred while getting categories: ", errorThrown);
+        });
+        request.always(function () {
+            // reenable the inputs
+            // $inputs.prop("disabled", false);
+        });
 
 
-         $("#settings-form").dialog("open");
-     });
+        $("#settings-form").dialog("open");
+    });
 
     // View mode feeds menu selection
     $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
@@ -291,6 +316,13 @@ $(document).ready(function () {
             $('#entries').empty();
             getHeadlines();
         });
+
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            // log the error to the console
+            console.error("The following error occured: " +
+                textStatus, errorThrown);
+        });
+
     });
 
     // Logout
@@ -338,7 +370,6 @@ $(document).ready(function () {
 
     load();
 
-    //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
 
     var feedURL = $("#feedURL"),
@@ -421,8 +452,6 @@ $(document).ready(function () {
                         subscribe(multipleFeedSelected, catIDnum);
                     }
 
-
-
                 }
             },
             Cancel: function () {
@@ -434,7 +463,6 @@ $(document).ready(function () {
         }
     });
 
-    //Added for Subscribe to New Feeds
     $("#settings-form").dialog({
         autoOpen: false,
         //height: 300,
@@ -447,6 +475,14 @@ $(document).ready(function () {
         modal: true,
         buttons: {
             "Save": function () {
+                let this_pref_Feed_limit = $("#pref_Feed_limit").val().trim();
+                let this_pref_Feed = $("#pref_Feed option:selected").val();
+                let this_is_cat = $("#pref_Feed option:selected").attr("is_cat");
+                let this_pref_ViewMode = $("#pref_ViewMode").val();
+                let this_pref_OrderBy = $("#pref_OrderBy").val();
+                let this_pref_FeedSort = $("#pref_FeedSort").val();
+
+                console.log("Feed limit: " + this_pref_Feed_limit + ", Feed: " + this_pref_Feed + ", Is Cat: " + this_is_cat + ", View Mode: " + this_pref_ViewMode + ", Order By: " + this_pref_OrderBy + ", Feed Sort: " + this_pref_FeedSort);
                 $(this).dialog("close");
             },
             Cancel: function () {
@@ -463,7 +499,8 @@ $(document).ready(function () {
     $(document).off('keydown', 'k', expandPreviousEntry).on('keydown', 'k', expandPreviousEntry);
     $(document).off('keydown', 'n', jumpNextEntry).on('keydown', 'n', jumpNextEntry);
     $(document).off('keydown', 'p', jumpPreviousEntry).on('keydown', 'p', jumpPreviousEntry);
-    $(document).off('keydown', 'o', toggleCurrentEntryAsExpanded).on('keydown', 'o', toggleCurrentEntryAsExpanded);
+    $(document).off('keydown', 'o', toggleCurrentEntryAsExpanded).on('keydown', 'o',
+        toggleCurrentEntryAsExpanded);
     $(document).off('keydown', 'm', toggleCurrentEntryAsRead).on('keydown', 'm', toggleCurrentEntryAsRead);
 });
 

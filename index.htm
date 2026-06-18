@@ -74,25 +74,20 @@
                     <label for="global_ttrssUrl">TTRSS url</label>
                     <div style="position:relative;">
                         <input type="text" name="global_ttrssUrl" id="global_ttrssUrl"
-                            class="text ui-widget-content ui-corner-all">
+                            class="text ui-widget-content ui-corner-all" disabled>
                     </div>
                     <label for="pref_Feed">Default Feed</label>
                     <select id="pref_Feed" name="pref_Feed">
                         <optgroup label="Please choose from list"></optgroup>
                     </select>
                     <label for="pref_StartInCat">Start in category/feed</label>
-                    <select id="pref_StartInCat" name="pref_StartInCat">
-                        <option value="0">Start showing feeds</option>
-                        <option value="1">Start in category</option>
+                    <select id="pref_StartInCat" name="pref_StartInCat" disabled>
+                        <option value="0">Showing feeds</option>
+                        <option value="1">Showing category</option>
                     </select>
-
-
-                    <select id="pref_Feed" name="pref_Feed">
-                        <optgroup label="Please choose from list"></optgroup>
-                    </select>
-                    <label for="pref_Feed_Limit">Feed Limit per load</label>
+                    <label for="pref_Feed_limit">Feed Limit per load</label>
                     <div style="position:relative;">
-                        <input type="text" name="pref_Feed_Limit" id="pref_Feed_Limit"
+                        <input type="text" name="pref_Feed_limit" id="pref_Feed_limit"
                             class="text ui-widget-content ui-corner-all">
                     </div>
                     <label for="pref_ViewMode">View Mode</label>
@@ -111,11 +106,6 @@
                     <select id="pref_FeedSort" name="pref_FeedSort">
                         <option value="0">Do not sort feeds</option>
                         <option value="alpha">Sort A-Z</option>
-                    </select>
-                    <label for="pref_StartInCat">Start in category</label>
-                    <select id="pref_StartInCat" name="pref_StartInCat">
-                        <option value="0">Start showing feeds</option>
-                        <option value="1">Start in category</option>
                     </select>
                 </fieldset>
             </form>
