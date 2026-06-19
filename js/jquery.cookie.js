@@ -6,9 +6,9 @@
  * Released under the MIT license
  */
 (function (factory) {
-    if (typeof define === 'function' && define.amd) { // eslint-disable-line no-undef
+    if (typeof define === 'function' && define.amd) {
         // AMD. Register as anonymous module.
-        define(['jquery'], factory); // eslint-disable-line no-undef
+        define(['jquery'], factory);
     } else {
         // Browser globals.
         factory(jQuery);
@@ -32,9 +32,7 @@
         }
         try {
             return config.json ? JSON.parse(s) : s;
-        } catch (er) {
-            console.log(er);
-        }
+        } catch (er) {}
     }
 
     var config = $.cookie = function (key, value, options) {
