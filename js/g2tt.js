@@ -1,4 +1,11 @@
-pref_IsCat = false;
+var pref_IsCat = false;
+var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
+var pref_Feed;
+var pref_ViewMode;
+var pref_OrderBy
+var pref_FeedSort
+var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in config
+var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in config
 
 if (typeof ($.cookie('g2tt_feed')) !== 'undefined') {
     pref_Feed = $.cookie('g2tt_feed');
@@ -9,11 +16,6 @@ if (typeof ($.cookie('g2tt_isCat')) !== 'undefined') {
 if (typeof ($.cookie('g2tt_viewMode')) !== 'undefined') {
     pref_ViewMode = $.cookie('g2tt_viewMode');
 }
-/* Not used
-if (typeof ($.cookie('g2tt_textType')) !== 'undefined') {
-    pref_textType = $.cookie('g2tt_textType');
-}
-*/
 if (typeof ($.cookie('g2tt_orderBy')) !== 'undefined') {
     pref_OrderBy = $.cookie('g2tt_orderBy');
 }
@@ -21,17 +23,24 @@ if (typeof ($.cookie('g2tt_feedSort')) !== 'undefined') {
     pref_FeedSort = $.cookie('g2tt_feedSort');
 }
 
-global_backCat = []; // Feed view always starts with all items
-global_ids = []; // List of all article IDs currently displayed
-global_parentId = '-4';
+console.log("global_ttrssUrl: " + global_ttrssUrl);
+console.log("pref_Feed = " + pref_Feed);
+console.log("pref_ViewMode = " + pref_ViewMode);
+console.log("pref_OrderBy = " + pref_OrderBy);
+console.log("pref_FeedSort = " + pref_FeedSort);
+console.log("pref_StartInCat = " + pref_StartInCat);
+console.log("pref_IsCat = " + pref_IsCat);
+console.log("pref_Feed_limit = " + pref_Feed_limit);
+
+var global_backCat = []; // Feed view always starts with all items
+var global_ids = []; // List of all article IDs currently displayed
+var global_parentId = '-4';
 
 $(document).ready(function () {
-
     $('html').off('click').on('click', function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
         $('#menuUp').addClass('hidden');
-
         $('.g2tt-menu').hide();
     });
 
@@ -40,24 +49,24 @@ $(document).ready(function () {
             request.abort();
         }
 
-        var $loginForm = $(this);
-        var $inputs = $loginForm.find("input");
-        var values = {};
-        $inputs.each(function () {
+        let loginForm = $(this);
+        let inputs = loginForm.find("input");
+        let values = {};
+        inputs.each(function () {
             values[this.name] = $(this).val();
         });
 
-        var data = {
+        let data = {
             'op': 'login',
             'user': values.Username,
             'password': values.Passwd,
         };
 
-        $inputs.prop("disabled", true);
+        inputs.prop("disabled", true);
 
         var request = apiCall(data);
 
-        request.done(function (response, textStatus, jqXHR) {
+        request.done(function (response, _textStatus, _jqXHR) {
             //console.log(response.content);
             if (response.content.error == 'LOGIN_ERROR') {
                 window.alert("Username and/or Password were incorrect!");
@@ -93,7 +102,7 @@ $(document).ready(function () {
         // if the request failed or succeeded
         request.always(function () {
             // reenable the inputs
-            $inputs.prop("disabled", false);
+            inputs.prop("disabled", false);
         });
 
         // prevent default posting of form
@@ -104,7 +113,7 @@ $(document).ready(function () {
 
     // Show more items
     $('#load-more-items').off('click').on('click', function () {
-        var last;
+        let last;
         if (pref_OrderBy == "date_reverse") {
             last = $('.entry-row').last().attr('id');
         } else {
@@ -219,15 +228,15 @@ $(document).ready(function () {
         $('.load-more-message').html('Marking as read...');
         //remove those that need to be kept unread
         keepUnread.removeFromArray(global_ids);
-        var data = {
+        let data = {
             op: "updateArticle",
             article_ids: global_ids.join(','),
             mode: 0,
             field: 2
         };
-        var request = apiCall(data);
+        let request = apiCall(data);
 
-        request.done(function (response) {
+        request.done(function (_response) {
             $('#entries').empty();
             getHeadlines();
         });
@@ -235,16 +244,15 @@ $(document).ready(function () {
 
     // Logout
     $('#menu-logout').off('click').on('click', function () {
-        var data = {
+        let data = {
             op: "logout"
         };
-        var request = apiCall(data);
+        let request = apiCall(data);
 
-        request.done(function (response) {
+        request.done(function (_response) {
             $.removeCookie('g2tt_feed');
             $.removeCookie('g2tt_isCat');
             $.removeCookie('g2tt_viewMode');
-            // Not used            $.removeCookie('g2tt_textType');
             $.removeCookie('g2tt_orderBy');
             $.removeCookie('g2tt_sid');
             location.reload(true);
@@ -282,7 +290,7 @@ $(document).ready(function () {
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
 
-    var feedURL = $("#feedURL"),
+    let feedURL = $("#feedURL"),
         //password = $( "#password" ),
         allFields = $([]).add(feedURL),
         tips = $(".validateTips");
@@ -312,7 +320,7 @@ $(document).ready(function () {
     }
 
     function checkRegexp(o, regexp, n) {
-        var makeOvalidHttp = o.val().trim();
+        let makeOvalidHttp = o.val().trim();
         console.log(firstToUpperCase(makeOvalidHttp));
         if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
             o.addClass("ui-state-error");
@@ -336,22 +344,22 @@ $(document).ready(function () {
         modal: true,
         buttons: {
             "Subscribe": function () {
-                var bValid = true;
+                let bValid = true;
                 allFields.removeClass("ui-state-error");
                 tips.addClass("hidden");
 
                 bValid = bValid && checkLength(feedURL, "URL", 5, 1000);
                 bValid = bValid && checkRegexp(feedURL,
-                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/,
+                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?$/,
                     "URL must be a valid URL. Make sure the URL is correct and re-submit");
 
                 // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
 
                 if (bValid) {
-                    var catIDnum = $("#catItems option:selected").val();
-                    var feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
+                    let catIDnum = $("#catItems option:selected").val();
+                    let feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
 
-                    var multipleFeedSelected = $("#feedsAvail option:selected").val();
+                    let multipleFeedSelected = $("#feedsAvail option:selected").val();
                     //console.log('When subscribe is chosen again ' + multipleFeedSelected);
 
                     if (multipleFeedSelected == null) {
@@ -389,27 +397,27 @@ $(document).ready(function () {
 
 
 function refreshCats() {
-    var data = {
+    let data = {
         op: "getCounters",
         output_mode: "fc"
     };
-    var request = apiCall(data);
+    let request = apiCall(data);
 
     request.done(function (response) {
-        var counters = response.content;
-        var cats = [];
-        var feeds = [];
+        let counters = response.content;
+        let cats = [];
+        let feeds = [];
 
-        for (var i = 0; i < counters.length; i++) {
+        for (let i = 0; i < counters.length; i++) {
             if (counters[i].kind == 'cat') {
                 cats[counters[i].id] = (counters[i]);
             } else {
                 feeds[counters[i].id] = (counters[i]);
             }
         }
-        $('.sub-row').each(function (i, j) {
-            var id = $(this).attr('id').substring(10);
-            var is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
+        $('.sub-row').each(function (_i, _j) {
+            let id = $(this).attr('id').substring(10);
+            let is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
             if (id == "-4" || id == "-1") {
                 $(this).find('.item-count-value').html(feeds['global-unread'].counter);
@@ -448,7 +456,7 @@ function refreshCats() {
 }
 
 function showEmpty() {
-    var visible = $('#sub-' + global_parentId).children(':visible');
+    let visible = $('#sub-' + global_parentId).children(':visible');
     if (visible.length == 0) {
         $('#subscriptions').removeClass('show-unread').addClass('show-all');
     }
@@ -487,7 +495,7 @@ function apiCall(data, asynch) {
     if (typeof (asynch) === 'undefined') asynch = true;
     data.sid = $.cookie('g2tt_sid');
     data = JSON.stringify(data);
-    var request = $.ajax({
+    let request = $.ajax({
         contentType: "application/json",
         url: global_ttrssUrl + "/api/",
         type: "post",
@@ -506,9 +514,9 @@ function getHeadlines(since) {
     if (typeof (since) === 'undefined') since = 0;
 
     //Anytime we get headlines, check if there is a search filter
-    var search = $('#search-input').val();
+    let search = $('#search-input').val();
 
-    var data = {
+    let data = {
         op: "getHeadlines",
         feed_id: pref_Feed,
         limit: pref_Feed_limit,
@@ -526,9 +534,9 @@ function getHeadlines(since) {
         data.skip = since;
     }
     data.search = search;
-    var headlines = apiCall(data);
+    let headlines = apiCall(data);
 
-    headlines.done(function (response, textStatus, jqXHR) {
+    headlines.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
@@ -543,23 +551,23 @@ function getHeadlines(since) {
         }
         $.each(headlines, function (index, headline) {
             global_ids.push(headline.id);
-            var email_subject = headline.title;
-            var email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
+            let email_subject = headline.title;
+            let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
                 headline.title + '</a></h2>' + headline.content;
 
-            var $content = $(headline.content);
-            var alt = null;
-            if ($content.length == 1 && $content.is("img") && (alt = ($content.attr("title") || $content
+            let content = $(headline.content);
+            let alt;
+            if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
                     .attr("alt")))) {
-                $content = $("<div>" + $content[0].outerHTML + "<div>" + alt + "</div></div>");
+                content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
             } else {
-                var $container = $("<div></div>");
-                $container.append($content);
-                $content = $container;
+                let container = $("<div></div>");
+                container.append(content);
+                content = container;
             }
 
-            var date = new Date(headline.updated * 1000);
-            var entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
+            let date = new Date(headline.updated * 1000);
+            let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
                     " read" : "") + "'> \
             <div class='entry-container'> \
             <div class='entry-top-bar'> \
@@ -592,7 +600,7 @@ function getHeadlines(since) {
             <div class='entry'> \
             <div id='entry-contents' class='entry whisper'> \
             <div class='entry-annotations'></div> \
-            <div class='entry-contents-inner'>" + $content[0].outerHTML + "</div> \
+            <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
             </div> \
             <div class='entry-footer'> \
             <div class='entry-actions'> \
@@ -636,29 +644,15 @@ function getHeadlines(since) {
             toggleEntryAsRead($(this).closest('.entry-row'));
         });
 
-        /*
-        // Mark (star) entry
-        $('.star').off('click').on('click', function () {
-            var data = {
-                op: "updateArticle",
-                article_ids: $(this).closest('.entry-row').attr('id'),
-                mode: 2,
-                field: 0
-            };
-            var response = apiCall(data);
-            $(this).toggleClass('item-star').toggleClass('item-star-active');
-        });
-        */
-
         // Mark NewFont (star) entry
         $('.favStarDiv').off('click').on('click', function () {
-            var data = {
+            let data = {
                 op: "updateArticle",
                 article_ids: $(this).closest('.entry-row').attr('id'),
                 mode: 2,
                 field: 0
             };
-            var response = apiCall(data);
+            let _response = apiCall(data);
 
             $(this).next().toggleClass('starNotActive').toggleClass('starActive');
             //console.log(newstar);
@@ -690,14 +684,14 @@ function getTopCategories() {
 
         $('#subscriptions-list').append("<div id='sub--4'></div>");
 
-        var data = {
+        let data = {
             op: "getUnread"
         };
-        var request = apiCall(data);
-        request.done(function (response, textStatus, jqXHR) {
-            unread = response.content.unread;
+        let request = apiCall(data);
+        request.done(function (response, _textStatus, _jqXHR) {
+            let unread = response.content.unread;
 
-            var entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
+            let entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
                 " no-unread-sub-row") + "' id='tree-item--4'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder-open fa-lg'></i> </div> \
@@ -722,14 +716,14 @@ function getTopCategories() {
             op: "getCategories",
             enable_nested: true
         };
-        var cats = apiCall(data);
+        let cats = apiCall(data);
 
-        cats.done(function (response, textStatus, jqXHR) {
+        cats.done(function (response, _textStatus, _jqXHR) {
             cats = response.content;
 
             cats.sort(function (a, b) {
-                var db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
-                var alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
+                let db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
+                let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
                 if (pref_FeedSort == '1') {
                     return alpha_order;
                 } else {
@@ -737,7 +731,7 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                var entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ?
+                let entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ?
                     " unread-sub" : " no-unread-sub-row") + " nested-sub' id='tree-item-" + cat.id + "'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder fa-lg'></i></div> \
@@ -789,17 +783,17 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
 
-        var data = {
+        let data = {
             op: "getFeeds",
             cat_id: parent_id,
             include_nested: true
         };
-        var feeds = apiCall(data);
+        let feeds = apiCall(data);
 
-        feeds.done(function (response, textStatus, jqXHR) {
+        feeds.done(function (response, _textStatus, _jqXHR) {
             feeds = response.content;
             feeds.sort(function (a, b) {
-                var alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
+                let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
                 if (pref_FeedSort == '1') {
                     return alpha_order;
                 } else {
@@ -808,7 +802,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
             $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
 
-            var entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ?
+            let entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ?
                 " unread-sub" : " no-unread-sub-row") + "' id='tree-item-" + parent_id + "'> \
         <div class='icon-cell'> \
         <i class='fa fa-folder-open fa-lg'></i> </div> \
@@ -821,7 +815,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             $('#sub-' + parent_id).prepend(entry);
 
             $.each(feeds, function (index, feed) {
-                var entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" :
+                entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" :
                         " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") +
                     " nested-sub' id='tree-item-" + feed.id + "'> \
         <div class='icon-cell'> \
@@ -867,7 +861,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 }
 
 function getTitle() {
-    var data = {};
+    let data = {};
     if (pref_IsCat == "true") {
         data.op = "getCategories";
     } else {
@@ -875,15 +869,15 @@ function getTitle() {
         data.cat_id = "-4";
     }
 
-    var request = apiCall(data);
+    let request = apiCall(data);
 
-    request.done(function (response, textStatus, jqXHR) {
+    request.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
             $.removeCookie('g2tt_sid');
             getData();
             return;
         }
-        items = response.content;
+        let items = response.content;
 
         $.each(items, function (index, item) {
             if (item.id == pref_Feed) {
@@ -919,8 +913,28 @@ function getData() {
 }
 
 var keepUnread = new function () {
-    var COOKIE_NAME = 'g2tt_keepUnread_ids';
+    let COOKIE_NAME = 'g2tt_keepUnread_ids';
     this.keepUnreadIdMap = undefined;
+
+    let getIdMap = function () {
+        if (undefined == this.keepUnreadIdMap) {
+            //attempt to load from cookie
+            this.keepUnreadIdMap = [];
+            let savedKeepUnread_ids;
+            if (typeof ($.cookie(COOKIE_NAME)) !== 'undefined') {
+                savedKeepUnread_ids = $.cookie(COOKIE_NAME);
+            }
+
+            if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
+                let idList = savedKeepUnread_ids.split(',');
+                for (let i = 0; i < idList.length; i++) {
+                    this.keepUnreadIdMap[idList[i]] = true;
+                }
+            }
+        }
+        return this.keepUnreadIdMap;
+    };
+
 
     this.hasId = function (ids, articleId) {
         return true == getIdMap[articleId];
@@ -944,25 +958,6 @@ var keepUnread = new function () {
             }
         }
         this.save();
-    };
-
-    var getIdMap = function () {
-        if (undefined == this.keepUnreadIdMap) {
-            //attempt to load from cookie
-            this.keepUnreadIdMap = [];
-            var savedKeepUnread_ids;
-            if (typeof ($.cookie(COOKIE_NAME)) !== 'undefined') {
-                savedKeepUnread_ids = $.cookie(COOKIE_NAME);
-            }
-
-            if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
-                var idList = savedKeepUnread_ids.split(',');
-                for (var i = 0; i < idList.length; i++) {
-                    this.keepUnreadIdMap[idList[i]] = true;
-                }
-            }
-        }
-        return this.keepUnreadIdMap;
     };
 
     /*given array of ids, remove all that need to be kept unread*/
@@ -993,128 +988,30 @@ var keepUnread = new function () {
 //ADDED for subscribing to new feeds
 
 function subscribe(feedurl, categoryID) {
-
-
-    var subscribeResult = "";
-    var data = {
+    let data = {
         op: "subscribeToFeed",
         feed_url: feedurl,
         category_id: categoryID
     };
-    //data.sid = session_id;
     $('#indicator').removeClass('hidden');
-    var request = apiCall(data);
+    let request = apiCall(data);
 
+    request.done(function (response, _textStatus, _jqXHR) {
+        let content = response.content;
+        let status = content.status;
+        let _message = status.message;
+        let statusCode = status.code;
+        //let feeds = [];
+        let feeds = status.feeds;
+        let feedUrls = [];
+        let feedUrlsTitles = [];
 
-    //    return request;
-    //var request = apiCall(data);
-
-    request.done(function (response, textStatus, jqXHR) {
-        var content = response.content;
-        var message = response.content.status.message;
-        var status = response.content.status;
-        var statusCode = response.content.status.code;
-        //var feeds = [];
-        var feeds = response.content.status.feeds;
-        var feedUrls = [];
-        var feedUrlsTitles = [];
-
-        for (var key in feeds) {
-            if (feeds.hasOwnProperty(key)) {
-
+        for (let key in feeds) {
+            if (Object.hasOwn(feeds, "key")) {
                 feedUrls.push(key);
                 feedUrlsTitles.push(feeds[key]);
             }
         }
-
-
-        //console.log(statusCode);
-        switch (statusCode) {
-            case 0:
-                //0 - OK, Feed already exists
-                //var status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
-                $('#indicator').addClass('hidden');
-                window.alert('Feed already exists in your feed list.');
-
-                //uncomment next line if you'd like it to close pop-up when they press OK.
-                //$( "#dialog-form" ).dialog( "close" );
-
-                break;
-            case 1:
-                //1 - OK, Feed added
-                $('#indicator').addClass('hidden');
-                var tips = $(".validateTips");
-                tips.text('Your Feed was Added')
-                    .addClass("ui-state-highlight").removeClass("hidden");
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                setTimeout(function () {
-                    //tips.removeClass( "ui-state-highlight", 1500 );
-
-                    $('#feedURL').val("");
-                }, 100);
-
-                //uncomment next line if you'd like it to close pop-up when subscription is added.
-                //$( "#dialog-form" ).dialog( "close" );
-                break;
-            case 2:
-                //2 - Invalid URL
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                window.alert('Invalid URL submitted. Please check URL and try again.');
-
-                break;
-            case 3:
-                //3 - URL content is HTML, no feeds available
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                window.alert(
-                    'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
-                );
-
-                break;
-            case 4:
-                //4 - URL content is HTML which contains multiple feeds.
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').removeClass('hidden');
-                $('#multipleFeedsSelect').removeClass('hidden');
-                console.log(feeds);
-                //$('#feedsAvail').append( $('<option></option>').val('').html('Choose available feed') );
-
-                $.each(feeds, function (url, title) {
-                    $('#feedsAvail').append($('<option></option>').val(url).html(title));
-
-                });
-                console.log('Populate Multiple FeedsNew');
-                break;
-            case 5:
-                //5 - Couldn't download the URL content.
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                window.alert(
-                    'Unable to download the URL content. Please check your internet connection or the URL and try again.'
-                );
-
-                break;
-            case 6:
-                //6 - Content is an invalid XML.
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                window.alert(
-                    'Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.'
-                );
-
-                break;
-        }
-
-
-
-
-        return response;
 
         /**
          * @return array (code => Status code, message => error message if available)
@@ -1129,60 +1026,96 @@ function subscribe(feedurl, categoryID) {
          *                 5 - Couldn't download the URL content.
          *                 6 - Content is an invalid XML.
          */
+        switch (statusCode) {
+            case 0:{
+                //0 - OK, Feed already exists
+                //let status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
+                $('#indicator').addClass('hidden');
+                window.alert('Feed already exists in your feed list.');
 
+                //uncomment next line if you'd like it to close pop-up when they press OK.
+                //$( "#dialog-form" ).dialog( "close" );
 
-    });
-    //$('#indicator').addClass('hidden');
+                break;}
+            case 1:{
+                //1 - OK, Feed added
+                $('#indicator').addClass('hidden');
+                let tips = $(".validateTips");
+                tips.text('Your Feed was Added')
+                    .addClass("ui-state-highlight").removeClass("hidden");
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                setTimeout(function () {
+                    //tips.removeClass( "ui-state-highlight", 1500 );
 
-}
+                    $('#feedURL').val("");
+                }, 100);
+                break;}
+            case 2:{
+                //2 - Invalid URL
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert('Invalid URL submitted. Please check URL and try again.');
+                break;}
+            case 3:{
+                //3 - URL content is HTML, no feeds available
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
+                );}
+                break;
+            case 4:{
+                //4 - URL content is HTML which contains multiple feeds.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').removeClass('hidden');
+                $('#multipleFeedsSelect').removeClass('hidden');
+                $.each(feeds, function (url, title) {
+                    $('#feedsAvail').append($('<option></option>').val(url).html(title));
 
-
-//haven't implemented yet.
-function unSubscribe(url, session_id, feed_id) {
-    var subscribeResult = "";
-    var data = {
-        op: "unsubscribeFeed",
-        sid: session_id,
-        feed_id: feed_id
-    };
-
-    $.ajax({
-        type: "POST",
-        url: url + "/api/",
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        dataType: "json",
-        async: false,
-        success: function (data) {
-            subscribeResult = data.content.status;
-
-        },
-        error: function () {
-            showAlert("Network Error, Please Check Network", "ttRss");
+                });
+                break;}
+            case 5:{
+                //5 - Couldn't download the URL content.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'Unable to download the URL content. Please check your internet connection or the URL and try again.'
+                );
+                break;}
+            case 6:{
+                //6 - Content is an invalid XML.
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.'
+                );
+                break;}
         }
+        return response;
     });
-    return subscribeResult;
 }
 
 function getCategoriesForNewSubscribe() {
-    var data = {
+    let data = {
         op: "getFeedTree",
         include_empty: true,
         enable_nested: false
     };
-    var catsForNew = apiCall(data);
+    let catsForNew = apiCall(data);
 
-    catsForNew.done(function (response, textStatus, jqXHR) {
+    catsForNew.done(function (response, _textStatus, _jqXHR) {
         catsForNew = response.content;
-        // console.log(catsForNew);
-
         $('#catItems').find('option').remove();
         $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
 
         $.each(catsForNew, function (index, cat) {
             $.each(cat.items, function (index, catObject) {
-                //console.log(index);
-                var catObjectIds = [];
+                let catObjectIds = [];
                 if (catObject.bare_id != -1 && catObject.bare_id != 0) {
                     catObjectIds.push({
                         "parent_id": catObject.bare_id,
@@ -1190,143 +1123,113 @@ function getCategoriesForNewSubscribe() {
                         "Name": catObject.name
                     });
                 }
-                //	console.log(catObjectIds);
-                //	console.log(catObject);
                 $.each(catObject.items, function (index, subcatObject) {
-                    var subcatObjectIds = [];
-
                     if (subcatObject.type == "category") {
-                        //subcatObjectIds.push({"parent_id":catObject.bare_id,"child_id":subcatObject.bare_id,"Name":subcatObject.name});
                         catObjectIds.push({
                             "parent_id": catObject.bare_id,
                             "child_id": subcatObject.bare_id,
                             "Name": subcatObject.name
                         });
-                        //console.log(subcatObjectIds.Name);
-                        //console.log(catObject,subcatObject);
-
                     }
-                    //console.log(subcatObject);
                 });
 
                 //put Uncategorized first
-
-
                 $.each(catObjectIds, function (index, objects) {
-
-                    $.each(objects, function (parent_id, child_id, Name) {
-                        //	console.log(parent_id);
-                        //$('#catItems').append( $('<option></option>').val(val).html(text) )
-                    });
                     if (objects.parent_id == objects.child_id) {
-
                         $('#catItems').append($('<option></option>').val(objects
                             .parent_id).html(objects.Name));
                     } else {
-                        var newOptionCat = $('#catItems').append($('<option></option>')
+                        let _newOptionCat = $('#catItems').append($('<option></option>')
                             .val(objects.child_id).html('&lfloor; ' + objects.Name));
-                        //newOptionCat.prepend('&lfloor;');
                     }
                 });
 
             });
-
         });
-
-
-
     });
 
 }
 
-function expandEntry($entryRow) {
-    if ($entryRow.hasClass('expanded')) {
+function expandEntry(entryRow) {
+    if (entryRow.hasClass('expanded')) {
         return;
     }
 
     $('.expanded').removeClass('expanded');
-    $entryRow.addClass('expanded');
-    $('html,body').scrollTop($entryRow.offset().top);
+    entryRow.addClass('expanded');
+    $('html,body').scrollTop(entryRow.offset().top);
 
     $('.current-entry').removeClass('current-entry');
-    $entryRow.addClass('current-entry');
+    entryRow.addClass('current-entry');
 
     // Mark as read
-    if (!$entryRow.hasClass('read')) {
-        $entryRow.addClass('read');
-        var data = {
+    if (!entryRow.hasClass('read')) {
+        entryRow.addClass('read');
+        let data = {
             op: "updateArticle",
-            article_ids: $entryRow.attr('id'),
+            article_ids: entryRow.attr('id'),
             mode: 0,
             field: 2
         };
-        var response = apiCall(data);
+        let _response = apiCall(data);
     }
 }
 
-function collapseEntry($entryRow) {
-    $entryRow.removeClass('expanded');
+function collapseEntry(entryRow) {
+    entryRow.removeClass('expanded');
 }
 
-function toggleEntryAsExpanded($entryRow) {
-    if ($entryRow.hasClass('expanded')) {
-        collapseEntry($entryRow);
-
+function toggleEntryAsExpanded(entryRow) {
+    if (entryRow.hasClass('expanded')) {
+        collapseEntry(entryRow);
     } else {
-        expandEntry($entryRow);
+        expandEntry(entryRow);
     }
 }
 
-function toggleCurrentEntryAsExpanded($entryRow) {
+function toggleCurrentEntryAsExpanded(_entryRow) {
     if ($('.current-entry').length) {
         toggleEntryAsExpanded($('.current-entry'));
     }
 }
 
 function expandNextEntry() {
+    let nextEntry;
     if (!$('.current-entry').length) {
-        $nextEntry = $('.entry-row').eq(0);
-
+        nextEntry = $('.entry-row').eq(0);
     } else {
-        $nextEntry = $('.current-entry').next();
+        nextEntry = $('.current-entry').next();
     }
-
-    if (!$nextEntry.is('.entry-row')) {
+    if (!nextEntry.is('.entry-row')) {
         return;
     }
-
-    expandEntry($nextEntry);
+    expandEntry(nextEntry);
 }
 
 function expandPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-
-    $previous = $('.current-entry').prev();
-
-    if (!$previous.is('.entry-row')) {
+    let previous = $('.current-entry').prev();
+    if (!previous.is('.entry-row')) {
         return;
     }
-
-    expandEntry($previous);
+    expandEntry(previous);
 }
 
 function jumpNextEntry() {
+    let nextEntry;
     if (!$('.current-entry').length) {
-        $nextEntry = $('.entry-row').eq(0);
+        nextEntry = $('.entry-row').eq(0);
 
     } else {
-        $nextEntry = $('.current-entry').next();
+        nextEntry = $('.current-entry').next();
     }
-
-    if (!$nextEntry.is('.entry-row')) {
+    if (!nextEntry.is('.entry-row')) {
         return;
     }
-
     $('.current-entry').removeClass('current-entry');
-    $nextEntry.addClass('current-entry');
-
+    nextEntry.addClass('current-entry');
     if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView(false);
     }
@@ -1336,50 +1239,47 @@ function jumpPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-
-    $previous = $('.current-entry').prev();
-
-    if (!$previous.is('.entry-row')) {
+    let previous = $('.current-entry').prev();
+    if (!previous.is('.entry-row')) {
         return;
     }
-
     $('.current-entry').removeClass('current-entry');
-    $previous.addClass('current-entry');
+    previous.addClass('current-entry');
 
     if (!isElementInViewport($('.current-entry'))) {
         $('.current-entry')[0].scrollIntoView();
     }
 }
 
-function toggleEntryAsRead($entryRow) {
-    $entryRow.toggleClass('read');
+function toggleEntryAsRead(entryRow) {
+    entryRow.toggleClass('read');
 
-    if (!$entryRow.hasClass('read')) {
-        $entryRow.find(".read-state").html("&nbsp;Mark read");
-        for (var i = 0; i < global_ids.length; i++) {
-            var articleId = $entryRow.attr('id');
+    if (!entryRow.hasClass('read')) {
+        entryRow.find(".read-state").html("&nbsp;Mark read");
+        for (let i = 0; i < global_ids.length; i++) {
+            let articleId = entryRow.attr('id');
             if (global_ids[i] == articleId) {
                 global_ids.splice(i, 1);
                 keepUnread.addId(articleId);
             }
         }
     } else {
-        $entryRow.find(".read-state").html("&nbsp;Mark unread");
-        var articleId = $entryRow.attr('id');
+        entryRow.find(".read-state").html("&nbsp;Mark unread");
+        let articleId = entryRow.attr('id');
         global_ids.push(articleId);
         keepUnread.removeId(articleId);
     }
 
-    var data = {
+    let data = {
         op: "updateArticle",
-        article_ids: $entryRow.attr('id'),
+        article_ids: entryRow.attr('id'),
         mode: 2,
         field: 2
     };
-    var response = apiCall(data);
+    let _response = apiCall(data);
 }
 
-function toggleCurrentEntryAsRead($entryRow) {
+function toggleCurrentEntryAsRead(_entryRow) {
     if ($('.current-entry').length) {
         toggleEntryAsRead($('.current-entry'));
     }
@@ -1392,7 +1292,7 @@ function isElementInViewport(el) {
         el = el[0];
     }
 
-    var rect = el.getBoundingClientRect();
+    let rect = el.getBoundingClientRect();
 
     return (
         rect.top >= 0 &&

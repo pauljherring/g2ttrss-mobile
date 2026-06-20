@@ -1627,7 +1627,7 @@ input[type=submit].g-button {
     display: inline-block;
     margin: -3px 0 0;
     opacity: .55;
-    filter: alpha(opacity=55);
+    filter: opacity(55);
     vertical-align: middle;
     pointer-events: none;
 }
@@ -1638,17 +1638,17 @@ input[type=submit].g-button {
 
 .g-button:hover img {
     opacity: .72;
-    filter: alpha(opacity=72);
+    filter: opacity(72);
 }
 
 .g-button:active img {
     opacity: 1;
-    filter: alpha(opacity=100);
+    filter: opacity(100);
 }
 
 .g-button.disabled img {
     opacity: .5;
-    filter: alpha(opacity=50);
+    filter: opacity(50);
 }
 
 .g-button.disabled,
@@ -1666,7 +1666,7 @@ input[type=submit].g-button {
 input[type=submit][disabled].g-button {
     background-color: transparent;
     opacity: .5;
-    filter: alpha(opacity=50);
+    filter: opacity(50);
     cursor: default;
     pointer-events: none;
 }
