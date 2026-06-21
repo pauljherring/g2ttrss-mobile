@@ -606,7 +606,9 @@ function getHeadlines(since) {
             <div class='entry-footer'> \
             <div class='entry-actions'> \
             <div class='entry-actions-primary'> \
-            <i class='fa fa-book read-state link unselectable' title='Toggle read'>&nbsp;Mark unread</i> \
+            <span class='read-state link unselectable' title='Toggle read'>\
+            <i class='fa fa-book-open'></i>&nbsp;Mark unread\
+            </span> \
             <span class='link unselectable' title='Sent by mail'> \
             <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
             <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
@@ -1257,7 +1259,7 @@ function toggleEntryAsRead(entryRow) {
     entryRow.toggleClass('read');
 
     if (!entryRow.hasClass('read')) {
-        entryRow.find(".read-state").html("&nbsp;Mark read");
+        entryRow.find(".read-state").html("<i class='fa fa-book'></i>&nbsp;Mark read");
         for (let i = 0; i < global_ids.length; i++) {
             let articleId = entryRow.attr('id');
             if (global_ids[i] == articleId) {
@@ -1266,7 +1268,7 @@ function toggleEntryAsRead(entryRow) {
             }
         }
     } else {
-        entryRow.find(".read-state").html("&nbsp;Mark unread");
+        entryRow.find(".read-state").html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
         let articleId = entryRow.attr('id');
         global_ids.push(articleId);
         keepUnread.removeId(articleId);
