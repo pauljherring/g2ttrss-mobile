@@ -383,15 +383,16 @@ $(document).ready(function () {
         }
     });
 
-    //Added for Subscribe to New Feeds
-
-    // Hotkeys
-    $(document).off('keydown', 'j', expandNextEntry).on('keydown', 'j', expandNextEntry);
-    $(document).off('keydown', 'k', expandPreviousEntry).on('keydown', 'k', expandPreviousEntry);
-    $(document).off('keydown', 'n', jumpNextEntry).on('keydown', 'n', jumpNextEntry);
-    $(document).off('keydown', 'p', jumpPreviousEntry).on('keydown', 'p', jumpPreviousEntry);
-    $(document).off('keydown', 'o', toggleCurrentEntryAsExpanded).on('keydown', 'o', toggleCurrentEntryAsExpanded);
-    $(document).off('keydown', 'm', toggleCurrentEntryAsRead).on('keydown', 'm', toggleCurrentEntryAsRead);
+    $(document).on('keypress', function(event) {
+        switch (String.fromCharCode(event.which).toLowerCase()) {
+            case 'j': expandNextEntry(); break;
+            case 'k': expandPreviousEntry(); break;
+            case 'n': jumpNextEntry(); break;
+            case 'p': jumpPreviousEntry(); break;
+            case 'o': toggleCurrentEntryAsExpanded(); break;
+            case 'm': toggleCurrentEntryAsRead(); break;
+        }
+    });
 });
 
 
