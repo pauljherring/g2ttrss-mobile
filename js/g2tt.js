@@ -822,7 +822,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                         " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") +
                     " nested-sub' id='tree-item-" + feed.id + "'> \
         <div class='icon-cell'> \
-        <i class='fa " + ((feed.is_cat) ? "fa-folder fa-lg" : "fa-rss-square") +
+        <i class='fa " + ((feed.is_cat) ? "fa-folder fa-lg" : "fa-rss-square fa-lg") +
                     "'></i> </div> \
         <div class='text sub-item'>" + feed.title + "</div> \
         <div class='item-count larger whisper'> \
