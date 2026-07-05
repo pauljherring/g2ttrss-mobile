@@ -40,13 +40,25 @@ var global_ids = []; // List of all article IDs currently displayed
 var global_parentId = '-4';
 
 $(document).ready(function () {
+    bindGlobalUi();
+    bindLoginForm();
+    bindNavigation();
+    bindSearchUi();
+    bindSubscriptionUi();
+    bindKeyboardShortcuts();
+    load();
+});
+
+function bindGlobalUi() {
     $('html').off('click').on('click', function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
         $('#menuUp').addClass('hidden');
         $('.g2tt-menu').hide();
     });
+}
 
+function bindLoginForm() {
     $("#login").on('submit', function (event) {
         if (request) {
             request.abort();
@@ -109,7 +121,9 @@ $(document).ready(function () {
         // prevent default posting of form
         event.preventDefault();
     });
+}
 
+function bindNavigation() {
     // Show more items
     $('#load-more-items').off('click').on('click', function () {
         let last;
@@ -182,39 +196,6 @@ $(document).ready(function () {
         showFeeds();
     });
 
-    // ADDED - Subscribe to new Feeds
-    $('#add-new-subscription').off('click').on('click', function () {
-        getCategoriesForNewSubscribe();
-        $("#dialog-form").dialog("open");
-    });
-
-    // View mode feeds menu selection
-    $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
-    $('#subscriptions').addClass('show-' + pref_ViewMode);
-    $('.feedsItem').off('click').on('click', function () {
-        console.log('feedsItem');
-        pref_ViewMode = $(this).attr('id').substring(6);
-        setCookie('g2tt_viewMode', pref_ViewMode);
-        $('.feedsItem').removeClass('g2tt-option-selected');
-        $(this).addClass('g2tt-option-selected');
-        $('.showItem').removeClass('g2tt-option-selected');
-        $('#' + pref_ViewMode).addClass('g2tt-option-selected');
-        $('#subscriptions').attr('class', 'show-' + $(this).attr('id').substring(6));
-    });
-
-    // Sort feeds A-Z
-    if (pref_FeedSort == '1') {
-        $('.feedsSort').addClass('g2tt-option-selected');
-    }
-    $('.feedsSort').off('click').on('click', function () {
-        if (pref_FeedSort == '1') {
-            pref_FeedSort = '0';
-        } else {
-            pref_FeedSort = '1';
-        }
-        setCookie('g2tt_feedSort', pref_FeedSort);
-        $(this).toggle('g2tt-option-selected');
-    });
 
     // Back to Feeds from sub category
     $('#sub-list-back').off('click').on('click', function () {
@@ -265,77 +246,42 @@ $(document).ready(function () {
             location.reload(true);
         });
     });
+}
 
-    // Search
-    // Show search
-    $('#menu-search').off('click').on('click', function () {
-        $('.search-box').removeClass('hidden');
-        $('#search-input').trigger('focus');
-    });
-    // Clear and hide search
-    $('#search-cancel').off('click').on('click', function () {
-        $('#search-input').val('');
-        $('.search-box').addClass('hidden');
-    });
-    // Enter in search field searches
-    $('#search-input').off('keypress').on('keypress', function (e) {
-        if (e.which == 13) {
-            jQuery(this).blur();
-            jQuery('#search-submit').trigger('focus').trigger('click');
-            return false;
-        }
-    });
-    // Remove currently displayed headlines and search
-    $('#search-submit').off('click').on('click', function () {
-        $('#entries').empty();
-        getHeadlines();
-        return false;
+function bindSubscriptionUi() {
+    // ADDED - Subscribe to new Feeds
+    $('#add-new-subscription').off('click').on('click', function () {
+        getCategoriesForNewSubscribe();
+        $("#dialog-form").dialog("open");
     });
 
-    load();
+    // View mode feeds menu selection
+    $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
+    $('#subscriptions').addClass('show-' + pref_ViewMode);
+    $('.feedsItem').off('click').on('click', function () {
+        console.log('feedsItem');
+        pref_ViewMode = $(this).attr('id').substring(6);
+        setCookie('g2tt_viewMode', pref_ViewMode);
+        $('.feedsItem').removeClass('g2tt-option-selected');
+        $(this).addClass('g2tt-option-selected');
+        $('.showItem').removeClass('g2tt-option-selected');
+        $('#' + pref_ViewMode).addClass('g2tt-option-selected');
+        $('#subscriptions').attr('class', 'show-' + $(this).attr('id').substring(6));
+    });
 
-    //Added for Subscribe to New Feeds
-    $('.ui-loader').remove();
-
-    let feedURL = $("#feedURL"),
-        //password = $( "#password" ),
-        allFields = $([]).add(feedURL),
-        tips = $(".validateTips");
-
-    function updateTips(t) {
-        tips
-            .text(t)
-            .addClass("ui-state-highlight").removeClass("hidden");
-            setTimeout(function () {
-            tips.removeClass("ui-state-highlight", 1500);
-        }, 500);
+    // Sort feeds A-Z
+    if (pref_FeedSort == '1') {
+        $('.feedsSort').addClass('g2tt-option-selected');
     }
-
-    function checkLength(o, n, min, max) {
-        if (o.val().length > max || o.val().length < min) {
-            o.addClass("ui-state-error");
-            updateTips("Length of " + n + " must be between " +
-                min + " and " + max + ".");
-            return false;
+    $('.feedsSort').off('click').on('click', function () {
+        if (pref_FeedSort == '1') {
+            pref_FeedSort = '0';
         } else {
-            return true;
+            pref_FeedSort = '1';
         }
-    }
-
-    function firstToUpperCase(str) {
-        return str.substr(0, 5).toLowerCase() + str.substr(5);
-    }
-
-    function checkRegexp(o, regexp, n) {
-        let makeOvalidHttp = o.val().trim();
-        if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
-            o.addClass("ui-state-error");
-            updateTips(n);
-            return false;
-        } else {
-            return true;
-        }
-    }
+        setCookie('g2tt_feedSort', pref_FeedSort);
+        $(this).toggle('g2tt-option-selected');
+    });
 
     $("#dialog-form").dialog({
 
@@ -388,6 +334,77 @@ $(document).ready(function () {
         }
     });
 
+    $('.ui-loader').remove();
+
+        let feedURL = $("#feedURL"),
+        //password = $( "#password" ),
+        allFields = $([]).add(feedURL),
+        tips = $(".validateTips");
+
+    function updateTips(t) {
+        tips
+            .text(t)
+            .addClass("ui-state-highlight").removeClass("hidden");
+            setTimeout(function () {
+            tips.removeClass("ui-state-highlight", 1500);
+        }, 500);
+    }
+
+    function checkLength(o, n, min, max) {
+        if (o.val().length > max || o.val().length < min) {
+            o.addClass("ui-state-error");
+            updateTips("Length of " + n + " must be between " +
+                min + " and " + max + ".");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function firstToUpperCase(str) {
+        return str.substr(0, 5).toLowerCase() + str.substr(5);
+    }
+
+    function checkRegexp(o, regexp, n) {
+        let makeOvalidHttp = o.val().trim();
+        if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
+            o.addClass("ui-state-error");
+            updateTips(n);
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+function bindSearchUi() {
+    // Show search
+    $('#menu-search').off('click').on('click', function () {
+        $('.search-box').removeClass('hidden');
+        $('#search-input').trigger('focus');
+    });
+    // Clear and hide search
+    $('#search-cancel').off('click').on('click', function () {
+        $('#search-input').val('');
+        $('.search-box').addClass('hidden');
+    });
+    // Enter in search field searches
+    $('#search-input').off('keypress').on('keypress', function (e) {
+        if (e.which == 13) {
+            jQuery(this).blur();
+            jQuery('#search-submit').trigger('focus').trigger('click');
+            return false;
+        }
+    });
+    // Remove currently displayed headlines and search
+    $('#search-submit').off('click').on('click', function () {
+        $('#entries').empty();
+        getHeadlines();
+        return false;
+    });
+}
+
+function bindKeyboardShortcuts() {
     $(document).on('keypress', function(event) {
         switch (String.fromCharCode(event.which).toLowerCase()) {
             case 'j': expandNextEntry(); break;
@@ -398,7 +415,9 @@ $(document).ready(function () {
             case 'm': toggleCurrentEntryAsRead(); break;
         }
     });
-});
+}
+
+
 
 
 
@@ -513,6 +532,147 @@ function apiCall(data, asynch) {
     return request;
 }
 
+function renderEntryMarkup(headline) {
+    global_ids.push(headline.id);
+    let email_subject = headline.title;
+    let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
+        headline.title + '</a></h2>' + headline.content;
+
+    let content = $(headline.content);
+    let alt;
+    if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
+            .attr("alt")))) {
+        content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
+    } else {
+        let container = $("<div></div>");
+        container.append(content);
+        content = container;
+    }
+    let date = new Date(headline.updated * 1000);
+    let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
+            " read" : "") + "'> \
+    <div class='entry-container'> \
+    <div class='entry-top-bar'> \
+    <span class='link entry-next'> \
+    <span class='entry-next-fa-icon'><i class='fa fa-arrow-down'></i></span> \
+    <span class='entry-next-text'>Next item</span> \
+    </span> \
+    <span class='link entry-collapse'> \
+    <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span> \
+    <span class='entry-collapse-text'>Collapse</span> \
+    </span> \
+    </div> \
+    <div class='entry-header'> \
+    <div class='entry-icons'> \
+    <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
+    <i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
+    </div> \
+    <div class='entry-header-body'> \
+    <div class='text'> \
+    <span class='item-title-collapsed'>" + headline.title + "</span> \
+    <a href='" + headline.link + "' \
+    class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
+    <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
+    <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
+            headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
+    </div> \
+    <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
+    </div> \
+    </div> \
+    <div class='entry'> \
+    <div id='entry-contents' class='entry whisper'> \
+    <div class='entry-annotations'></div> \
+    <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
+    </div> \
+    <div class='entry-footer'> \
+    <div class='entry-actions'> \
+    <div class='entry-actions-primary'> \
+    <span class='read-state link unselectable' title='Toggle read'>\
+    <i class='fa fa-book-open'></i>&nbsp;Mark unread\
+    </span> \
+    <span class='link unselectable' title='Sent by mail'> \
+    <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
+    <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
+        encodeURIComponent(email_body) + "'>E-Mail</a> \
+    </span> \
+    <wbr /> \
+    </div> \
+    </div> \
+    </div> \
+    <div class='action-area-container'></div> \
+    </div> \
+    </div> \
+    </div>";
+
+    $('#entries').append(entry);
+}
+
+function renderHeadlines(headlines) {
+    $.each(headlines, function (index, headline) {
+        renderEntryMarkup(headline);
+    });
+}
+
+function handleHeadlinesResponse(data, response, _textStatus, _jqXHR) {
+    if (response.status != 0) {
+        delCookie('g2tt_sid');
+        console.log('Removed sid - response.status = ' + response.status); // why?
+        console.log(data);
+        console.log(response);
+        throw "Problem: " + response.content.error;
+        // getData();
+        // return;
+    }
+    let headlines = response.content;
+
+    if (headlines.length != data.limit) {
+        $('#load-more-items').hide();
+    } else {
+        $('#load-more-items').show();
+    }
+    renderHeadlines(headlines);
+
+    // Expand an entry
+    $('.entry-header-body').off('click').on('click', function () {
+        expandEntry($(this).closest('.entry-row'));
+    });
+
+    // Collapse an entry
+    $('.entry-top-bar').off('click').on('click', function () {
+        collapseEntry($(this).closest('.entry-row'));
+    });
+
+    // Next entry
+    $('.entry-next').off('click').on('click', function (event) {
+        expandEntry($(this).closest('.entry-row').next());
+        event.stopPropagation();
+    });
+
+    // Toggle read
+    $('.read-state').off('click').on('click', function () {
+        toggleEntryAsRead($(this).closest('.entry-row'));
+    });
+
+    // Mark NewFont (star) entry
+    $('.favStarDiv').off('click').on('click', function () {
+        let data = {
+            op: "updateArticle",
+            article_ids: $(this).closest('.entry-row').attr('id'),
+            mode: 2,
+            field: 0
+        };
+        let _response = apiCall(data);
+
+        $(this).next().toggleClass('starNotActive').toggleClass('starActive');
+    });
+
+    // Done loading
+    $('body').removeClass('loading').addClass('loaded');
+    $('.load-more-message').html('Mark these items as read');
+    $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
+    keepUnread.clean(global_ids);
+}
+
 function getHeadlines(since) {
     $('body').addClass('loading');
     $('.load-more-message').html('Loading...');
@@ -543,137 +703,7 @@ function getHeadlines(since) {
     let headlines = apiCall(data);
 
     headlines.done(function (response, _textStatus, _jqXHR) {
-        if (response.status != 0) {
-            delCookie('g2tt_sid');
-            console.log('Removed sid - response.status = ' + response.status); // why?
-            console.log(data);
-            console.log(response);
-            throw "Problem: " + response.content.error;
-            getData();
-            return;
-        }
-        headlines = response.content;
-
-        if (headlines.length != data.limit) {
-            $('#load-more-items').hide();
-        } else {
-            $('#load-more-items').show();
-        }
-        $.each(headlines, function (index, headline) {
-            global_ids.push(headline.id);
-            let email_subject = headline.title;
-            let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
-                headline.title + '</a></h2>' + headline.content;
-
-            let content = $(headline.content);
-            let alt;
-            if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
-                    .attr("alt")))) {
-                content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
-            } else {
-                let container = $("<div></div>");
-                container.append(content);
-                content = container;
-            }
-
-            let date = new Date(headline.updated * 1000);
-            let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
-                    " read" : "") + "'> \
-            <div class='entry-container'> \
-            <div class='entry-top-bar'> \
-            <span class='link entry-next'> \
-            <span class='entry-next-fa-icon'><i class='fa fa-arrow-down'></i></span> \
-            <span class='entry-next-text'>Next item</span> \
-            </span> \
-            <span class='link entry-collapse'> \
-            <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span> \
-            <span class='entry-collapse-text'>Collapse</span> \
-            </span> \
-            </div> \
-            <div class='entry-header'> \
-		<div class='entry-icons'> \
-			<i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
-			<i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
-		</div> \
-            <div class='entry-header-body'> \
-            <div class='text'> \
-            <span class='item-title-collapsed'>" + headline.title + "</span> \
-            <a href='" + headline.link + "' \
-            class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
-            <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
-            <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
-                    headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
-            </div> \
-            <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
-            </div> \
-            </div> \
-            <div class='entry'> \
-            <div id='entry-contents' class='entry whisper'> \
-            <div class='entry-annotations'></div> \
-            <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
-            </div> \
-            <div class='entry-footer'> \
-            <div class='entry-actions'> \
-            <div class='entry-actions-primary'> \
-            <span class='read-state link unselectable' title='Toggle read'>\
-            <i class='fa fa-book-open'></i>&nbsp;Mark unread\
-            </span> \
-            <span class='link unselectable' title='Sent by mail'> \
-            <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
-            <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
-                encodeURIComponent(email_body) + "'>E-Mail</a> \
-            </span> \
-            <wbr /> \
-            </div> \
-            </div> \
-            </div> \
-            <div class='action-area-container'></div> \
-            </div> \
-            </div> \
-            </div>";
-
-            $('#entries').append(entry);
-        });
-
-        // Expand an entry
-        $('.entry-header-body').off('click').on('click', function () {
-            expandEntry($(this).closest('.entry-row'));
-        });
-
-        // Collapse an entry
-        $('.entry-top-bar').off('click').on('click', function () {
-            collapseEntry($(this).closest('.entry-row'));
-        });
-
-        // Next entry
-        $('.entry-next').off('click').on('click', function (event) {
-            expandEntry($(this).closest('.entry-row').next());
-            event.stopPropagation();
-        });
-
-        // Toggle read
-        $('.read-state').off('click').on('click', function () {
-            toggleEntryAsRead($(this).closest('.entry-row'));
-        });
-
-        // Mark NewFont (star) entry
-        $('.favStarDiv').off('click').on('click', function () {
-            let data = {
-                op: "updateArticle",
-                article_ids: $(this).closest('.entry-row').attr('id'),
-                mode: 2,
-                field: 0
-            };
-            let _response = apiCall(data);
-
-            $(this).next().toggleClass('starNotActive').toggleClass('starActive');
-        });
-
-        // Done loading
-        $('body').removeClass('loading').addClass('loaded');
-        $('.load-more-message').html('Mark these items as read');
-        $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
-        keepUnread.clean(global_ids);
+        handleHeadlinesResponse(data, response, _textStatus, _jqXHR);
     });
 }
 
@@ -702,17 +732,19 @@ function getTopCategories() {
         };
         let request = apiCall(data);
         request.done(function (response, _textStatus, _jqXHR) {
-            let unread = response.content.unread;
+            var entry = "<div class='row whisper sub-row open-sub-folder" +
+            ((unread > 0) ?
+                " unread-sub" :
+                " no-unread-sub-row") +
+            "' id='tree-item--4'> \
+            <div class='icon-cell'> \
+            <i class='fa fa-folder-open fa-lg'></i> </div> \
+            <div class='text sub-item'>All articles</div> \
+            <div class='item-count larger whisper'> \
+            <span class='item-count-value' id='tree-item--4-unread-count'>" + unread + "</span> \
+            </div> \
+            </div>";
 
-            let entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
-                " no-unread-sub-row") + "' id='tree-item--4'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder-open fa-lg'></i> </div> \
-        <div class='text sub-item'>All articles</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item--4-unread-count'>" + unread + "</span> \
-        </div> \
-        </div>";
 
             $('#sub--4').prepend(entry);
 
@@ -740,15 +772,18 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                let entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ?
-                    " unread-sub" : " no-unread-sub-row") + " nested-sub' id='tree-item-" + cat.id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder fa-lg'></i></div> \
-        <div class='text sub-item'>" + cat.title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + cat.id + "-unread-count'>" + cat.unread + "</span> \
-        </div> \
-        </div>";
+                var entry = "<div class='row whisper sub-row closed-sub-folder" +
+                ((cat.unread > 0) ?
+                    " unread-sub" :
+                    " no-unread-sub-row") +
+                " nested-sub' id='tree-item-" + cat.id + "'> \
+                <div class='icon-cell'> \
+                <i class='fa fa-folder fa-lg'></i></div> \
+                <div class='text sub-item'>" + cat.title + "</div> \
+                <div class='item-count larger whisper'> \
+                <span class='item-count-value' id='tree-item-" + cat.id + "-unread-count'>" + cat.unread + "</span> \
+                </div> \
+                </div>";
 
                 $('#sub--4').append(entry);
 
@@ -822,31 +857,38 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 }
             });
             $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
-
-            let entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ?
-                " unread-sub" : " no-unread-sub-row") + "' id='tree-item-" + parent_id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder-open fa-lg'></i> </div> \
-        <div class='text sub-item'>" + parent_title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + parent_id + "-unread-count'>" + parent_unread + "</span> \
-        </div> \
-        </div>";
+            var entry = "<div class='row whisper sub-row open-sub-folder" +
+            ((parent_unread > 0) ?
+                " unread-sub" :
+                " no-unread-sub-row") +
+            "' id='tree-item-" + parent_id + "'> \
+            <div class='icon-cell'> \
+            <i class='fa fa-folder-open fa-lg'></i> </div> \
+            <div class='text sub-item'>" + parent_title + "</div> \
+            <div class='item-count larger whisper'> \
+            <span class='item-count-value' id='tree-item-" + parent_id + "-unread-count'>" + parent_unread + "</span> \
+            </div> \
+            </div>";
 
             $('#sub-' + parent_id).prepend(entry);
 
             $.each(feeds, function (index, feed) {
-                entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" :
-                        " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") +
-                    " nested-sub' id='tree-item-" + feed.id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa " + ((feed.is_cat) ? "fa-folder fa-lg" : "fa-rss-square fa-lg") +
-                    "'></i> </div> \
-        <div class='text sub-item'>" + feed.title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + feed.id + "-unread-count'>" + feed.unread + "</span> \
-        </div> \
-        </div>";
+                var entry = "<div class='row whisper sub-row" +
+                ((feed.unread > 0) ?
+                    " unread-sub" :
+                    " no-unread-sub-row")
+                + " " +
+                ((feed.is_cat) ?
+                    "closed-sub-folder" :
+                    "sub") +
+                " nested-sub' id='tree-item-" + feed.id + "'> \
+                <div class='icon-cell'> \
+                <i class='fa fa-rss-square'></i> </div> \
+                <div class='text sub-item'>" + feed.title + "</div> \
+                <div class='item-count larger whisper'> \
+                <span class='item-count-value' id='tree-item-" + feed.id + "-unread-count'>" + feed.unread + "</span> \
+                </div> \
+                </div>";
 
                 $('#sub-' + parent_id).append(entry);
 
@@ -867,7 +909,6 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
 
             $('.sub').off('click').on('click', function (_event) {
-                console.log('sub');
                 showFeedsFn($(this).attr('id').substring(10), false);
             });
 
