@@ -1,36 +1,39 @@
-var pref_IsCat = false;
+function readCookie(name, fallback = undefined) {
+    const value = $.cookie(name);
+    return typeof value !== 'undefined' ? value : fallback;
+}
+
+function setCookie(name, value, days = undefined) {
+    let oldVal = readCookie(name);
+    if (typeof days === 'undefined') {
+        $.cookie(name, value);
+    } else {
+        $.cookie(name, value, {
+            expires: days
+        });
+    }
+    return oldVal;
+}
+
+function delCookie(name) {
+    let oldVal = readCookie(name);
+    $.removeCookie(name);
+    return oldVal;
+}
+
+var pref_IsCat = readCookie('g2tt_isCat', false);
+var pref_Feed = readCookie('g2tt_feed', pref_Feed);
+var pref_ViewMode = readCookie('g2tt_viewMode', pref_ViewMode);
+var pref_OrderBy = readCookie('g2tt_orderBy', pref_OrderBy);
+var pref_FeedSort = readCookie('g2tt_feedSort', pref_FeedSort);
 var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_Feed;
-var pref_ViewMode;
-var pref_OrderBy
-var pref_FeedSort
 var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in config
+var historylist = [];
 
-if (typeof ($.cookie('g2tt_feed')) !== 'undefined') {
-    pref_Feed = $.cookie('g2tt_feed');
+if (typeof (readCookie('g2tt_history')) !== 'undefined') {
+    historylist = JSONSafeParse(readCookie('g2tt_history'));
 }
-if (typeof ($.cookie('g2tt_isCat')) !== 'undefined') {
-    pref_IsCat = $.cookie('g2tt_isCat');
-}
-if (typeof ($.cookie('g2tt_viewMode')) !== 'undefined') {
-    pref_ViewMode = $.cookie('g2tt_viewMode');
-}
-if (typeof ($.cookie('g2tt_orderBy')) !== 'undefined') {
-    pref_OrderBy = $.cookie('g2tt_orderBy');
-}
-if (typeof ($.cookie('g2tt_feedSort')) !== 'undefined') {
-    pref_FeedSort = $.cookie('g2tt_feedSort');
-}
-
-console.log("global_ttrssUrl: " + global_ttrssUrl);
-console.log("pref_Feed = " + pref_Feed);
-console.log("pref_ViewMode = " + pref_ViewMode);
-console.log("pref_OrderBy = " + pref_OrderBy);
-console.log("pref_FeedSort = " + pref_FeedSort);
-console.log("pref_StartInCat = " + pref_StartInCat);
-console.log("pref_IsCat = " + pref_IsCat);
-console.log("pref_Feed_limit = " + pref_Feed_limit);
 
 var global_backCat = []; // Feed view always starts with all items
 var global_ids = []; // List of all article IDs currently displayed
@@ -67,7 +70,6 @@ $(document).ready(function () {
         var request = apiCall(data);
 
         request.done(function (response, _textStatus, _jqXHR) {
-            //console.log(response.content);
             if (response.content.error == 'LOGIN_ERROR') {
                 window.alert("Username and/or Password were incorrect!");
             }
@@ -81,17 +83,16 @@ $(document).ready(function () {
                 window.alert("Unexpected error received: ".concat(" ", response.content
                     .error));
             } else {
-                $.cookie('g2tt_sid', response.content.session_id, {
-                    expires: 7
-                });
+                setCookie('g2tt_feed', pref_Feed, 7);
                 $('.login').addClass('hidden');
                 $('#main').removeClass('hidden');
                 load();
             }
+            resetHistory();
         });
 
         // callback handler that will be called on failure
-        request.fail(function (jqXHR, textStatus, errorThrown) {
+        request.fail(function (_jqXHR, textStatus, errorThrown) {
             // log the error to the console
             console.error(
                 "The following error occured: " +
@@ -108,8 +109,6 @@ $(document).ready(function () {
         // prevent default posting of form
         event.preventDefault();
     });
-    //end of #login function
-
 
     // Show more items
     $('#load-more-items').off('click').on('click', function () {
@@ -150,8 +149,9 @@ $(document).ready(function () {
     // View mode menu selection
     $('#' + pref_ViewMode).addClass('g2tt-option-selected');
     $('.showItem').off('click').on('click', function () {
+        console.log('showItem');
         pref_ViewMode = $(this).attr('id');
-        $.cookie('g2tt_viewMode', pref_ViewMode);
+        setCookie('g2tt_viewMode', pref_ViewMode);
         $('.showItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.feedsItem').removeClass('g2tt-option-selected');
@@ -167,7 +167,7 @@ $(document).ready(function () {
 
     $('.sortItem').off('click').on('click', function () {
         pref_OrderBy = $(this).attr('id');
-        $.cookie('g2tt_orderBy', pref_OrderBy);
+        setCookie('g2tt_orderBy', pref_OrderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('#entries').empty();
@@ -176,13 +176,14 @@ $(document).ready(function () {
 
     // Back to Feeds
     $('.back-to-feeds').off('click').on('click', function () {
+        popHistory()
+        popHistory()
         refreshCats();
         showFeeds();
     });
 
     // ADDED - Subscribe to new Feeds
     $('#add-new-subscription').off('click').on('click', function () {
-        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
         getCategoriesForNewSubscribe();
         $("#dialog-form").dialog("open");
     });
@@ -191,8 +192,9 @@ $(document).ready(function () {
     $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
     $('#subscriptions').addClass('show-' + pref_ViewMode);
     $('.feedsItem').off('click').on('click', function () {
+        console.log('feedsItem');
         pref_ViewMode = $(this).attr('id').substring(6);
-        $.cookie('g2tt_viewMode', pref_ViewMode);
+        setCookie('g2tt_viewMode', pref_ViewMode);
         $('.feedsItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.showItem').removeClass('g2tt-option-selected');
@@ -210,7 +212,7 @@ $(document).ready(function () {
         } else {
             pref_FeedSort = '1';
         }
-        $.cookie('g2tt_feedSort', pref_FeedSort);
+        setCookie('g2tt_feedSort', pref_FeedSort);
         $(this).toggle('g2tt-option-selected');
     });
 
@@ -218,8 +220,10 @@ $(document).ready(function () {
     $('#sub-list-back').off('click').on('click', function () {
         refreshCats();
         getFeeds(global_backCat.pop());
-        $('#add-new-subscription').removeClass('hidden');
-
+        popHistory()
+        if (historylist.peek() == "folder/-4") {
+            $('#add-new-subscription').removeClass('hidden');
+        }
     });
 
     // Mark all as read
@@ -244,17 +248,20 @@ $(document).ready(function () {
 
     // Logout
     $('#menu-logout').off('click').on('click', function () {
+        resetHistory()
+        pushHistory('Logout');
         let data = {
             op: "logout"
         };
         let request = apiCall(data);
 
         request.done(function (_response) {
-            $.removeCookie('g2tt_feed');
-            $.removeCookie('g2tt_isCat');
-            $.removeCookie('g2tt_viewMode');
-            $.removeCookie('g2tt_orderBy');
-            $.removeCookie('g2tt_sid');
+            delCookie('g2tt_feed');
+            delCookie('g2tt_isCat');
+            delCookie('g2tt_viewMode');
+            delCookie('g2tt_orderBy');
+            delCookie('g2tt_sid');
+            delCookie('g2tt_history');
             location.reload(true);
         });
     });
@@ -299,7 +306,7 @@ $(document).ready(function () {
         tips
             .text(t)
             .addClass("ui-state-highlight").removeClass("hidden");
-        setTimeout(function () {
+            setTimeout(function () {
             tips.removeClass("ui-state-highlight", 1500);
         }, 500);
     }
@@ -321,7 +328,6 @@ $(document).ready(function () {
 
     function checkRegexp(o, regexp, n) {
         let makeOvalidHttp = o.val().trim();
-        console.log(firstToUpperCase(makeOvalidHttp));
         if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
             o.addClass("ui-state-error");
             updateTips(n);
@@ -360,7 +366,6 @@ $(document).ready(function () {
                     let feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
 
                     let multipleFeedSelected = $("#feedsAvail option:selected").val();
-                    //console.log('When subscribe is chosen again ' + multipleFeedSelected);
 
                     if (multipleFeedSelected == null) {
                         $('#feedURL').val(feedURLTrimmed);
@@ -475,8 +480,8 @@ function showFeeds() {
         $('#sub-list-back').removeClass('hidden');
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
-
     }
+    pushHistory("folder/" + global_parentId);
     $('#nav-title').html('');
 }
 
@@ -494,7 +499,7 @@ function showArticles() {
 
 function apiCall(data, asynch) {
     if (typeof (asynch) === 'undefined') asynch = true;
-    data.sid = $.cookie('g2tt_sid');
+    data.sid = readCookie('g2tt_sid');
     data = JSON.stringify(data);
     let request = $.ajax({
         contentType: "application/json",
@@ -539,7 +544,11 @@ function getHeadlines(since) {
 
     headlines.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
-            $.removeCookie('g2tt_sid');
+            delCookie('g2tt_sid');
+            console.log('Removed sid - response.status = ' + response.status); // why?
+            console.log(data);
+            console.log(response);
+            throw "Problem: " + response.content.error;
             getData();
             return;
         }
@@ -658,7 +667,6 @@ function getHeadlines(since) {
             let _response = apiCall(data);
 
             $(this).next().toggleClass('starNotActive').toggleClass('starActive');
-            //console.log(newstar);
         });
 
         // Done loading
@@ -676,7 +684,9 @@ function getTopCategories() {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
         $('.closed-sub-folder').off('click').on('click', function () {
+            console.log('closed-sub-folder');
             global_backCat.push("-4");
+            pushHistory('folder/-4');
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
                 '.item-count-value').html());
@@ -707,11 +717,7 @@ function getTopCategories() {
             $('#sub--4').prepend(entry);
 
             $('#tree-item--4').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', false);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
-                getData();
+                showFeedsFn($(this).attr('id').substring(10), false);
             });
         });
 
@@ -748,7 +754,8 @@ function getTopCategories() {
 
             });
 
-            $('.closed-sub-folder').off('click').on('click', function () {
+            $('.closed-sub-folder').off('click').on('click', function (_event) {
+                pushHistory("folder/" + $(this).attr('id').substring(10));
                 global_backCat.push("-4");
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
@@ -762,8 +769,18 @@ function getTopCategories() {
     }
 }
 
+function showFeedsFn(feedId, isCat) {
+    pushHistory((isCat?'mult':'sing') + '/feed/' + feedId);
+    setCookie('g2tt_feed', feedId);
+    setCookie('g2tt_isCat', isCat);
+    pref_Feed = readCookie('g2tt_feed', pref_Feed);
+    pref_IsCat = readCookie('g2tt_isCat', pref_IsCat);
+    getData();
+}
+
 function getFeeds(parent_id, parent_title, parent_unread) {
     global_parentId = parent_id;
+
     if (parent_id === '-4') {
         getTopCategories();
         return;
@@ -777,6 +794,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub-' + parent_id).removeClass('hidden');
         $('.closed-sub-folder').off('click').on('click', function () {
+            console.log('closed-sub-folder: ' + parent_id);
             global_backCat.push(parent_id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
@@ -787,7 +805,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('#loading-area-container').removeClass('hidden');
 
         let data = {
-            op: "getFeeds",
+            op: 'getFeeds',
             cat_id: parent_id,
             include_nested: true
         };
@@ -834,27 +852,23 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
             });
 
-            $('.closed-sub-folder').off('click').on('click', function () {
+            $('.closed-sub-folder').off('click').on('click', function (_event) {
+                console.log('closed-sub-folder');
                 global_backCat.push(parent_id);
+                pushHistory("folder/" + $(this).attr('id').substring(10));
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
                     .find('.item-count-value').html());
             });
 
             $('.open-sub-folder[id!="tree-item--4"]').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', true);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
-                getData();
+                console.log('open-sub-folder!=-4');
+                showFeedsFn($(this).attr('id').substring(10), true);
             });
 
-            $('.sub').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', false);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
-                getData();
+            $('.sub').off('click').on('click', function (_event) {
+                console.log('sub');
+                showFeedsFn($(this).attr('id').substring(10), false);
             });
 
             // Done loading
@@ -877,7 +891,7 @@ function getTitle() {
 
     request.done(function (response, _textStatus, _jqXHR) {
         if (response.status != 0) {
-            $.removeCookie('g2tt_sid');
+            delCookie('g2tt_sid');
             getData();
             return;
         }
@@ -917,17 +931,13 @@ function getData() {
 }
 
 var keepUnread = new function () {
-    let COOKIE_NAME = 'g2tt_keepUnread_ids';
     this.keepUnreadIdMap = undefined;
 
     let getIdMap = function () {
         if (undefined == this.keepUnreadIdMap) {
             //attempt to load from cookie
             this.keepUnreadIdMap = [];
-            let savedKeepUnread_ids;
-            if (typeof ($.cookie(COOKIE_NAME)) !== 'undefined') {
-                savedKeepUnread_ids = $.cookie(COOKIE_NAME);
-            }
+            let savedKeepUnread_ids = readCookie('g2tt_keepUnread_ids');
 
             if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
                 let idList = savedKeepUnread_ids.split(',');
@@ -984,7 +994,7 @@ var keepUnread = new function () {
             }
             strVal += articleId;
         }
-        $.cookie(COOKIE_NAME, strVal);
+        setCookie('g2tt_keepUnread_ids', strVal);
     };
 };
 
@@ -1159,6 +1169,7 @@ function expandEntry(entryRow) {
         return;
     }
 
+    console.log($('.expanded'));
     $('.expanded').removeClass('expanded');
     entryRow.addClass('expanded');
     $('html,body').scrollTop(entryRow.offset().top);
@@ -1304,4 +1315,98 @@ function isElementInViewport(el) {
         rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /*or $(window).height() */
         rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
     );
+}
+
+// function getErrorObject() {
+//     try { throw Error('') } catch(err) { return err; }
+// }
+
+// function callee() {
+//     var err = getErrorObject();
+//     var caller_line = err.stack.split("\n")[4];
+//     var index = caller_line.indexOf("at ");
+//     var clean = caller_line.slice(index+2, caller_line.length);
+//     return clean;
+// }
+
+
+// historylist.peek = function(p = 1){
+//     if (historylist.length > p - 1) {
+//         return historylist[historylist.length - p];
+//     }
+//     return '';
+// }
+if (!Array.prototype.peek) {
+    Object.defineProperty(Array.prototype, 'peek', {
+        value: function(p = 1) {
+            // "this" refers to whatever array calls the method
+            if (this.length > p - 1) {
+                return this[this.length - p];
+            }
+            return '';
+        },
+        enumerable: false,   // Keeps it hidden from for...in loops
+        configurable: true,  // Allows redefinition if needed
+        writable: true       // Allows value changes
+    });
+}
+
+function pushHistory(t) {
+    historylist.push(t);
+    sethash(historylist.peek());
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+}
+
+function popHistory() {
+    var h = historylist.pop();
+    sethash(historylist.peek());
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+    return h;
+}
+
+function resetHistory() {
+    historylist = [];
+    setCookie('g2tt_history', JSON.stringify([]));
+    sethash('');
+}
+
+function sethash(h) {
+    var oldLocation = '';
+    if (window.location) {
+        oldLocation = window.location.hash.slice(1); // remove # from the start
+        window.location.hash = h;
+    }
+    return oldLocation;
+}
+
+function gethash() { // eslint-disable-line no-unused-vars
+    if (window.location && window.location.hash) {
+        return window.location.hash.slice(1);
+    }
+    return '';
+}
+
+function JSONSafeParse(str) {
+    // Check for empty input
+    if (!str || typeof str !== 'string') {
+    console.error('Invalid input: expected non-empty string');
+    return null;
+    }
+
+    // Trim whitespace and BOM
+    str = str.trim().replace(/^\uFEFF/, '');
+
+    try {
+        return JSON.parse(str);
+    } catch (error) {
+        console.error('JSON parse error:', error.message);
+
+        // Try to identify the problem location
+        const match = error.message.match(/position (\d+)/);
+        if (match) {
+        const pos = parseInt(match[1]);
+        console.error('Error near:', str.substring(Math.max(0, pos - 20), pos + 20));
+        }
+        return [];
+    }
 }
