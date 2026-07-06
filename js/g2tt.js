@@ -23,27 +23,20 @@ if (typeof ($.cookie('g2tt_feedSort')) !== 'undefined') {
     pref_FeedSort = $.cookie('g2tt_feedSort');
 }
 
-console.log("global_ttrssUrl: " + global_ttrssUrl);
-console.log("pref_Feed = " + pref_Feed);
-console.log("pref_ViewMode = " + pref_ViewMode);
-console.log("pref_OrderBy = " + pref_OrderBy);
-console.log("pref_FeedSort = " + pref_FeedSort);
-console.log("pref_StartInCat = " + pref_StartInCat);
-console.log("pref_IsCat = " + pref_IsCat);
-console.log("pref_Feed_limit = " + pref_Feed_limit);
-
 var global_backCat = []; // Feed view always starts with all items
 var global_ids = []; // List of all article IDs currently displayed
 var global_parentId = '-4';
 
-$(document).ready(function () {
+function bindGlobalUi(){
     $('html').off('click').on('click', function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
         $('#menuUp').addClass('hidden');
         $('.g2tt-menu').hide();
     });
+}
 
+function bindLoginForm(){
     $("#login").on('submit', function (event) {
         if (request) {
             request.abort();
@@ -109,8 +102,9 @@ $(document).ready(function () {
         event.preventDefault();
     });
     //end of #login function
+}
 
-
+function bindNavigation(){
     // Show more items
     $('#load-more-items').off('click').on('click', function () {
         let last;
@@ -258,7 +252,9 @@ $(document).ready(function () {
             location.reload(true);
         });
     });
+}
 
+function bindSearchUi(){
     // Search
     // Show search
     $('#menu-search').off('click').on('click', function () {
@@ -284,8 +280,9 @@ $(document).ready(function () {
         getHeadlines();
         return false;
     });
+}
 
-    load();
+function bindSubscriptionUi(){
 
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
@@ -332,7 +329,6 @@ $(document).ready(function () {
     }
 
     $("#dialog-form").dialog({
-
         autoOpen: false,
         //height: 300,
         dialogClass: "dialog-nav-bar",
@@ -369,9 +365,6 @@ $(document).ready(function () {
                         $('#feedURL').val(multipleFeedSelected);
                         subscribe(multipleFeedSelected, catIDnum);
                     }
-
-
-
                 }
             },
             Cancel: function () {
@@ -382,7 +375,9 @@ $(document).ready(function () {
             allFields.val("").removeClass("ui-state-error");
         }
     });
+}
 
+function bindKeyboardShortcuts(){
     $(document).on('keypress', function(event) {
         switch (String.fromCharCode(event.which).toLowerCase()) {
             case 'j': expandNextEntry(); break;
@@ -393,6 +388,17 @@ $(document).ready(function () {
             case 'm': toggleCurrentEntryAsRead(); break;
         }
     });
+}
+
+$(document).ready(function () {
+    bindGlobalUi();
+    bindLoginForm();
+    bindNavigation();
+    bindSearchUi();
+    bindSubscriptionUi();
+    bindKeyboardShortcuts();
+    load();
+
 });
 
 
