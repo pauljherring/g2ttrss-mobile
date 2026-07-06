@@ -1,27 +1,40 @@
+function readCookie(name, fallback = undefined) {
+    const value = $.cookie(name);
+    return typeof value !== 'undefined' ? value : fallback;
+}
+
+function setCookie(name, value, days = undefined) {
+    let oldVal = readCookie(name);
+    if (typeof days === 'undefined') {
+        $.cookie(name, value);
+    } else {
+        $.cookie(name, value, {
+            expires: days
+        });
+    }
+    return oldVal;
+}
+
+function delCookie(name) {
+    let oldVal = readCookie(name);
+    $.removeCookie(name);
+    return oldVal;
+}
+
 var pref_IsCat = false;
-var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_Feed;
 var pref_ViewMode;
 var pref_OrderBy
 var pref_FeedSort
+var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in config
 
-if (typeof ($.cookie('g2tt_feed')) !== 'undefined') {
-    pref_Feed = $.cookie('g2tt_feed');
-}
-if (typeof ($.cookie('g2tt_isCat')) !== 'undefined') {
-    pref_IsCat = $.cookie('g2tt_isCat');
-}
-if (typeof ($.cookie('g2tt_viewMode')) !== 'undefined') {
-    pref_ViewMode = $.cookie('g2tt_viewMode');
-}
-if (typeof ($.cookie('g2tt_orderBy')) !== 'undefined') {
-    pref_OrderBy = $.cookie('g2tt_orderBy');
-}
-if (typeof ($.cookie('g2tt_feedSort')) !== 'undefined') {
-    pref_FeedSort = $.cookie('g2tt_feedSort');
-}
+pref_Feed = readCookie('g2tt_feed', pref_Feed);
+pref_IsCat = readCookie('g2tt_isCat', pref_IsCat);
+pref_ViewMode = readCookie('g2tt_viewMode', pref_ViewMode);
+pref_OrderBy = readCookie('g2tt_orderBy', pref_OrderBy);
+pref_FeedSort = readCookie('g2tt_feedSort', pref_FeedSort);
 
 var global_backCat = []; // Feed view always starts with all items
 var global_ids = []; // List of all article IDs currently displayed
@@ -38,8 +51,8 @@ function bindGlobalUi(){
 
 function bindLoginForm(){
     $("#login").on('submit', function (event) {
-        if (request) {
-            request.abort();
+        if (bindLoginForm.request) {
+            bindLoginForm.request.abort();
         }
 
         let loginForm = $(this);
@@ -57,9 +70,9 @@ function bindLoginForm(){
 
         inputs.prop("disabled", true);
 
-        var request = apiCall(data);
+        bindLoginForm.request = apiCall(data);
 
-        request.done(function (response, _textStatus, _jqXHR) {
+        bindLoginForm.request.done(function (response, _textStatus, _jqXHR) {
             //console.log(response.content);
             if (response.content.error == 'LOGIN_ERROR') {
                 window.alert("Username and/or Password were incorrect!");
@@ -74,9 +87,7 @@ function bindLoginForm(){
                 window.alert("Unexpected error received: ".concat(" ", response.content
                     .error));
             } else {
-                $.cookie('g2tt_sid', response.content.session_id, {
-                    expires: 7
-                });
+                setCookie('g2tt_sid', response.content.session_id, 7);
                 $('.login').addClass('hidden');
                 $('#main').removeClass('hidden');
                 load();
@@ -84,7 +95,7 @@ function bindLoginForm(){
         });
 
         // callback handler that will be called on failure
-        request.fail(function (jqXHR, textStatus, errorThrown) {
+        bindLoginForm.request.fail(function (jqXHR, textStatus, errorThrown) {
             // log the error to the console
             console.error(
                 "The following error occured: " +
@@ -93,7 +104,7 @@ function bindLoginForm(){
 
         // callback handler that will be called regardless
         // if the request failed or succeeded
-        request.always(function () {
+        bindLoginForm.request.always(function () {
             // reenable the inputs
             inputs.prop("disabled", false);
         });
@@ -145,7 +156,7 @@ function bindNavigation(){
     $('#' + pref_ViewMode).addClass('g2tt-option-selected');
     $('.showItem').off('click').on('click', function () {
         pref_ViewMode = $(this).attr('id');
-        $.cookie('g2tt_viewMode', pref_ViewMode);
+        setCookie('g2tt_viewMode', pref_ViewMode);
         $('.showItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.feedsItem').removeClass('g2tt-option-selected');
@@ -161,7 +172,7 @@ function bindNavigation(){
 
     $('.sortItem').off('click').on('click', function () {
         pref_OrderBy = $(this).attr('id');
-        $.cookie('g2tt_orderBy', pref_OrderBy);
+        setCookie('g2tt_orderBy', pref_OrderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('#entries').empty();
@@ -186,7 +197,7 @@ function bindNavigation(){
     $('#subscriptions').addClass('show-' + pref_ViewMode);
     $('.feedsItem').off('click').on('click', function () {
         pref_ViewMode = $(this).attr('id').substring(6);
-        $.cookie('g2tt_viewMode', pref_ViewMode);
+        setCookie('g2tt_viewMode', pref_ViewMode);
         $('.feedsItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.showItem').removeClass('g2tt-option-selected');
@@ -204,7 +215,7 @@ function bindNavigation(){
         } else {
             pref_FeedSort = '1';
         }
-        $.cookie('g2tt_feedSort', pref_FeedSort);
+        setCookie('g2tt_feedSort', pref_FeedSort);
         $(this).toggle('g2tt-option-selected');
     });
 
@@ -244,11 +255,11 @@ function bindNavigation(){
         let request = apiCall(data);
 
         request.done(function (_response) {
-            $.removeCookie('g2tt_feed');
-            $.removeCookie('g2tt_isCat');
-            $.removeCookie('g2tt_viewMode');
-            $.removeCookie('g2tt_orderBy');
-            $.removeCookie('g2tt_sid');
+            delCookie('g2tt_feed');
+            delCookie('g2tt_isCat');
+            delCookie('g2tt_viewMode');
+            delCookie('g2tt_orderBy');
+            delCookie('g2tt_sid');
             location.reload(true);
         });
     });
@@ -401,8 +412,6 @@ $(document).ready(function () {
 
 });
 
-
-
 function refreshCats() {
     let data = {
         op: "getCounters",
@@ -500,7 +509,7 @@ function showArticles() {
 
 function apiCall(data, asynch) {
     if (typeof (asynch) === 'undefined') asynch = true;
-    data.sid = $.cookie('g2tt_sid');
+    data.sid = readCookie('g2tt_sid');
     data = JSON.stringify(data);
     let request = $.ajax({
         contentType: "application/json",
@@ -713,10 +722,10 @@ function getTopCategories() {
             $('#sub--4').prepend(entry);
 
             $('#tree-item--4').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', false);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
+                setCookie('g2tt_feed', $(this).attr('id').substring(10));
+                setCookie('g2tt_isCat', false);
+                pref_Feed = readCookie('g2tt_feed');
+                pref_IsCat = readCookie('g2tt_isCat');
                 getData();
             });
         });
@@ -848,18 +857,18 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
 
             $('.open-sub-folder[id!="tree-item--4"]').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', true);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
+                setCookie('g2tt_feed', $(this).attr('id').substring(10));
+                setCookie('g2tt_isCat', true);
+                pref_Feed = readCookie('g2tt_feed');
+                pref_IsCat = readCookie('g2tt_isCat');
                 getData();
             });
 
             $('.sub').off('click').on('click', function () {
-                $.cookie('g2tt_feed', $(this).attr('id').substring(10));
-                $.cookie('g2tt_isCat', false);
-                pref_Feed = $.cookie('g2tt_feed');
-                pref_IsCat = $.cookie('g2tt_isCat');
+                setCookie('g2tt_feed', $(this).attr('id').substring(10));
+                setCookie('g2tt_isCat', false);
+                pref_Feed = readCookie('g2tt_feed');
+                pref_IsCat = readCookie('g2tt_isCat');
                 getData();
             });
 
@@ -931,9 +940,7 @@ var keepUnread = new function () {
             //attempt to load from cookie
             this.keepUnreadIdMap = [];
             let savedKeepUnread_ids;
-            if (typeof ($.cookie(COOKIE_NAME)) !== 'undefined') {
-                savedKeepUnread_ids = $.cookie(COOKIE_NAME);
-            }
+            savedKeepUnread_ids = readCookie(COOKIE_NAME);
 
             if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
                 let idList = savedKeepUnread_ids.split(',');
@@ -990,7 +997,7 @@ var keepUnread = new function () {
             }
             strVal += articleId;
         }
-        $.cookie(COOKIE_NAME, strVal);
+        setCookie(COOKIE_NAME, strVal);
     };
 };
 
