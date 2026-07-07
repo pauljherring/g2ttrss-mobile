@@ -684,6 +684,20 @@ function getHeadlines(since) {
     });
 }
 
+function buildTreeRow(sub, unread, id, nested, icon, title) {
+    let entry = "<div class='row whisper sub-row " + sub +
+    ((unread > 0) ? " unread-sub" : " no-unread-sub-row") +
+    (nested ? " " + nested : "") + "' id='tree-item-" + id + "'> \
+    <div class='icon-cell'> \
+    <i class='fa " + icon + " fa-lg'></i></div> \
+    <div class='text sub-item'>" + title + "</div> \
+    <div class='item-count larger whisper'> \
+    <span class='item-count-value' id='tree-item-" + id + "-unread-count'>" + unread + "</span> \
+    </div> \
+    </div>";
+    return entry;
+}
+
 function getTopCategories() {
     $('#nav-title').html('');
     $('#sub-list-back').addClass('hidden');
@@ -707,19 +721,14 @@ function getTopCategories() {
         };
         let request = apiCall(data);
         request.done(function (response, _textStatus, _jqXHR) {
+            let sub = 'open-sub-folder';
             let unread = response.content.unread;
+            let id = -4;
+            let nested = '';
+            let icon = 'fa-folder-open';
+            let title = "All articles";
 
-            let entry = "<div class='row whisper sub-row open-sub-folder" + ((unread > 0) ? " unread-sub" :
-                " no-unread-sub-row") + "' id='tree-item--4'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder-open fa-lg'></i> </div> \
-        <div class='text sub-item'>All articles</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item--4-unread-count'>" + unread + "</span> \
-        </div> \
-        </div>";
-
-            $('#sub--4').prepend(entry);
+            $('#sub--4').prepend(buildTreeRow(sub, unread, id, nested, icon, title));
 
             $('#tree-item--4').off('click').on('click', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
@@ -749,17 +758,13 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                let entry = "<div class='row whisper sub-row closed-sub-folder" + ((cat.unread > 0) ?
-                    " unread-sub" : " no-unread-sub-row") + " nested-sub' id='tree-item-" + cat.id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder fa-lg'></i></div> \
-        <div class='text sub-item'>" + cat.title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + cat.id + "-unread-count'>" + cat.unread + "</span> \
-        </div> \
-        </div>";
-
-                $('#sub--4').append(entry);
+                let sub = 'closed-sub-folder';
+                let unread = cat.unread;
+                let id = cat.id;
+                let nested = 'nested-sub';
+                let icon = 'fa-folder';
+                let title = cat.title;
+                $('#sub--4').append(buildTreeRow(sub, unread, id, nested, icon, title));
 
             });
 
@@ -820,32 +825,22 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
             $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
 
-            let entry = "<div class='row whisper sub-row open-sub-folder" + ((parent_unread > 0) ?
-                " unread-sub" : " no-unread-sub-row") + "' id='tree-item-" + parent_id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa fa-folder-open fa-lg'></i> </div> \
-        <div class='text sub-item'>" + parent_title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + parent_id + "-unread-count'>" + parent_unread + "</span> \
-        </div> \
-        </div>";
-
-            $('#sub-' + parent_id).prepend(entry);
+            let sub = 'open-sub-folder';
+            let unread = parent_unread;
+            let id = parent_id;
+            let nested = '';
+            let icon = 'fa-folder-open';
+            let title = parent_title;
+            $('#sub-' + parent_id).prepend(buildTreeRow(sub, unread, id, nested, icon, title));
 
             $.each(feeds, function (index, feed) {
-                entry = "<div class='row whisper sub-row" + ((feed.unread > 0) ? " unread-sub" :
-                        " no-unread-sub-row") + "" + ((feed.is_cat) ? " closed-sub-folder" : " sub") +
-                    " nested-sub' id='tree-item-" + feed.id + "'> \
-        <div class='icon-cell'> \
-        <i class='fa " + ((feed.is_cat) ? "fa-folder fa-lg" : "fa-rss-square fa-lg") +
-                    "'></i> </div> \
-        <div class='text sub-item'>" + feed.title + "</div> \
-        <div class='item-count larger whisper'> \
-        <span class='item-count-value' id='tree-item-" + feed.id + "-unread-count'>" + feed.unread + "</span> \
-        </div> \
-        </div>";
-
-                $('#sub-' + parent_id).append(entry);
+                let sub = ((feed.is_cat) ? " closed-sub-folder" : " sub");
+                let unread = feed.unread;
+                let id = feed.id;
+                let nested = 'nested-sub';
+                let icon = ((feed.is_cat) ? "fa-folder" : "fa-rss-square");
+                let title = feed.title;
+                $('#sub-' + parent_id).append(buildTreeRow(sub, unread, id, nested, icon, title));
 
             });
 
