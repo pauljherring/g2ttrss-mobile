@@ -245,6 +245,13 @@ function bindNavigation(){
             $('#entries').empty();
             getHeadlines();
         });
+
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        request.always(function () {});
+
     });
 
     // Logout
@@ -262,6 +269,12 @@ function bindNavigation(){
             delCookie('g2tt_sid');
             location.reload(true);
         });
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        request.always(function () {});
+
     });
 }
 
@@ -464,6 +477,12 @@ function refreshCats() {
                 }
             }
         });
+
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        request.always(function () {});
 
         showEmpty();
 
@@ -738,6 +757,11 @@ function getTopCategories() {
                 getData();
             });
         });
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        request.always(function () {});
 
         data = {
             op: "getCategories",
@@ -780,6 +804,11 @@ function getTopCategories() {
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
+        cats.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        cats.always(function () {});
     }
 }
 
@@ -873,6 +902,12 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
+
+        feeds.fail(function (jqXHR, textStatus, errorThrown) {
+            console.error("The following error occurred: " + textStatus, errorThrown);
+        });
+
+        feeds.always(function () {});
     }
 }
 
@@ -902,6 +937,13 @@ function getTitle() {
             }
         });
     });
+
+    request.fail(function (jqXHR, textStatus, errorThrown) {
+        console.error("The following error occurred: " + textStatus, errorThrown);
+    });
+
+    request.always(function () {});
+
 }
 
 function load() {
@@ -1112,6 +1154,12 @@ function subscribe(feedurl, categoryID) {
         }
         return response;
     });
+
+    request.fail(function (jqXHR, textStatus, errorThrown) {
+        console.error("The following error occurred: " + textStatus, errorThrown);
+    });
+
+    request.always(function () {});
 }
 
 function getCategoriesForNewSubscribe() {
@@ -1162,6 +1210,11 @@ function getCategoriesForNewSubscribe() {
         });
     });
 
+    catsForNew.fail(function (jqXHR, textStatus, errorThrown) {
+        console.error("The following error occurred: " + textStatus, errorThrown);
+    });
+
+    catsForNew.always(function () {});
 }
 
 function expandEntry(entryRow) {
