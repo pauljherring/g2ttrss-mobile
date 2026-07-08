@@ -40,8 +40,19 @@ var global_backCat = []; // Feed view always starts with all items
 var global_ids = []; // List of all article IDs currently displayed
 var global_parentId = '-4';
 
+function bindClick(selector, callback) {
+    let eventType = 'click';
+    switch (selector) {
+        case '#login':
+            eventType = 'submit';
+            break;
+        default:
+    }
+    $(selector).off(eventType).on(eventType, callback);
+}
+
 function bindGlobalUi(){
-    $('html').off('click').on('click', function () {
+    bindClick('html', function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
         $('#menuUp').addClass('hidden');
@@ -50,7 +61,7 @@ function bindGlobalUi(){
 }
 
 function bindLoginForm(){
-    $("#login").on('submit', function (event) {
+    bindClick('#login', function (event) {
         if (bindLoginForm.request) {
             bindLoginForm.request.abort();
         }
@@ -117,7 +128,7 @@ function bindLoginForm(){
 
 function bindNavigation(){
     // Show more items
-    $('#load-more-items').off('click').on('click', function () {
+    bindClick('#load-more-items', function () {
         let last;
         if (pref_OrderBy == "date_reverse") {
             last = $('.entry-row').last().attr('id');
@@ -128,7 +139,7 @@ function bindNavigation(){
     });
 
     // Menu button
-    $('#header-menu').off('click').on('click', function (event) {
+    bindClick('#header-menu', function (event) {
         $(this).toggleClass('m-button-pressed');
         $('#menuDown').toggleClass('hidden');
         $('#menuUp').toggleClass('hidden');
@@ -143,7 +154,7 @@ function bindNavigation(){
     });
 
     // Refresh button
-    $('#header-refresh').off('click').on('click', function () {
+    bindClick('#header-refresh', function () {
         $(this).addClass('m-button-pressed');
         if ($('#subscriptions').is(':hidden')) {
             location.reload(true);
@@ -154,7 +165,7 @@ function bindNavigation(){
 
     // View mode menu selection
     $('#' + pref_ViewMode).addClass('g2tt-option-selected');
-    $('.showItem').off('click').on('click', function () {
+    bindClick('.showItem', function () {
         pref_ViewMode = $(this).attr('id');
         setCookie('g2tt_viewMode', pref_ViewMode);
         $('.showItem').removeClass('g2tt-option-selected');
@@ -170,7 +181,7 @@ function bindNavigation(){
     $('#' + pref_OrderBy).addClass('g2tt-option-selected');
 
 
-    $('.sortItem').off('click').on('click', function () {
+    bindClick('.sortItem', function () {
         pref_OrderBy = $(this).attr('id');
         setCookie('g2tt_orderBy', pref_OrderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
@@ -180,13 +191,13 @@ function bindNavigation(){
     });
 
     // Back to Feeds
-    $('.back-to-feeds').off('click').on('click', function () {
+    bindClick('.back-to-feeds', function () {
         refreshCats();
         showFeeds();
     });
 
     // ADDED - Subscribe to new Feeds
-    $('#add-new-subscription').off('click').on('click', function () {
+    bindClick('#add-new-subscription', function () {
         // $("#catItems-button").css("display", "none"); // hack - determine why this is so
         getCategoriesForNewSubscribe();
         $("#dialog-form").dialog("open");
@@ -195,7 +206,7 @@ function bindNavigation(){
     // View mode feeds menu selection
     $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
     $('#subscriptions').addClass('show-' + pref_ViewMode);
-    $('.feedsItem').off('click').on('click', function () {
+    bindClick('.feedsItem', function () {
         pref_ViewMode = $(this).attr('id').substring(6);
         setCookie('g2tt_viewMode', pref_ViewMode);
         $('.feedsItem').removeClass('g2tt-option-selected');
@@ -209,7 +220,7 @@ function bindNavigation(){
     if (pref_FeedSort == '1') {
         $('.feedsSort').addClass('g2tt-option-selected');
     }
-    $('.feedsSort').off('click').on('click', function () {
+    bindClick('.feedsSort', function () {
         if (pref_FeedSort == '1') {
             pref_FeedSort = '0';
         } else {
@@ -220,7 +231,7 @@ function bindNavigation(){
     });
 
     // Back to Feeds from sub category
-    $('#sub-list-back').off('click').on('click', function () {
+    bindClick('#sub-list-back', function () {
         refreshCats();
         getFeeds(global_backCat.pop());
         $('#add-new-subscription').removeClass('hidden');
@@ -228,7 +239,7 @@ function bindNavigation(){
     });
 
     // Mark all as read
-    $('#show-more-row, #menu-mark-read').off('click').on('click', function () {
+    bindClick('#show-more-row, #menu-mark-read', function () {
         $('body').removeClass('loaded').addClass('loading');
         $('.load-more-message').html('Marking as read...');
         //remove those that need to be kept unread
@@ -255,7 +266,7 @@ function bindNavigation(){
     });
 
     // Logout
-    $('#menu-logout').off('click').on('click', function () {
+    bindClick('#menu-logout', function () {
         let data = {
             op: "logout"
         };
@@ -281,17 +292,17 @@ function bindNavigation(){
 function bindSearchUi(){
     // Search
     // Show search
-    $('#menu-search').off('click').on('click', function () {
+    bindClick('#menu-search', function () {
         $('.search-box').removeClass('hidden');
         $('#search-input').trigger('focus');
     });
     // Clear and hide search
-    $('#search-cancel').off('click').on('click', function () {
+    bindClick('#search-cancel', function () {
         $('#search-input').val('');
         $('.search-box').addClass('hidden');
     });
     // Enter in search field searches
-    $('#search-input').off('keypress').on('keypress', function (e) {
+    bindClick('#search-input', function (e) {
         if (e.which == 13) {
             jQuery(this).blur();
             jQuery('#search-submit').trigger('focus').trigger('click');
@@ -299,7 +310,7 @@ function bindSearchUi(){
         }
     });
     // Remove currently displayed headlines and search
-    $('#search-submit').off('click').on('click', function () {
+    bindClick('#search-submit', function () {
         $('#entries').empty();
         getHeadlines();
         return false;
@@ -625,28 +636,28 @@ function renderHeadlines(headlines) {
 
 function bindHeadlineEvents() {
     // Expand an entry
-    $('.entry-header-body').off('click').on('click', function () {
+    bindClick('.entry-header-body', function () {
         expandEntry($(this).closest('.entry-row'));
     });
 
     // Collapse an entry
-    $('.entry-top-bar').off('click').on('click', function () {
+    bindClick('.entry-top-bar', function () {
         collapseEntry($(this).closest('.entry-row'));
     });
 
     // Next entry
-    $('.entry-next').off('click').on('click', function (event) {
+    bindClick('.entry-next', function (event) {
         expandEntry($(this).closest('.entry-row').next());
         event.stopPropagation();
     });
 
     // Toggle read
-    $('.read-state').off('click').on('click', function () {
+    bindClick('.read-state', function () {
         toggleEntryAsRead($(this).closest('.entry-row'));
     });
 
     // Mark NewFont (star) entry
-    $('.favStarDiv').off('click').on('click', function () {
+    bindClick('.favStarDiv', function () {
         let data = {
             op: "updateArticle",
             article_ids: $(this).closest('.entry-row').attr('id'),
@@ -735,7 +746,7 @@ function getTopCategories() {
     if ($('#sub--4').length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
-        $('.closed-sub-folder').off('click').on('click', function () {
+        bindClick('.closed-sub-folder', function () {
             global_backCat.push("-4");
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
@@ -761,7 +772,7 @@ function getTopCategories() {
                 title: 'All articles'
             }));
 
-            $('#tree-item--4').off('click').on('click', function () {
+            bindClick('#tree-item--4', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
                 pref_Feed = readCookie('g2tt_feed');
@@ -805,7 +816,7 @@ function getTopCategories() {
 
             });
 
-            $('.closed-sub-folder').off('click').on('click', function () {
+            bindClick('.closed-sub-folder', function () {
                 global_backCat.push("-4");
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
@@ -838,7 +849,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     if ($('#sub-' + parent_id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub-' + parent_id).removeClass('hidden');
-        $('.closed-sub-folder').off('click').on('click', function () {
+        bindClick('.closed-sub-folder', function () {
             global_backCat.push(parent_id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
@@ -887,14 +898,14 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
             });
 
-            $('.closed-sub-folder').off('click').on('click', function () {
+            bindClick('.closed-sub-folder', function () {
                 global_backCat.push(parent_id);
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
                     .find('.item-count-value').html());
             });
 
-            $('.open-sub-folder[id!="tree-item--4"]').off('click').on('click', function () {
+            bindClick('.open-sub-folder[id!="tree-item--4"]', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', true);
                 pref_Feed = readCookie('g2tt_feed');
@@ -902,7 +913,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 getData();
             });
 
-            $('.sub').off('click').on('click', function () {
+            bindClick('.sub', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
                 pref_Feed = readCookie('g2tt_feed');
