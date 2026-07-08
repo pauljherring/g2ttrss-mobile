@@ -21,24 +21,30 @@ function delCookie(name) {
     return oldVal;
 }
 
+// legacy global variables, now stored in appState. Do not reference these
+// directly, use appState instead.
 var pref_IsCat = false;
-var pref_Feed;
-var pref_ViewMode;
-var pref_OrderBy
-var pref_FeedSort
+var pref_Feed;      // eslint-disable-line no-unassigned-vars -- defined in config
+var pref_ViewMode;  // eslint-disable-line no-unassigned-vars -- defined in config
+var pref_OrderBy    // eslint-disable-line no-unassigned-vars -- defined in config
+var pref_FeedSort   // eslint-disable-line no-unassigned-vars -- defined in config
 var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in config
 var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in config
 
-pref_Feed = readCookie('g2tt_feed', pref_Feed);
-pref_IsCat = readCookie('g2tt_isCat', pref_IsCat);
-pref_ViewMode = readCookie('g2tt_viewMode', pref_ViewMode);
-pref_OrderBy = readCookie('g2tt_orderBy', pref_OrderBy);
-pref_FeedSort = readCookie('g2tt_feedSort', pref_FeedSort);
-
-var global_backCat = []; // Feed view always starts with all items
-var global_ids = []; // List of all article IDs currently displayed
-var global_parentId = '-4';
+const appState = {
+    feedId: typeof pref_Feed !== 'undefined' ? pref_Feed : readCookie('g2tt_feed'),
+    isCategory: typeof pref_IsCat !== 'undefined' ? pref_IsCat : readCookie('g2tt_isCat', false),
+    viewMode: typeof pref_ViewMode !== 'undefined' ? pref_ViewMode : readCookie('g2tt_viewMode'),
+    orderBy: typeof pref_OrderBy !== 'undefined' ? pref_OrderBy : readCookie('g2tt_orderBy'),
+    feedSort: typeof pref_FeedSort !== 'undefined' ? pref_FeedSort : readCookie('g2tt_feedSort'),
+    feedLimit: typeof pref_Feed_limit !== 'undefined' ? pref_Feed_limit : readCookie('g2tt_feedLimit'),
+    startCategory: pref_StartInCat,
+    parentId: '-4',
+    itemIds: [],
+    backCat: [],
+    url: global_ttrssUrl
+};
 
 function bindClick(selector, callback) {
     let eventType = 'click';
@@ -132,7 +138,7 @@ function bindLoginForm(){
 function bindLoadMore(){
     bindClick('#load-more-items', function () {
         let last;
-        if (pref_OrderBy == "date_reverse") {
+        if (appState.orderBy == "date_reverse") {
             last = $('.entry-row').last().attr('id');
         } else {
             last = $('.entry-row').length;
@@ -169,25 +175,25 @@ function bindHeader() {
 
 function bindViewMode() {
     // View mode menu selection
-    $('#' + pref_ViewMode).addClass('g2tt-option-selected');
+    $('#' + appState.viewMode).addClass('g2tt-option-selected');
     bindClick('.showItem', function () {
-        pref_ViewMode = $(this).attr('id');
-        setCookie('g2tt_viewMode', pref_ViewMode);
+        appState.viewMode = $(this).attr('id');
+        setCookie('g2tt_viewMode', appState.viewMode);
         $('.showItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.feedsItem').removeClass('g2tt-option-selected');
-        $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
+        $('#feeds-' + appState.viewMode).addClass('g2tt-option-selected');
         $('#entries').empty();
-        $('#subscriptions').attr('class', 'hidden show-' + pref_ViewMode);
+        $('#subscriptions').attr('class', 'hidden show-' + appState.viewMode);
         getHeadlines();
     });
 }
 
 function bindSortMode() {
-    $('#' + pref_OrderBy).addClass('g2tt-option-selected');
+    $('#' + appState.orderBy).addClass('g2tt-option-selected');
         bindClick('.sortItem', function () {
-        pref_OrderBy = $(this).attr('id');
-        setCookie('g2tt_orderBy', pref_OrderBy);
+        appState.orderBy = $(this).attr('id');
+        setCookie('g2tt_orderBy', appState.orderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('#entries').empty();
@@ -197,15 +203,15 @@ function bindSortMode() {
 
 function bindFeedsMenu() {
     // View mode feeds menu selection
-    $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
-    $('#subscriptions').addClass('show-' + pref_ViewMode);
+    $('#feeds-' + appState.viewMode).addClass('g2tt-option-selected');
+    $('#subscriptions').addClass('show-' + appState.viewMode);
     bindClick('.feedsItem', function () {
-        pref_ViewMode = $(this).attr('id').substring(6);
-        setCookie('g2tt_viewMode', pref_ViewMode);
+        appState.viewMode = $(this).attr('id').substring(6);
+        setCookie('g2tt_viewMode', appState.viewMode);
         $('.feedsItem').removeClass('g2tt-option-selected');
         $(this).addClass('g2tt-option-selected');
         $('.showItem').removeClass('g2tt-option-selected');
-        $('#' + pref_ViewMode).addClass('g2tt-option-selected');
+        $('#' + appState.viewMode).addClass('g2tt-option-selected');
         $('#subscriptions').attr('class', 'show-' + $(this).attr('id').substring(6));
     });
 }
@@ -220,16 +226,16 @@ function bindSubscription() {
 
 function bindSort() {
     // Sort feeds A-Z
-    if (pref_FeedSort == '1') {
+    if (appState.feedSort == '1') {
         $('.feedsSort').addClass('g2tt-option-selected');
     }
     bindClick('.feedsSort', function () {
-        if (pref_FeedSort == '1') {
-            pref_FeedSort = '0';
+        if (appState.feedSort == '1') {
+            appState.feedSort = '0';
         } else {
-            pref_FeedSort = '1';
+            appState.feedSort = '1';
         }
-        setCookie('g2tt_feedSort', pref_FeedSort);
+        setCookie('g2tt_feedSort', appState.feedSort);
         $(this).toggle('g2tt-option-selected');
     });
 }
@@ -244,7 +250,7 @@ function bindBackButtons() {
     // Back to Feeds from sub category
     bindClick('#sub-list-back', function () {
         refreshCats();
-        getFeeds(global_backCat.pop());
+        getFeeds(appState.backCat.pop());
         $('#add-new-subscription').removeClass('hidden');
 
     });
@@ -256,10 +262,10 @@ function bindMarkRead() {
         $('body').removeClass('loaded').addClass('loading');
         $('.load-more-message').html('Marking as read...');
         //remove those that need to be kept unread
-        keepUnread.removeFromArray(global_ids);
+        keepUnread.removeFromArray(appState.itemIds);
         let data = {
             op: "updateArticle",
-            article_ids: global_ids.join(','),
+            article_ids: appState.itemIds.join(','),
             mode: 0,
             field: 2
         };
@@ -493,7 +499,7 @@ function refreshCats() {
                     $('#subscriptions').removeClass('show-unread').addClass('show-all');
                 } else {
                     $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
-                    if (pref_ViewMode == 'unread' && $('#subscriptions').hasClass('show-all')) {
+                    if (appState.viewMode == 'unread' && $('#subscriptions').hasClass('show-all')) {
                         $('#subscriptions').removeClass('show-all').addClass('show-unread');
                     }
                 }
@@ -529,7 +535,7 @@ function refreshCats() {
 }
 
 function showEmpty() {
-    let visible = $('#sub-' + global_parentId).children(':visible');
+    let visible = $('#sub-' + appState.parentId).children(':visible');
     if (visible.length == 0) {
         $('#subscriptions').removeClass('show-unread').addClass('show-all');
     }
@@ -543,7 +549,7 @@ function showFeeds() {
     $('.feedsMenu').removeClass('hidden');
     //added to show + for adding new subscriptions
     $('#add-new-subscription').removeClass('hidden');
-    if (global_parentId != '-4') {
+    if (appState.parentId != '-4') {
         $('#sub-list-back').removeClass('hidden');
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
@@ -570,7 +576,7 @@ function apiCall(data, asynch) {
     data = JSON.stringify(data);
     let request = $.ajax({
         contentType: "application/json",
-        url: global_ttrssUrl + "/api/",
+        url: appState.url + "/api/",
         type: "post",
         dataType: "json",
         data: data,
@@ -581,7 +587,6 @@ function apiCall(data, asynch) {
 }
 
 function buildHeadlinesEntry(headline) {
-    global_ids.push(headline.id);
     let email_subject = headline.title;
     let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
         headline.title + '</a></h2>' + headline.content;
@@ -657,6 +662,7 @@ function buildHeadlinesEntry(headline) {
 
 function renderHeadlines(headlines) {
     $.each(headlines, function (index, headline) {
+        appState.itemIds.push(headline.id);
         $('#entries').append(buildHeadlinesEntry(headline));
     });
 }
@@ -703,7 +709,7 @@ function finaliseHeadlines() {
     $('body').removeClass('loading').addClass('loaded');
     $('.load-more-message').html('Mark these items as read');
     $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
-    keepUnread.clean(global_ids);
+    keepUnread.clean(appState.itemIds);
 }
 
 function getHeadlines(since) {
@@ -717,17 +723,17 @@ function getHeadlines(since) {
 
     let data = {
         op: "getHeadlines",
-        feed_id: pref_Feed,
-        limit: pref_Feed_limit,
+        feed_id: appState.feedId,
+        limit: appState.feedLimit,
         show_excerpt: 1,
         show_content: 1,
         include_attachments: 0,
-        view_mode: pref_ViewMode,
-        is_cat: pref_IsCat
+        view_mode: appState.viewMode,
+        is_cat: appState.isCategory
     };
     data.include_nested = true;
-    data.order_by = pref_OrderBy;
-    if (pref_OrderBy == "date_reverse") {
+    data.order_by = appState.orderBy;
+    if (appState.orderBy == "date_reverse") {
         data.since_id = since;
     } else {
         data.skip = since;
@@ -774,7 +780,7 @@ function getTopCategories() {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
         bindClick('.closed-sub-folder', function () {
-            global_backCat.push("-4");
+            appState.backCat.push("-4");
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
                 '.item-count-value').html());
@@ -802,8 +808,8 @@ function getTopCategories() {
             bindClick('#tree-item--4', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
-                pref_Feed = readCookie('g2tt_feed');
-                pref_IsCat = readCookie('g2tt_isCat');
+                appState.feedId = readCookie('g2tt_feed');
+                appState.isCategory = readCookie('g2tt_isCat');
                 getData();
             });
         });
@@ -825,7 +831,7 @@ function getTopCategories() {
             cats.sort(function (a, b) {
                 let db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
                 let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
-                if (pref_FeedSort == '1') {
+                if (appState.feedSort == '1') {
                     return alpha_order;
                 } else {
                     return db_order;
@@ -844,7 +850,7 @@ function getTopCategories() {
             });
 
             bindClick('.closed-sub-folder', function () {
-                global_backCat.push("-4");
+                appState.backCat.push("-4");
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
                     .find('.item-count-value').html());
@@ -863,7 +869,7 @@ function getTopCategories() {
 }
 
 function getFeeds(parent_id, parent_title, parent_unread) {
-    global_parentId = parent_id;
+    appState.parentId = parent_id;
     if (parent_id === '-4') {
         getTopCategories();
         return;
@@ -877,7 +883,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub-' + parent_id).removeClass('hidden');
         bindClick('.closed-sub-folder', function () {
-            global_backCat.push(parent_id);
+            appState.backCat.push(parent_id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
                 '.item-count-value').html());
@@ -897,7 +903,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             feeds = response.content;
             feeds.sort(function (a, b) {
                 let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
-                if (pref_FeedSort == '1') {
+                if (appState.feedSort == '1') {
                     return alpha_order;
                 } else {
                     return ((a.cat_id < b.cat_id) ? -1 : ((a.cat_id > b.cat_id) ? 1 : 0));
@@ -926,7 +932,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
 
             bindClick('.closed-sub-folder', function () {
-                global_backCat.push(parent_id);
+                appState.backCat.push(parent_id);
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
                     .find('.item-count-value').html());
@@ -935,16 +941,16 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             bindClick('.open-sub-folder[id!="tree-item--4"]', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', true);
-                pref_Feed = readCookie('g2tt_feed');
-                pref_IsCat = readCookie('g2tt_isCat');
+                appState.feedId = readCookie('g2tt_feed');
+                appState.isCategory = readCookie('g2tt_isCat');
                 getData();
             });
 
             bindClick('.sub', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
-                pref_Feed = readCookie('g2tt_feed');
-                pref_IsCat = readCookie('g2tt_isCat');
+                appState.feedId = readCookie('g2tt_feed');
+                appState.isCategory = readCookie('g2tt_isCat');
                 getData();
             });
 
@@ -963,7 +969,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
 function getTitle() {
     let data = {};
-    if (pref_IsCat == "true") {
+    if (appState.isCategory == "true") {
         data.op = "getCategories";
     } else {
         data.op = "getFeeds";
@@ -981,7 +987,7 @@ function getTitle() {
         let items = response.content;
 
         $.each(items, function (index, item) {
-            if (item.id == pref_Feed) {
+            if (item.id == appState.feedId) {
                 $('#nav-title').html(item.title);
                 return;
             }
@@ -1000,7 +1006,7 @@ function load() {
     if (typeof ($.cookie('g2tt_sid')) === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
-    } else if (pref_StartInCat == '1') {
+    } else if (appState.startCategory == '1') {
         showFeeds();
         getTopCategories();
     } else {
@@ -1015,7 +1021,7 @@ function getData() {
     $('body').removeClass('loaded').addClass('loading');
     $('.load-more-message').html('Marking as read...');
     $('#entries').empty();
-    global_ids = [];
+    appState.itemIds = [];
     getTitle();
     getHeadlines();
 }
@@ -1053,7 +1059,7 @@ var keepUnread = new function () {
         this.save();
     };
     this.clean = function (ids) {
-        //check that global_keepUnread_ids does not contain items which are no longer in global_ids
+        //check that global_keepUnread_ids does not contain items which are no longer in appState.itemIds
         var keepUnreadIds = getIdMap();
         if (ids.length > 0) {
             for (var id in keepUnreadIds) {
@@ -1373,17 +1379,17 @@ function toggleEntryAsRead(entryRow) {
 
     if (!entryRow.hasClass('read')) {
         entryRow.find(".read-state").html("<i class='fa fa-book'></i>&nbsp;Mark read");
-        for (let i = 0; i < global_ids.length; i++) {
+        for (let i = 0; i < appState.itemIds.length; i++) {
             let articleId = entryRow.attr('id');
-            if (global_ids[i] == articleId) {
-                global_ids.splice(i, 1);
+            if (appState.itemIds[i] == articleId) {
+                appState.itemIds.splice(i, 1);
                 keepUnread.addId(articleId);
             }
         }
     } else {
         entryRow.find(".read-state").html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
         let articleId = entryRow.attr('id');
-        global_ids.push(articleId);
+        appState.itemIds.push(articleId);
         keepUnread.removeId(articleId);
     }
 
