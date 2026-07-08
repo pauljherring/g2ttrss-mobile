@@ -542,6 +542,132 @@ function apiCall(data, asynch) {
     return request;
 }
 
+function buildHeadlinesEntry(headline) {
+    global_ids.push(headline.id);
+    let email_subject = headline.title;
+    let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
+        headline.title + '</a></h2>' + headline.content;
+
+    let content = $(headline.content);
+    let alt;
+    if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
+            .attr("alt")))) {
+        content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
+    } else {
+        let container = $("<div></div>");
+        container.append(content);
+        content = container;
+    }
+
+    let date = new Date(headline.updated * 1000);
+    let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
+            " read" : "") + "'> \
+    <div class='entry-container'> \
+    <div class='entry-top-bar'> \
+    <span class='link entry-next'> \
+    <span class='entry-next-fa-icon'><i class='fa fa-arrow-down'></i></span> \
+    <span class='entry-next-text'>Next item</span> \
+    </span> \
+    <span class='link entry-collapse'> \
+    <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span> \
+    <span class='entry-collapse-text'>Collapse</span> \
+    </span> \
+    </div> \
+    <div class='entry-header'> \
+<div class='entry-icons'> \
+    <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
+    <i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
+</div> \
+    <div class='entry-header-body'> \
+    <div class='text'> \
+    <span class='item-title-collapsed'>" + headline.title + "</span> \
+    <a href='" + headline.link + "' \
+    class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
+    <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
+    <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
+            headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
+    </div> \
+    <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
+    </div> \
+    </div> \
+    <div class='entry'> \
+    <div id='entry-contents' class='entry whisper'> \
+    <div class='entry-annotations'></div> \
+    <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
+    </div> \
+    <div class='entry-footer'> \
+    <div class='entry-actions'> \
+    <div class='entry-actions-primary'> \
+    <span class='read-state link unselectable' title='Toggle read'>\
+    <i class='fa fa-book-open'></i>&nbsp;Mark unread\
+    </span> \
+    <span class='link unselectable' title='Sent by mail'> \
+    <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
+    <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
+        encodeURIComponent(email_body) + "'>E-Mail</a> \
+    </span> \
+    <wbr /> \
+    </div> \
+    </div> \
+    </div> \
+    <div class='action-area-container'></div> \
+    </div> \
+    </div> \
+    </div>";
+    return entry;
+}
+
+function renderHeadlines(headlines) {
+    $.each(headlines, function (index, headline) {
+        $('#entries').append(buildHeadlinesEntry(headline));
+    });
+}
+
+function bindHeadlineEvents() {
+    // Expand an entry
+    $('.entry-header-body').off('click').on('click', function () {
+        expandEntry($(this).closest('.entry-row'));
+    });
+
+    // Collapse an entry
+    $('.entry-top-bar').off('click').on('click', function () {
+        collapseEntry($(this).closest('.entry-row'));
+    });
+
+    // Next entry
+    $('.entry-next').off('click').on('click', function (event) {
+        expandEntry($(this).closest('.entry-row').next());
+        event.stopPropagation();
+    });
+
+    // Toggle read
+    $('.read-state').off('click').on('click', function () {
+        toggleEntryAsRead($(this).closest('.entry-row'));
+    });
+
+    // Mark NewFont (star) entry
+    $('.favStarDiv').off('click').on('click', function () {
+        let data = {
+            op: "updateArticle",
+            article_ids: $(this).closest('.entry-row').attr('id'),
+            mode: 2,
+            field: 0
+        };
+        let _response = apiCall(data);
+
+        $(this).next().toggleClass('starNotActive').toggleClass('starActive');
+        //console.log(newstar);
+    });
+}
+
+function finaliseHeadlines() {
+    // Done loading
+    $('body').removeClass('loading').addClass('loaded');
+    $('.load-more-message').html('Mark these items as read');
+    $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
+    keepUnread.clean(global_ids);
+}
+
 function getHeadlines(since) {
     $('body').addClass('loading');
     $('.load-more-message').html('Loading...');
@@ -578,128 +704,14 @@ function getHeadlines(since) {
             return;
         }
         headlines = response.content;
-
         if (headlines.length != data.limit) {
             $('#load-more-items').hide();
         } else {
             $('#load-more-items').show();
         }
-        $.each(headlines, function (index, headline) {
-            global_ids.push(headline.id);
-            let email_subject = headline.title;
-            let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
-                headline.title + '</a></h2>' + headline.content;
-
-            let content = $(headline.content);
-            let alt;
-            if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
-                    .attr("alt")))) {
-                content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
-            } else {
-                let container = $("<div></div>");
-                container.append(content);
-                content = container;
-            }
-
-            let date = new Date(headline.updated * 1000);
-            let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
-                    " read" : "") + "'> \
-            <div class='entry-container'> \
-            <div class='entry-top-bar'> \
-            <span class='link entry-next'> \
-            <span class='entry-next-fa-icon'><i class='fa fa-arrow-down'></i></span> \
-            <span class='entry-next-text'>Next item</span> \
-            </span> \
-            <span class='link entry-collapse'> \
-            <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span> \
-            <span class='entry-collapse-text'>Collapse</span> \
-            </span> \
-            </div> \
-            <div class='entry-header'> \
-		<div class='entry-icons'> \
-			<i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
-			<i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
-		</div> \
-            <div class='entry-header-body'> \
-            <div class='text'> \
-            <span class='item-title-collapsed'>" + headline.title + "</span> \
-            <a href='" + headline.link + "' \
-            class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
-            <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
-            <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
-                    headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
-            </div> \
-            <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
-            </div> \
-            </div> \
-            <div class='entry'> \
-            <div id='entry-contents' class='entry whisper'> \
-            <div class='entry-annotations'></div> \
-            <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
-            </div> \
-            <div class='entry-footer'> \
-            <div class='entry-actions'> \
-            <div class='entry-actions-primary'> \
-            <span class='read-state link unselectable' title='Toggle read'>\
-            <i class='fa fa-book-open'></i>&nbsp;Mark unread\
-            </span> \
-            <span class='link unselectable' title='Sent by mail'> \
-            <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
-            <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
-                encodeURIComponent(email_body) + "'>E-Mail</a> \
-            </span> \
-            <wbr /> \
-            </div> \
-            </div> \
-            </div> \
-            <div class='action-area-container'></div> \
-            </div> \
-            </div> \
-            </div>";
-
-            $('#entries').append(entry);
-        });
-
-        // Expand an entry
-        $('.entry-header-body').off('click').on('click', function () {
-            expandEntry($(this).closest('.entry-row'));
-        });
-
-        // Collapse an entry
-        $('.entry-top-bar').off('click').on('click', function () {
-            collapseEntry($(this).closest('.entry-row'));
-        });
-
-        // Next entry
-        $('.entry-next').off('click').on('click', function (event) {
-            expandEntry($(this).closest('.entry-row').next());
-            event.stopPropagation();
-        });
-
-        // Toggle read
-        $('.read-state').off('click').on('click', function () {
-            toggleEntryAsRead($(this).closest('.entry-row'));
-        });
-
-        // Mark NewFont (star) entry
-        $('.favStarDiv').off('click').on('click', function () {
-            let data = {
-                op: "updateArticle",
-                article_ids: $(this).closest('.entry-row').attr('id'),
-                mode: 2,
-                field: 0
-            };
-            let _response = apiCall(data);
-
-            $(this).next().toggleClass('starNotActive').toggleClass('starActive');
-            //console.log(newstar);
-        });
-
-        // Done loading
-        $('body').removeClass('loading').addClass('loaded');
-        $('.load-more-message').html('Mark these items as read');
-        $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
-        keepUnread.clean(global_ids);
+        renderHeadlines(headlines);
+        bindHeadlineEvents();
+        finaliseHeadlines();
     });
 }
 
