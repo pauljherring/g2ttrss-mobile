@@ -45,6 +45,7 @@ function bindClick(selector, callback) {
     switch (selector) {
         case '#login':
             eventType = 'submit';
+            break;
         case '#search-input':
             eventType = 'keypress';
             break;
