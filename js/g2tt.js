@@ -684,15 +684,15 @@ function getHeadlines(since) {
     });
 }
 
-function buildTreeRow(sub, unread, id, nested, icon, title) {
-    let entry = "<div class='row whisper sub-row " + sub +
-    ((unread > 0) ? " unread-sub" : " no-unread-sub-row") +
-    (nested ? " " + nested : "") + "' id='tree-item-" + id + "'> \
+function buildTreeRow(object) {
+    let entry = "<div class='row whisper sub-row " + object.sub +
+    ((object.unread > 0) ? " unread-sub" : " no-unread-sub-row") +
+    (object.nested ? " " + object.nested : "") + "' id='tree-item-" + object.id + "'> \
     <div class='icon-cell'> \
-    <i class='fa " + icon + " fa-lg'></i></div> \
-    <div class='text sub-item'>" + title + "</div> \
+    <i class='fa " + object.icon + " fa-lg'></i></div> \
+    <div class='text sub-item'>" + object.title + "</div> \
     <div class='item-count larger whisper'> \
-    <span class='item-count-value' id='tree-item-" + id + "-unread-count'>" + unread + "</span> \
+    <span class='item-count-value' id='tree-item-" + object.id + "-unread-count'>" + object.unread + "</span> \
     </div> \
     </div>";
     return entry;
@@ -721,14 +721,14 @@ function getTopCategories() {
         };
         let request = apiCall(data);
         request.done(function (response, _textStatus, _jqXHR) {
-            let sub = 'open-sub-folder';
-            let unread = response.content.unread;
-            let id = -4;
-            let nested = '';
-            let icon = 'fa-folder-open';
-            let title = "All articles";
-
-            $('#sub--4').prepend(buildTreeRow(sub, unread, id, nested, icon, title));
+            $('#sub--4').prepend(buildTreeRow({
+                sub: 'open-sub-folder',
+                unread: response.content.unread,
+                id: -4,
+                nested: '',
+                icon: 'fa-folder-open',
+                title: 'All articles'
+            }));
 
             $('#tree-item--4').off('click').on('click', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
@@ -758,13 +758,14 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                let sub = 'closed-sub-folder';
-                let unread = cat.unread;
-                let id = cat.id;
-                let nested = 'nested-sub';
-                let icon = 'fa-folder';
-                let title = cat.title;
-                $('#sub--4').append(buildTreeRow(sub, unread, id, nested, icon, title));
+                $('#sub--4').append(buildTreeRow({
+                    sub: 'closed-sub-folder',
+                    unread: cat.unread,
+                    id: cat.id,
+                    nested: 'nested-sub',
+                    icon: 'fa-folder',
+                    title: cat.title
+                }));
 
             });
 
@@ -825,22 +826,23 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             });
             $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
 
-            let sub = 'open-sub-folder';
-            let unread = parent_unread;
-            let id = parent_id;
-            let nested = '';
-            let icon = 'fa-folder-open';
-            let title = parent_title;
-            $('#sub-' + parent_id).prepend(buildTreeRow(sub, unread, id, nested, icon, title));
-
+            $('#sub-' + parent_id).prepend(buildTreeRow({
+                sub: 'open-sub-folder',
+                unread: parent_unread,
+                id: parent_id,
+                nested: '',
+                icon: 'fa-folder-open',
+                title: parent_title
+            }));
             $.each(feeds, function (index, feed) {
-                let sub = ((feed.is_cat) ? " closed-sub-folder" : " sub");
-                let unread = feed.unread;
-                let id = feed.id;
-                let nested = 'nested-sub';
-                let icon = ((feed.is_cat) ? "fa-folder" : "fa-rss-square");
-                let title = feed.title;
-                $('#sub-' + parent_id).append(buildTreeRow(sub, unread, id, nested, icon, title));
+                $('#sub-' + parent_id).append(buildTreeRow({
+                    sub: ((feed.is_cat) ? " closed-sub-folder" : " sub"),
+                    unread: feed.unread,
+                    id: feed.id,
+                    nested: 'nested-sub',
+                    icon: ((feed.is_cat) ? "fa-folder" : "fa-rss-square"),
+                    title: feed.title
+                }));
 
             });
 
