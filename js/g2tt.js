@@ -45,6 +45,8 @@ function bindClick(selector, callback) {
     switch (selector) {
         case '#login':
             eventType = 'submit';
+        case '#search-input':
+            eventType = 'keypress';
             break;
         default:
     }
@@ -126,8 +128,7 @@ function bindLoginForm(){
     //end of #login function
 }
 
-function bindNavigation(){
-    // Show more items
+function bindLoadMore(){
     bindClick('#load-more-items', function () {
         let last;
         if (pref_OrderBy == "date_reverse") {
@@ -137,7 +138,8 @@ function bindNavigation(){
         }
         getHeadlines(last);
     });
-
+}
+function bindHeader() {
     // Menu button
     bindClick('#header-menu', function (event) {
         $(this).toggleClass('m-button-pressed');
@@ -162,7 +164,9 @@ function bindNavigation(){
             refreshCats();
         }
     });
+}
 
+function bindViewMode() {
     // View mode menu selection
     $('#' + pref_ViewMode).addClass('g2tt-option-selected');
     bindClick('.showItem', function () {
@@ -176,12 +180,11 @@ function bindNavigation(){
         $('#subscriptions').attr('class', 'hidden show-' + pref_ViewMode);
         getHeadlines();
     });
+}
 
-    // Order by menu selection
+function bindSortMode() {
     $('#' + pref_OrderBy).addClass('g2tt-option-selected');
-
-
-    bindClick('.sortItem', function () {
+        bindClick('.sortItem', function () {
         pref_OrderBy = $(this).attr('id');
         setCookie('g2tt_orderBy', pref_OrderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
@@ -189,20 +192,9 @@ function bindNavigation(){
         $('#entries').empty();
         getHeadlines();
     });
+}
 
-    // Back to Feeds
-    bindClick('.back-to-feeds', function () {
-        refreshCats();
-        showFeeds();
-    });
-
-    // ADDED - Subscribe to new Feeds
-    bindClick('#add-new-subscription', function () {
-        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
-        getCategoriesForNewSubscribe();
-        $("#dialog-form").dialog("open");
-    });
-
+function bindFeedsMenu() {
     // View mode feeds menu selection
     $('#feeds-' + pref_ViewMode).addClass('g2tt-option-selected');
     $('#subscriptions').addClass('show-' + pref_ViewMode);
@@ -215,7 +207,17 @@ function bindNavigation(){
         $('#' + pref_ViewMode).addClass('g2tt-option-selected');
         $('#subscriptions').attr('class', 'show-' + $(this).attr('id').substring(6));
     });
+}
 
+function bindSubscription() {
+    bindClick('#add-new-subscription', function () {
+        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
+        getCategoriesForNewSubscribe();
+        $("#dialog-form").dialog("open");
+    });
+}
+
+function bindSort() {
     // Sort feeds A-Z
     if (pref_FeedSort == '1') {
         $('.feedsSort').addClass('g2tt-option-selected');
@@ -229,6 +231,14 @@ function bindNavigation(){
         setCookie('g2tt_feedSort', pref_FeedSort);
         $(this).toggle('g2tt-option-selected');
     });
+}
+
+function bindBackButtons() {
+    // Back to Feeds
+    bindClick('.back-to-feeds', function () {
+        refreshCats();
+        showFeeds();
+    });
 
     // Back to Feeds from sub category
     bindClick('#sub-list-back', function () {
@@ -237,7 +247,9 @@ function bindNavigation(){
         $('#add-new-subscription').removeClass('hidden');
 
     });
+}
 
+function bindMarkRead() {
     // Mark all as read
     bindClick('#show-more-row, #menu-mark-read', function () {
         $('body').removeClass('loaded').addClass('loading');
@@ -264,8 +276,9 @@ function bindNavigation(){
         request.always(function () {});
 
     });
+}
 
-    // Logout
+function bindLogout() {
     bindClick('#menu-logout', function () {
         let data = {
             op: "logout"
@@ -287,6 +300,19 @@ function bindNavigation(){
         request.always(function () {});
 
     });
+}
+
+function bindNavigation(){
+    bindLoadMore();
+    bindHeader();
+    bindViewMode();
+    bindSortMode();
+    bindFeedsMenu();
+    bindSubscription();
+    bindSort();
+    bindBackButtons();
+    bindMarkRead();
+    bindLogout();
 }
 
 function bindSearchUi(){
