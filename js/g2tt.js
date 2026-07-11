@@ -1,3 +1,17 @@
+const SUPPORTED_API_LEVEL  = 23;
+
+const STATUS_OK  = 0;
+const STATUS_ERR = 1;
+
+const E_API_DISABLED = "API_DISABLED";
+const E_NOT_LOGGED_IN = "NOT_LOGGED_IN";
+const E_LOGIN_ERROR = "LOGIN_ERROR";
+const E_INCORRECT_USAGE = "INCORRECT_USAGE";
+const E_UNKNOWN_METHOD = "UNKNOWN_METHOD";
+const E_OPERATION_FAILED = "E_OPERATION_FAILED";
+const E_NOT_FOUND = "E_NOT_FOUND";
+
+
 function readCookie(name, fallback = undefined) {
     const value = $.cookie(name);
     return typeof value !== 'undefined' ? value : fallback;
@@ -71,8 +85,9 @@ function bindGlobalUi(){
 
 function bindLoginForm(){
     bindClick('#login', function (event) {
-        if (bindLoginForm.request) {
-            bindLoginForm.request.abort();
+        if (bindLoginForm.request !== undefined && bindLoginForm.request.abort !== undefined) {
+            console.log("Aborting previous login request...");
+            console.log(bindLoginForm.request);
         }
 
         let loginForm = $(this);
@@ -93,33 +108,14 @@ function bindLoginForm(){
         bindLoginForm.request = apiCall(data);
 
         bindLoginForm.request.done(function (response, _textStatus, _jqXHR) {
-            //console.log(response.content);
-            if (response.content.error == 'LOGIN_ERROR') {
-                window.alert("Username and/or Password were incorrect!");
+            $('.login').addClass('hidden');
+            $('#main').removeClass('hidden');
+            if ( response.content.api_level < SUPPORTED_API_LEVEL) {
+                window.alert("Current TT-RSS API version (" + response.content.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
+                logoutToHomepage();
             }
-            if (response.content.error == 'API_DISABLED' || response.content.error ==
-                'INCORRECT_USAGE') {
-                window.alert(
-                    "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
-                );
-            }
-            if (typeof response.content.error !== 'undefined') {
-                window.alert("Unexpected error received: ".concat(" ", response.content
-                    .error));
-            } else {
-                setCookie('g2tt_sid', response.content.session_id, 7);
-                $('.login').addClass('hidden');
-                $('#main').removeClass('hidden');
-                load();
-            }
-        });
-
-        // callback handler that will be called on failure
-        bindLoginForm.request.fail(function (jqXHR, textStatus, errorThrown) {
-            // log the error to the console
-            console.error(
-                "The following error occured: " +
-                textStatus, errorThrown);
+            setCookie('g2tt_sid', response.content.session_id, 7);
+            load();
         });
 
         // callback handler that will be called regardless
@@ -275,14 +271,20 @@ function bindMarkRead() {
             $('#entries').empty();
             getHeadlines();
         });
-
-        request.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        request.always(function () {});
-
     });
+}
+
+function clearCookies() {
+    delCookie('g2tt_feed');
+    delCookie('g2tt_isCat');
+    delCookie('g2tt_viewMode');
+    delCookie('g2tt_orderBy');
+    delCookie('g2tt_sid');
+}
+
+function logoutToHomepage() {
+    clearCookies();
+    location.reload(true);
 }
 
 function bindLogout() {
@@ -293,19 +295,8 @@ function bindLogout() {
         let request = apiCall(data);
 
         request.done(function (_response) {
-            delCookie('g2tt_feed');
-            delCookie('g2tt_isCat');
-            delCookie('g2tt_viewMode');
-            delCookie('g2tt_orderBy');
-            delCookie('g2tt_sid');
-            location.reload(true);
+            logoutToHomepage();
         });
-        request.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        request.always(function () {});
-
     });
 }
 
@@ -521,13 +512,6 @@ function refreshCats() {
                 }
             }
         });
-
-        request.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        request.always(function () {});
-
         showEmpty();
 
         $('#header-refresh').removeClass('m-button-pressed');
@@ -570,20 +554,75 @@ function showArticles() {
     $('#sub-list-back').addClass('hidden');
 }
 
-function apiCall(data, asynch) {
-    if (typeof (asynch) === 'undefined') asynch = true;
-    data.sid = readCookie('g2tt_sid');
-    data = JSON.stringify(data);
-    let request = $.ajax({
-        contentType: "application/json",
-        url: appState.url + "/api/",
-        type: "post",
-        dataType: "json",
-        data: data,
-        asynch: asynch,
-    });
+function handleAjaxError(jqXHR, textStatus, errorThrown) {
+    if (jqXHR.content === undefined || jqXHR.status === undefined) {
+        window.alert("Unexpected response from server");
+        console.error(jqXHR);
+        console.error(textStatus);
+        console.error(errorThrown);
+        throw new Error("Unexpected response");
+    }
 
-    return request;
+    if (jqXHR.content.error == E_API_DISABLED) {
+        window.alert(
+            "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
+        );
+        logoutToHomepage();
+    }
+    if (jqXHR.content.error == E_NOT_LOGGED_IN) {
+        window.alert("You are not logged in or your session has expired.");
+        logoutToHomepage();
+    }
+    if (jqXHR.content.error == E_LOGIN_ERROR) {
+        window.alert("Username and/or password were incorrect.");
+    }
+    if (jqXHR.content.error == E_INCORRECT_USAGE) {
+        window.alert(
+            "API error: Incorrect usage"
+        );
+    }
+    if (jqXHR.content.error == E_UNKNOWN_METHOD) {
+        window.alert(
+            "API error: Unknown method called"
+        );
+    }
+    if (jqXHR.content.error == E_OPERATION_FAILED) {
+        window.alert(
+            "API error: Operation failed"
+        );
+    }
+    if (jqXHR.content.error == E_NOT_FOUND) {
+        window.alert(
+            "API error: Icon not found)"
+        );
+    }
+}
+
+function handleApiStatusError(response) {
+    throw response;
+}
+
+function apiCall(data, opts = {}) {
+    data.sid = readCookie('g2tt_sid');
+    return $.ajax({
+        url: appState.url + "/api/",
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(data),
+        async: opts.async !== false,
+        timeout: opts.timeout || 15000
+    })
+    .then(response => {
+      if (response.status !== STATUS_OK) {
+        handleApiStatusError(response);
+      }
+      return response;
+    })
+    .fail((jqXHR, textStatus, errorThrown) => {
+        handleAjaxError(jqXHR, textStatus, errorThrown);
+        return $.Deferred().reject({ jqXHR, textStatus, errorThrown }).promise();
+    });
 }
 
 function buildHeadlinesEntry(headline) {
@@ -813,11 +852,6 @@ function getTopCategories() {
                 getData();
             });
         });
-        request.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        request.always(function () {});
 
         data = {
             op: "getCategories",
@@ -860,11 +894,6 @@ function getTopCategories() {
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
-        cats.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        cats.always(function () {});
     }
 }
 
@@ -958,12 +987,6 @@ function getFeeds(parent_id, parent_title, parent_unread) {
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
-
-        feeds.fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("The following error occurred: " + textStatus, errorThrown);
-        });
-
-        feeds.always(function () {});
     }
 }
 
@@ -993,13 +1016,6 @@ function getTitle() {
             }
         });
     });
-
-    request.fail(function (jqXHR, textStatus, errorThrown) {
-        console.error("The following error occurred: " + textStatus, errorThrown);
-    });
-
-    request.always(function () {});
-
 }
 
 function load() {
@@ -1210,12 +1226,6 @@ function subscribe(feedurl, categoryID) {
         }
         return response;
     });
-
-    request.fail(function (jqXHR, textStatus, errorThrown) {
-        console.error("The following error occurred: " + textStatus, errorThrown);
-    });
-
-    request.always(function () {});
 }
 
 function getCategoriesForNewSubscribe() {
@@ -1265,12 +1275,6 @@ function getCategoriesForNewSubscribe() {
             });
         });
     });
-
-    catsForNew.fail(function (jqXHR, textStatus, errorThrown) {
-        console.error("The following error occurred: " + textStatus, errorThrown);
-    });
-
-    catsForNew.always(function () {});
 }
 
 function expandEntry(entryRow) {
