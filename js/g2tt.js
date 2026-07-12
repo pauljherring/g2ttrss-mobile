@@ -613,10 +613,10 @@ function apiCall(data, opts = {}) {
         timeout: opts.timeout || 15000
     })
     .then(response => {
-      if (response.status !== STATUS_OK) {
-        handleApiStatusError(response);
-        return $.Deferred().reject(response).promise();
-      }
+        if (response.status !== STATUS_OK) {
+            handleApiStatusError(response);
+            return $.Deferred().reject(response).promise();
+        }
       return response.content;
     })
     .fail((jqXHR, textStatus, errorThrown) => {
@@ -751,15 +751,11 @@ function finaliseHeadlines() {
     keepUnread.clean(appState.itemIds);
 }
 
-function getHeadlines(since) {
-    $('body').addClass('loading');
-    $('.load-more-message').html('Loading...');
-    $('.entries-count').html('');
+
+function getHeadlinesRequest(since) {
     if (typeof (since) === 'undefined') since = 0;
 
-    //Anytime we get headlines, check if there is a search filter
     let search = $('#search-input').val();
-
     let data = {
         op: "getHeadlines",
         feed_id: appState.feedId,
@@ -768,27 +764,44 @@ function getHeadlines(since) {
         show_content: 1,
         include_attachments: 0,
         view_mode: appState.viewMode,
-        is_cat: appState.isCategory
+        is_cat: appState.isCategory,
+        include_nested: true,
+        order_by: appState.orderBy,
+        search: search
     };
-    data.include_nested = true;
-    data.order_by = appState.orderBy;
+
     if (appState.orderBy == "date_reverse") {
         data.since_id = since;
     } else {
         data.skip = since;
     }
-    data.search = search;
-    let headlines = apiCall(data);
 
-    headlines.done(function (headlines) {
-        if (headlines.length != data.limit) {
-            $('#load-more-items').hide();
-        } else {
-            $('#load-more-items').show();
-        }
-        renderHeadlines(headlines);
-        bindHeadlineEvents();
-        finaliseHeadlines();
+    return apiCall(data);
+}
+
+function updateHeadlinesPagination(headlineCount, limit) {
+    if (headlineCount != limit) {
+        $('#load-more-items').hide();
+    } else {
+        $('#load-more-items').show();
+    }
+}
+
+function handleHeadlinesResponse(headlines) {
+    updateHeadlinesPagination(headlines.length, appState.feedLimit);
+    renderHeadlines(headlines);
+    bindHeadlineEvents();
+    finaliseHeadlines();
+}
+
+function getHeadlines(since) {
+    console.log('Getting headlines: ' + since);
+    $('body').addClass('loading');
+    $('.load-more-message').html('Loading...');
+    $('.entries-count').html('');
+
+    getHeadlinesRequest(since).done(function (headlines) {
+        handleHeadlinesResponse(headlines);
     });
 }
 

@@ -17,20 +17,10 @@ in getTopCategories() /
 getFeeds()
 
 
-## state management
-
-reduce reliance on globals like pref_Feed, pref_IsCat, global_ids, global_parentId
-consider a small state object instead of scattered vars
-
 ## keepUnread helper
 
 fix hasId bug (getIdMap[articleId] should likely be getIdMap()[articleId])
 simplify cookie load/save and map handling
-
-## `API helper and error handling
-
-improve apiCall() to handle failures consistently
-verify the asynch option usage against jQuery’s async
 
 ## modern JavaScript cleanup
 
