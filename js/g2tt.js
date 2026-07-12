@@ -214,7 +214,6 @@ function bindFeedsMenu() {
 
 function bindSubscription() {
     bindClick('#add-new-subscription', function () {
-        // $("#catItems-button").css("display", "none"); // hack - determine why this is so
         getCategoriesForNewSubscribe();
         $("#dialog-form").dialog("open");
     });
@@ -839,8 +838,8 @@ function getTopCategories() {
         let data = {
             op: "getUnread"
         };
-        let request = apiCall(data);
-        request.done(function (content) {
+        let unread = apiCall(data);
+        unread.done(function (content) {
             $('#sub--4').prepend(buildTreeRow({
                 sub: 'open-sub-folder',
                 unread: content.unread,
@@ -1071,9 +1070,9 @@ var keepUnread = new function () {
     };
     this.clean = function (ids) {
         //check that global_keepUnread_ids does not contain items which are no longer in appState.itemIds
-        var keepUnreadIds = getIdMap();
+        let keepUnreadIds = getIdMap();
         if (ids.length > 0) {
-            for (var id in keepUnreadIds) {
+            for (let id in keepUnreadIds) {
                 id = id || 0; //id must be numeric
                 if ($.inArray(id, ids) < 0) {
                     this.removeId(id);
@@ -1085,19 +1084,19 @@ var keepUnread = new function () {
 
     /*given array of ids, remove all that need to be kept unread*/
     this.removeFromArray = function (ids) {
-        var keepUnreadIds = getIdMap();
-        for (var id in keepUnreadIds) {
+        let keepUnreadIds = getIdMap();
+        for (let id in keepUnreadIds) {
             id = id || 0; //id must be numeric
-            var index = $.inArray(id, ids);
+            let index = $.inArray(id, ids);
             if (index >= 0) {
                 ids.splice(index, 1);
             }
         }
     };
     this.save = function () {
-        var strVal = '';
-        var keepIdMap = getIdMap();
-        for (var articleId in keepIdMap) {
+        let strVal = '';
+        let keepIdMap = getIdMap();
+        for (let articleId in keepIdMap) {
             if (strVal.length > 0) {
                 strVal += ',';
             }
