@@ -795,7 +795,6 @@ function handleHeadlinesResponse(headlines) {
 }
 
 function getHeadlines(since) {
-    console.log('Getting headlines: ' + since);
     $('body').addClass('loading');
     $('.load-more-message').html('Loading...');
     $('.entries-count').html('');
@@ -855,7 +854,7 @@ function getTopCategories() {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
                 appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = readCookie('g2tt_isCat');
+                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
                 getData();
             });
         });
@@ -975,7 +974,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', true);
                 appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = readCookie('g2tt_isCat');
+                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
                 getData();
             });
 
@@ -983,7 +982,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
                 setCookie('g2tt_isCat', false);
                 appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = readCookie('g2tt_isCat');
+                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
                 getData();
             });
 
@@ -996,7 +995,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
 function getTitle() {
     let data = {};
-    if (appState.isCategory == "true") {
+    if (appState.isCategory === true) {
         data.op = "getCategories";
     } else {
         data.op = "getFeeds";
@@ -1040,7 +1039,6 @@ function getData() {
 }
 
 var keepUnread = new function () {
-    let COOKIE_NAME = 'g2tt_keepUnread_ids';
     this.keepUnreadIdMap = undefined;
 
     let getIdMap = function () {
@@ -1048,7 +1046,7 @@ var keepUnread = new function () {
             //attempt to load from cookie
             this.keepUnreadIdMap = [];
             let savedKeepUnread_ids;
-            savedKeepUnread_ids = readCookie(COOKIE_NAME);
+            savedKeepUnread_ids = readCookie('g2tt_keepUnread_ids');
 
             if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
                 let idList = savedKeepUnread_ids.split(',');
@@ -1062,7 +1060,7 @@ var keepUnread = new function () {
 
 
     this.hasId = function (ids, articleId) {
-        return true == getIdMap[articleId];
+        return true == getIdMap()[articleId];
     };
     this.removeId = function (articleId) {
         delete getIdMap()[articleId];
@@ -1105,7 +1103,7 @@ var keepUnread = new function () {
             }
             strVal += articleId;
         }
-        setCookie(COOKIE_NAME, strVal);
+        setCookie('g2tt_keepUnread_ids', strVal);
     };
 };
 
