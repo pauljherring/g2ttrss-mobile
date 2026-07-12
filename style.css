@@ -171,6 +171,7 @@ a.logo {
     color: #24b;
     text-decoration: underline;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .loading #viewer-bottom-links #load-more-items,
@@ -1764,8 +1765,6 @@ fieldset {
 
 .ui-state-hover {
     background: black;
-
-
 }
 
 .fullSite {

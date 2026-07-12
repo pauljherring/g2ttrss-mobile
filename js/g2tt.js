@@ -107,14 +107,14 @@ function bindLoginForm(){
 
         bindLoginForm.request = apiCall(data);
 
-        bindLoginForm.request.done(function (response, _textStatus, _jqXHR) {
+        bindLoginForm.request.done(function (loggedIn) {
             $('.login').addClass('hidden');
             $('#main').removeClass('hidden');
-            if ( response.content.api_level < SUPPORTED_API_LEVEL) {
-                window.alert("Current TT-RSS API version (" + response.content.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
+            if ( loggedIn.api_level < SUPPORTED_API_LEVEL) {
+                window.alert("Current TT-RSS API version (" + loggedIn.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
                 logoutToHomepage();
             }
-            setCookie('g2tt_sid', response.content.session_id, 7);
+            setCookie('g2tt_sid', loggedIn.session_id, 7);
             load();
         });
 
@@ -294,7 +294,7 @@ function bindLogout() {
         };
         let request = apiCall(data);
 
-        request.done(function (_response) {
+        request.done(function (_content) {
             logoutToHomepage();
         });
     });
@@ -467,8 +467,7 @@ function refreshCats() {
     };
     let request = apiCall(data);
 
-    request.done(function (response) {
-        let counters = response.content;
+    request.done(function (counters) {
         let cats = [];
         let feeds = [];
 
@@ -616,8 +615,9 @@ function apiCall(data, opts = {}) {
     .then(response => {
       if (response.status !== STATUS_OK) {
         handleApiStatusError(response);
+        return $.Deferred().reject(response).promise();
       }
-      return response;
+      return response.content;
     })
     .fail((jqXHR, textStatus, errorThrown) => {
         handleAjaxError(jqXHR, textStatus, errorThrown);
@@ -780,13 +780,7 @@ function getHeadlines(since) {
     data.search = search;
     let headlines = apiCall(data);
 
-    headlines.done(function (response, _textStatus, _jqXHR) {
-        if (response.status != 0) {
-            $.removeCookie('g2tt_sid');
-            getData();
-            return;
-        }
-        headlines = response.content;
+    headlines.done(function (headlines) {
         if (headlines.length != data.limit) {
             $('#load-more-items').hide();
         } else {
@@ -834,10 +828,10 @@ function getTopCategories() {
             op: "getUnread"
         };
         let request = apiCall(data);
-        request.done(function (response, _textStatus, _jqXHR) {
+        request.done(function (content) {
             $('#sub--4').prepend(buildTreeRow({
                 sub: 'open-sub-folder',
-                unread: response.content.unread,
+                unread: content.unread,
                 id: -4,
                 nested: '',
                 icon: 'fa-folder-open',
@@ -859,9 +853,7 @@ function getTopCategories() {
         };
         let cats = apiCall(data);
 
-        cats.done(function (response, _textStatus, _jqXHR) {
-            cats = response.content;
-
+        cats.done(function (cats) {
             cats.sort(function (a, b) {
                 let db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
                 let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
@@ -928,8 +920,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         };
         let feeds = apiCall(data);
 
-        feeds.done(function (response, _textStatus, _jqXHR) {
-            feeds = response.content;
+        feeds.done(function (feeds) {
             feeds.sort(function (a, b) {
                 let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
                 if (appState.feedSort == '1') {
@@ -1001,14 +992,7 @@ function getTitle() {
 
     let request = apiCall(data);
 
-    request.done(function (response, _textStatus, _jqXHR) {
-        if (response.status != 0) {
-            $.removeCookie('g2tt_sid');
-            getData();
-            return;
-        }
-        let items = response.content;
-
+    request.done(function (items) {
         $.each(items, function (index, item) {
             if (item.id == appState.feedId) {
                 $('#nav-title').html(item.title);
@@ -1124,8 +1108,7 @@ function subscribe(feedurl, categoryID) {
     $('#indicator').removeClass('hidden');
     let request = apiCall(data);
 
-    request.done(function (response, _textStatus, _jqXHR) {
-        let content = response.content;
+    request.done(function (content) {
         let status = content.status;
         let _message = status.message;
         let statusCode = status.code;
@@ -1144,15 +1127,15 @@ function subscribe(feedurl, categoryID) {
         /**
          * @return array (code => Status code, message => error message if available)
          *
-         *                 0 - OK, Feed already exists
-         *                 1 - OK, Feed added
-         *                 2 - Invalid URL
-         *                 3 - URL content is HTML, no feeds available
-         *                 4 - URL content is HTML which contains multiple feeds.
-         *                     Here you should call extractfeedurls in rpc-backend
-         *                     to get all possible feeds.
-         *                 5 - Couldn't download the URL content.
-         *                 6 - Content is an invalid XML.
+         *  0 - OK, Feed already exists
+         *  1 - OK, Feed added
+         *  2 - Invalid URL
+         *  3 - URL content is HTML, no feeds available
+         *  4 - URL content is HTML which contains multiple feeds.
+         *      Here you should call extractfeedurls in rpc-backend
+         *      to get all possible feeds.
+         *  5 - Couldn't download the URL content.
+         *  6 - Content is an invalid XML.
          */
         switch (statusCode) {
             case 0:{
@@ -1224,7 +1207,7 @@ function subscribe(feedurl, categoryID) {
                 );
                 break;}
         }
-        return response;
+        return content;
     });
 }
 
@@ -1236,8 +1219,7 @@ function getCategoriesForNewSubscribe() {
     };
     let catsForNew = apiCall(data);
 
-    catsForNew.done(function (response, _textStatus, _jqXHR) {
-        catsForNew = response.content;
+    catsForNew.done(function (catsForNew) {
         $('#catItems').find('option').remove();
         $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
 
