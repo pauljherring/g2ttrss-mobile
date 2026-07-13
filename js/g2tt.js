@@ -817,6 +817,35 @@ function getHeadlines(since) {
     });
 }
 
+function buildAllArticlesRow(content) {
+    return buildTreeRow({
+        obj: content,
+        sub: 'open-sub-folder'
+    });
+}
+
+function buildCategoryRow(cat) {
+    return buildTreeRow({
+        obj: cat,
+        sub: 'closed-sub-folder',
+        nested: 'nested-sub'
+    });
+}
+
+function buildParentFolderRow(parent) {
+    return buildTreeRow({
+        obj: parent,
+        sub: 'open-sub-folder'
+    });
+}
+
+function buildFeedRow(feed) {
+    return buildTreeRow({
+        obj: feed,
+        sub: feed.is_cat ? 'closed-sub-folder' : 'sub'
+    });
+}
+
 function buildTreeRow(row) {
     const iconMap = {
         'open-sub-folder': 'fa-folder-open',
@@ -873,10 +902,7 @@ function getTopCategories() {
         unread.done(function (content) {
             content.id = -4;
             content.title = 'All articles'
-            $('#sub--4').prepend(buildTreeRow({
-                obj: content,
-                sub: 'open-sub-folder',
-            }));
+            $('#sub--4').prepend(buildAllArticlesRow(content));
 
             bindClick('#tree-item--4', function () {
                 setCookie('g2tt_feed', $(this).attr('id').substring(10));
@@ -904,11 +930,7 @@ function getTopCategories() {
                 }
             });
             $.each(cats, function (index, cat) {
-                $('#sub--4').append(buildTreeRow({
-                    obj: cat,
-                    sub: 'closed-sub-folder',
-                    nested: 'nested-sub',
-                }));
+                $('#sub--4').append(buildCategoryRow(cat));
 
             });
 
@@ -973,15 +995,9 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 }
             });
             $('#subscriptions-list').append("<div id='sub-" + parent.id + "'></div>");
-            $('#sub-' + parent.id).prepend(buildTreeRow({
-                obj: parent,
-                sub: 'open-sub-folder',
-            }));
+            $('#sub-' + parent.id).prepend(buildParentFolderRow(parent));
             $.each(feeds, function (index, feed) {
-                $('#sub-' + parent.id).append(buildTreeRow({
-                    obj: feed,
-                    sub: ((feed.is_cat) ? "closed-sub-folder" : "sub"),
-                }));
+                $('#sub-' + parent.id).append(buildFeedRow(feed));
 
             });
 
