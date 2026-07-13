@@ -329,6 +329,7 @@ function bindNavigation() {
     bindBackButtons();
     bindMarkRead();
     bindLogout();
+    bindSubscriptionRowActions();
 }
 
 function bindSearchUi() {
@@ -928,12 +929,6 @@ function getTopCategories() {
     if ($('#sub--4').length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
-        bindClick('.closed-sub-folder', function () {
-            appState.backCat.push("-4");
-            $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
-                '.item-count-value').html());
-        });
     } else {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
@@ -992,12 +987,6 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     if ($('#sub-' + parent.id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub-' + parent.id).removeClass('hidden');
-        bindClick('.closed-sub-folder', function () {
-            appState.backCat.push(parent.id);
-            $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
-                '.item-count-value').html());
-        });
     } else {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
