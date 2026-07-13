@@ -8,31 +8,42 @@ What is it?
 -----------
 
 This mobile-oriented webapp is a client for [Tiny Tiny RSS](http://tt-rss.org)(TT-RSS).
-The webapp uses TT-RSS's [JSON API](http://tt-rss.org/redmine/projects/tt-rss/wiki/JsonApiReference).
+The webapp uses TT-RSS's [JSON API](https://tt-rss.org/docs/API-Reference.html).
 
-I was a big user of Google Reader's mobile webapp and when Google announced the
-end of Reader, I switched to TT-RSS. I was not satisfied with any of the other
-mobile interfaces out there for TT-RSS and decided I build my own based on the
-CSS styles from Google.
+The [original author](https://github.com/g2ttrss/g2ttrss-mobile) was a big user of Google Reader's mobile webapp and when
+Google announced the end of Reader, they switched to TT-RSS. They were not
+satisfied with any of the other mobile interfaces out there for TT-RSS and
+they decided to build their own based on the CSS styles from Google.
 
-g2ttrss-mobile use:
+g2ttrss-mobile uses:
+
  * [jQuery](http://jquery.com/)
+ * [jQuery UI](https://jqueryui.com/)
+ * [Font Awesome](https://fontawesome.com/)
 
 
 How to use it?
 --------------
 
-You should install the files in a directory on the same host as your TT-RSS install.
-As the webapp uses AJAX calls to access the API, it should be hosted on the **same domain name**.
-G2TTRSS assumes that your TT-RSS install is located at `<your-domain>/tt-rss`, if this is not the case
-edit `js/g2tt-config.js` and change `global_ttrssUrl` (line 2) to point to the correct location.
-If the webapp is installed in a subdirectory of TT-RSS, it could be wiped on an update to TT-RSS
-so after each update of TT-RSS, you may need to reinstall G2TTRSS.
+You should install the files in a directory on the same host as your TT-RSS
+install, though it is advised to put it in a sibling directoy to the main TT-RSS
+install - see below*.
 
-Use of this webapp requires TT-RSS's external APIs. They are enabled through the per-user TT-RSS's preferences:
+As the webapp uses AJAX calls to access the API, it should be hosted on the **same domain name**.
+
+G2TTRSS assumes that your TT-RSS install is located at `<your-domain>/tt-rss`,
+if this is not the case edit `js/g2tt-user-overrides.js` and change `globalThis.appState.url`
+to point to the correct location.
+
+
+Use of this webapp requires TT-RSS's external APIs. They are enabled through the
+per-user TT-RSS's preferences:
  * in *Tiny Tiny RSS* go into *Hamburger menu* -> `Preferences` -> `Preferences`
  * `Configuration` -> `Enable API`
  * `Configuration` -> `Allows accessing the API from browsers`
+
+\* If the webapp is installed in a subdirectory of TT-RSS, it could be wiped on an
+update to TT-RSS so after each update of TT-RSS, you may need to reinstall G2TTRSS.
 
 
 Current features
@@ -54,8 +65,6 @@ Current features
 * search for keywords in feeds
 * Google Reader style hotkeys (`j`, `k`, `n`, `p`, `o`, `m`)
 
-Future features are tracked as issues.
-
 Hotkeys
 -------
 
@@ -69,15 +78,17 @@ Hotkeys
 Configuration Options
 ---------------------
 
-Configuration options can be found in the js/g2tt-config.js file. These are options to change your personal preference for how the interface works.
+Configuration options can be found in the `js/g2tt-user-overrides.js` file. These
+are options to change your personal preference for how the interface works.
 
 Options:
 
-* **global_ttrssUrl** (Default: _("/tt-rss/")_)
+* **globalThis.appState.url** (Default: _("/tt-rss/")_)
 
-    The path to your TT-RSS installation relative to your domain.
+    The path to your TT-RSS installation relative to your domain. It accesses the
+    `/api` endpoint on the end of that URL.
 
-* **pref_Feed** (String, default: _('-4')_, all items)
+* **globalThis.appState.feedId** (String, default: _('-4')_, all items)
 
     The default feed to display. Available values:
     * >0 - A specific feed
@@ -87,27 +98,27 @@ Options:
     * -3 - All feeds, excluding virtual feeds (e.g. Labels and such)
     * -4 - All feeds, including virtual feeds
 
-* **pref_ViewMode** (Default: _('unread')_, unread articles only)
+* **globalThis.appState.viewMode** (Default: _('unread')_, unread articles only)
 
     Show unread or all articles? Available values:
     * unread - show unread articles only
     * all - show all articles
 
-* **pref_OrderBy** (Default: _('date_reverse')_, oldest first)
+* **globalThis.appState.orderBy** (Default: _('date_reverse')_, oldest first)
 
     Sort order of the articles/items. Available values:
     * date_reverse - oldest first
     * feed_dates - newest first, goes by feed date
     * (nothing) - TT-RSS's default (whatever that is)
 
-* **pref_FeedSort** (Default: _('0')_, do not sort feeds)
+* **globalThis.appState.feedSort** (Default: _('0')_, do not sort feeds)
 
     Sort the feeds (categories) in alphabetical order or not. Availables values:
     * 0 - do not sort feeds, display in the order TT-RSS returns them
     * 1 - sort the feeds in alphabetical order (A-Z)
 
-* **pref_StartInCat** (Default: _('0')_, start showing articles)
+* **globalThis.appState.startCategory** (Default: _('0')_, start showing articles)
 
     Start showing the feeds (categories) or articles (items)
-    * 0 - start showing articles
-    * 1 - start showing feeds
+    * false - start showing articles
+    * true - start showing feeds

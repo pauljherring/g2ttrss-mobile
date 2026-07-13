@@ -1,7 +1,7 @@
 const SUPPORTED_API_LEVEL  = 23;
 
 const STATUS_OK  = 0;
-const STATUS_ERR = 1;
+const STATUS_ERR = 1; // eslint-disable-line no-unused-vars
 
 const E_API_DISABLED = "API_DISABLED";
 const E_NOT_LOGGED_IN = "NOT_LOGGED_IN";
@@ -11,6 +11,14 @@ const E_UNKNOWN_METHOD = "UNKNOWN_METHOD";
 const E_OPERATION_FAILED = "E_OPERATION_FAILED";
 const E_NOT_FOUND = "E_NOT_FOUND";
 
+globalThis.appState.feedId = readCookie('g2tt_feed', globalThis.appState.feedId);
+globalThis.appState.isCategory = readCookie('g2tt_isCat', globalThis.appState.isCategory);
+globalThis.appState.viewMode = readCookie('g2tt_viewMode', globalThis.appState.viewMode);
+globalThis.appState.orderBy = readCookie('g2tt_orderBy', globalThis.appState.orderBy);
+globalThis.appState.feedSort = readCookie('g2tt_feedSort', globalThis.appState.feedSort);
+globalThis.appState.feedLimit = readCookie('g2tt_feedLimit', globalThis.appState.feedLimit);
+
+// let appState.feedLimit = globalThis.appState.feedLimit;
 
 function readCookie(name, fallback = undefined) {
     const value = $.cookie(name);
@@ -34,31 +42,6 @@ function delCookie(name) {
     $.removeCookie(name);
     return oldVal;
 }
-
-// legacy global variables, now stored in appState. Do not reference these
-// directly, use appState instead.
-var pref_IsCat = false;
-var pref_Feed;      // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_ViewMode;  // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_OrderBy    // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_FeedSort   // eslint-disable-line no-unassigned-vars -- defined in config
-var global_ttrssUrl; // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_StartInCat; // eslint-disable-line no-unassigned-vars -- defined in config
-var pref_Feed_limit; // eslint-disable-line no-unassigned-vars -- defined in config
-
-const appState = {
-    feedId: typeof pref_Feed !== 'undefined' ? pref_Feed : readCookie('g2tt_feed'),
-    isCategory: typeof pref_IsCat !== 'undefined' ? pref_IsCat : readCookie('g2tt_isCat', false),
-    viewMode: typeof pref_ViewMode !== 'undefined' ? pref_ViewMode : readCookie('g2tt_viewMode'),
-    orderBy: typeof pref_OrderBy !== 'undefined' ? pref_OrderBy : readCookie('g2tt_orderBy'),
-    feedSort: typeof pref_FeedSort !== 'undefined' ? pref_FeedSort : readCookie('g2tt_feedSort'),
-    feedLimit: typeof pref_Feed_limit !== 'undefined' ? pref_Feed_limit : readCookie('g2tt_feedLimit'),
-    startCategory: pref_StartInCat,
-    parentId: '-4',
-    itemIds: [],
-    backCat: [],
-    url: global_ttrssUrl
-};
 
 function bindClick(selector, callback) {
     let eventType = 'click';
@@ -278,6 +261,7 @@ function clearCookies() {
     delCookie('g2tt_isCat');
     delCookie('g2tt_viewMode');
     delCookie('g2tt_orderBy');
+    delCookie('g2tt_keepUnread_ids');
     delCookie('g2tt_sid');
 }
 
@@ -376,7 +360,6 @@ function bindSubscriptionUi(){
 
     function checkRegexp(o, regexp, n) {
         let makeOvalidHttp = o.val().trim();
-        console.log(firstToUpperCase(makeOvalidHttp));
         if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
             o.addClass("ui-state-error");
             updateTips(n);
@@ -414,7 +397,6 @@ function bindSubscriptionUi(){
                     let feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
 
                     let multipleFeedSelected = $("#feedsAvail option:selected").val();
-                    //console.log('When subscribe is chosen again ' + multipleFeedSelected);
 
                     if (multipleFeedSelected == null) {
                         $('#feedURL').val(feedURLTrimmed);
@@ -624,6 +606,11 @@ function apiCall(data, opts = {}) {
     });
 }
 
+function fixedEncodeURIComponent (str) {
+    // encodeURIComponent fails to encode, e.g., single quotes
+    // https://stackoverflow.com/a/32525285
+    return encodeURIComponent(str).replace(/[!'()*]/g, escape);
+}
 function buildHeadlinesEntry(headline) {
     let email_subject = headline.title;
     let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
@@ -631,8 +618,9 @@ function buildHeadlinesEntry(headline) {
 
     let content = $(headline.content);
     let alt;
-    if (content.length == 1 && content.is("img") && (alt = (content.attr("title") || content
-            .attr("alt")))) {
+    if (content.length == 1 &&
+            content.is("img") &&
+            (alt = (content.attr("title") || content.attr("alt")))) {
         content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
     } else {
         let container = $("<div></div>");
@@ -641,61 +629,69 @@ function buildHeadlinesEntry(headline) {
     }
 
     let date = new Date(headline.updated * 1000);
-    let entry = "<div id='" + headline.id + "' class='entry-row whisper" + ((!headline.unread) ?
-            " read" : "") + "'> \
-    <div class='entry-container'> \
-    <div class='entry-top-bar'> \
-    <span class='link entry-next'> \
-    <span class='entry-next-fa-icon'><i class='fa fa-arrow-down'></i></span> \
-    <span class='entry-next-text'>Next item</span> \
-    </span> \
-    <span class='link entry-collapse'> \
-    <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span> \
-    <span class='entry-collapse-text'>Collapse</span> \
-    </span> \
-    </div> \
-    <div class='entry-header'> \
-<div class='entry-icons'> \
-    <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i> \
-    <i class='favStar fa fa-star fa-2x " + ((headline.marked) ? "starActive" : "starNotActive") + "'></i> \
-</div> \
-    <div class='entry-header-body'> \
-    <div class='text'> \
-    <span class='item-title-collapsed'>" + headline.title + "</span> \
-    <a href='" + headline.link + "' \
-    class='item-title item-title-link' target='_blank'>" + headline.title + "</a> \
-    <span class='item-source-title'>&nbsp;-&nbsp;" + headline.feed_title + "</span> \
-    <div class='item-snippet'>" + ((headline.excerpt && headline.excerpt != '&hellip;') ? headline.excerpt : $(
-            headline.content).text().substr(0, 100) + '&hellip;') + "</div> \
-    </div> \
-    <div class='entry-sub-header'>by " + headline.author + " on " + date.toLocaleString() + "</div> \
-    </div> \
-    </div> \
-    <div class='entry'> \
-    <div id='entry-contents' class='entry whisper'> \
-    <div class='entry-annotations'></div> \
-    <div class='entry-contents-inner'>" + content[0].outerHTML + "</div> \
-    </div> \
-    <div class='entry-footer'> \
-    <div class='entry-actions'> \
-    <div class='entry-actions-primary'> \
-    <span class='read-state link unselectable' title='Toggle read'>\
-    <i class='fa fa-book-open'></i>&nbsp;Mark unread\
-    </span> \
-    <span class='link unselectable' title='Sent by mail'> \
-    <i class='fa fa-envelope-o' style='vertical-align:top;'></i> \
-    <a class='link unselectable' href='mailto:?subject=" + encodeURIComponent(email_subject) + "&body=" +
-        encodeURIComponent(email_body) + "'>E-Mail</a> \
-    </span> \
-    <wbr /> \
-    </div> \
-    </div> \
-    </div> \
-    <div class='action-area-container'></div> \
-    </div> \
-    </div> \
-    </div>";
-    return entry;
+    let read = ((!headline.unread) ? " read" : "");
+    let star = ((headline.marked) ? "starActive" : "starNotActive");
+    let excerpt = ((headline.excerpt && headline.excerpt != '&hellip;') ?
+                        headline.excerpt :
+                        $(headline.content).text().substr(0, 100) + '&hellip;')
+
+    return `
+<div id='${headline.id}' class='entry-row whisper ${read}'>
+    <div class='entry-container'>
+        <div class='entry-top-bar'>
+            <span class='link entry-next'>
+                <span class='entry-next-fa-icon'>
+                    <i class='fa fa-arrow-down'></i>
+                </span>
+                <span class='entry-next-text'>Next item</span>
+            </span>
+            <span class='link entry-collapse'>
+                <span class='entry-collapse-fa-icon'><i class='fa fa-bars'></i></span>
+                <span class='entry-collapse-text'>Collapse</span>
+            </span>
+        </div>
+        <div class='entry-header'>
+            <div class='entry-icons'>
+                <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i>
+                <i class='favStar fa fa-star fa-2x ${star}'></i>
+            </div>
+            <div class='entry-header-body'>
+                <div class='text'>
+                    <span class='item-title-collapsed'>${headline.title}</span>
+                    <a href='${headline.link}' class='item-title item-title-link' target='_blank'>
+                        ${headline.title}
+                    </a>
+                    <span class='item-source-title'>&nbsp;-&nbsp;${headline.feed_title}</span>
+                    <div class='item-snippet'>${excerpt}</div>
+                </div>
+                <div class='entry-sub-header'>by ${headline.author}  on ${date.toLocaleString()} + "</div>
+            </div>
+        </div>
+        <div class='entry'>
+            <div id='entry-contents' class='entry whisper'>
+                <div class='entry-annotations'></div>
+                <div class='entry-contents-inner'>
+                    ${content[0].outerHTML}
+                </div>
+            </div>
+            <div class='entry-footer'>
+                <div class='entry-actions'>
+                    <div class='entry-actions-primary'>
+                        <span class='read-state link unselectable' title='Toggle read'>
+                            <i class='fa fa-book-open'></i>&nbsp;Mark unread\
+                        </span>
+                        <span class='link unselectable' title='Sent by mail'>
+                            <i class='fa fa-envelope' style='vertical-align:top;'></i>
+                            <a class='link unselectable' href="mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}">E-Mail</a>
+                        </span>
+                        <wbr />
+                    </div>
+                </div>
+            </div>
+            <div class='action-area-container'></div>
+        </div>
+    </div>
+</div>`;
 }
 
 function renderHeadlines(headlines) {
@@ -738,18 +734,20 @@ function bindHeadlineEvents() {
         let _response = apiCall(data);
 
         $(this).next().toggleClass('starNotActive').toggleClass('starActive');
-        //console.log(newstar);
     });
 }
 
-function finaliseHeadlines() {
+function finaliseHeadlines(headlines) {
     // Done loading
     $('body').removeClass('loading').addClass('loaded');
-    $('.load-more-message').html('Mark these items as read');
+    if (headlines.length > 0) {
+        $('.load-more-message').html('Mark these items as read');
+    } else {
+        $('.load-more-message').html(''); // effectively invisible?
+    }
     $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
     keepUnread.clean(appState.itemIds);
 }
-
 
 function getHeadlinesRequest(since) {
     if (typeof (since) === 'undefined') since = 0;
@@ -790,7 +788,7 @@ function handleHeadlinesResponse(headlines) {
     updateHeadlinesPagination(headlines.length, appState.feedLimit);
     renderHeadlines(headlines);
     bindHeadlineEvents();
-    finaliseHeadlines();
+    finaliseHeadlines(headlines);
 }
 
 function getHeadlines(since) {
@@ -804,17 +802,35 @@ function getHeadlines(since) {
 }
 
 function buildTreeRow(object) {
-    let entry = "<div class='row whisper sub-row " + object.sub +
-    ((object.unread > 0) ? " unread-sub" : " no-unread-sub-row") +
-    (object.nested ? " " + object.nested : "") + "' id='tree-item-" + object.id + "'> \
-    <div class='icon-cell'> \
-    <i class='fa " + object.icon + " fa-lg'></i></div> \
-    <div class='text sub-item'>" + object.title + "</div> \
-    <div class='item-count larger whisper'> \
-    <span class='item-count-value' id='tree-item-" + object.id + "-unread-count'>" + object.unread + "</span> \
-    </div> \
-    </div>";
-    return entry;
+    switch (object.sub) {
+        case 'open-sub-folder':
+            object.icon = 'fa-folder-open';
+            break;
+        case 'closed-sub-folder':
+            object.icon = 'fa-folder';
+            break;
+        case 'sub':
+            object.icon = 'fa-rss-square';
+            break;
+        default:
+            window.alert("Unexpected sub: " + object.sub);
+    }
+
+    let unread = ((object.obj.unread > 0) ? "unread-sub" : "no-unread-sub-row");
+    let nested = object.nested || '';
+
+    return `
+<div class='row whisper sub-row ${object.sub} ${unread} ${nested}' id='tree-item-${object.obj.id}'>
+    <div class='icon-cell'>
+        <i class='fa ${object.icon} fa-lg'></i>
+    </div>
+    <div class='text sub-item'> ${object.obj.title} </div>
+    <div class='item-count larger whisper'>
+        <span class='item-count-value' id='tree-item-${object.obj.id}-unread-count'>
+            ${object.obj.unread}
+        </span>
+    </div>
+</div>`;
 }
 
 function getTopCategories() {
@@ -840,13 +856,11 @@ function getTopCategories() {
         };
         let unread = apiCall(data);
         unread.done(function (content) {
+            content.id = -4;
+            content.title = 'All articles'
             $('#sub--4').prepend(buildTreeRow({
+                obj: content,
                 sub: 'open-sub-folder',
-                unread: content.unread,
-                id: -4,
-                nested: '',
-                icon: 'fa-folder-open',
-                title: 'All articles'
             }));
 
             bindClick('#tree-item--4', function () {
@@ -876,12 +890,9 @@ function getTopCategories() {
             });
             $.each(cats, function (index, cat) {
                 $('#sub--4').append(buildTreeRow({
+                    obj: cat,
                     sub: 'closed-sub-folder',
-                    unread: cat.unread,
-                    id: cat.id,
                     nested: 'nested-sub',
-                    icon: 'fa-folder',
-                    title: cat.title
                 }));
 
             });
@@ -902,7 +913,13 @@ function getTopCategories() {
 
 function getFeeds(parent_id, parent_title, parent_unread) {
     appState.parentId = parent_id;
-    if (parent_id === '-4') {
+    let parent = {
+        id: parent_id,
+        title: parent_title,
+        unread: parent_unread,
+    };
+
+    if (parent.id === '-4') {
         getTopCategories();
         return;
     }
@@ -911,11 +928,11 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     //added to show + for adding new subscriptions
     $('#add-new-subscription').addClass('hidden');
 
-    if ($('#sub-' + parent_id).length != 0) {
+    if ($('#sub-' + parent.id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
-        $('#sub-' + parent_id).removeClass('hidden');
+        $('#sub-' + parent.id).removeClass('hidden');
         bindClick('.closed-sub-folder', function () {
-            appState.backCat.push(parent_id);
+            appState.backCat.push(parent.id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
                 '.item-count-value').html());
@@ -926,7 +943,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
         let data = {
             op: "getFeeds",
-            cat_id: parent_id,
+            cat_id: parent.id,
             include_nested: true
         };
         let feeds = apiCall(data);
@@ -940,30 +957,21 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                     return ((a.cat_id < b.cat_id) ? -1 : ((a.cat_id > b.cat_id) ? 1 : 0));
                 }
             });
-            $('#subscriptions-list').append("<div id='sub-" + parent_id + "'></div>");
-
-            $('#sub-' + parent_id).prepend(buildTreeRow({
+            $('#subscriptions-list').append("<div id='sub-" + parent.id + "'></div>");
+            $('#sub-' + parent.id).prepend(buildTreeRow({
+                obj: parent,
                 sub: 'open-sub-folder',
-                unread: parent_unread,
-                id: parent_id,
-                nested: '',
-                icon: 'fa-folder-open',
-                title: parent_title
             }));
             $.each(feeds, function (index, feed) {
-                $('#sub-' + parent_id).append(buildTreeRow({
-                    sub: ((feed.is_cat) ? " closed-sub-folder" : " sub"),
-                    unread: feed.unread,
-                    id: feed.id,
-                    nested: 'nested-sub',
-                    icon: ((feed.is_cat) ? "fa-folder" : "fa-rss-square"),
-                    title: feed.title
+                $('#sub-' + parent.id).append(buildTreeRow({
+                    obj: feed,
+                    sub: ((feed.is_cat) ? "closed-sub-folder" : "sub"),
                 }));
 
             });
 
             bindClick('.closed-sub-folder', function () {
-                appState.backCat.push(parent_id);
+                appState.backCat.push(parent.id);
                 $('#subscriptions-list').children().addClass('hidden');
                 getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
                     .find('.item-count-value').html());
@@ -1057,7 +1065,6 @@ var keepUnread = new function () {
         return this.keepUnreadIdMap;
     };
 
-
     this.hasId = function (ids, articleId) {
         return true == getIdMap()[articleId];
     };
@@ -1105,9 +1112,6 @@ var keepUnread = new function () {
         setCookie('g2tt_keepUnread_ids', strVal);
     };
 };
-
-
-//ADDED for subscribing to new feeds
 
 function subscribe(feedurl, categoryID) {
     let data = {
