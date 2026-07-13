@@ -1,6 +1,6 @@
-const SUPPORTED_API_LEVEL  = 23;
+const SUPPORTED_API_LEVEL = 23;
 
-const STATUS_OK  = 0;
+const STATUS_OK = 0;
 const STATUS_ERR = 1; // eslint-disable-line no-unused-vars
 
 const E_API_DISABLED = "API_DISABLED";
@@ -57,7 +57,7 @@ function bindClick(selector, callback) {
     $(selector).off(eventType).on(eventType, callback);
 }
 
-function bindGlobalUi(){
+function bindGlobalUi() {
     bindClick('html', function () {
         $('#header-menu').removeClass('m-button-pressed');
         $('#menuDown').removeClass('hidden');
@@ -66,7 +66,7 @@ function bindGlobalUi(){
     });
 }
 
-function bindLoginForm(){
+function bindLoginForm() {
     bindClick('#login', function (event) {
         if (bindLoginForm.request !== undefined && bindLoginForm.request.abort !== undefined) {
             console.log("Aborting previous login request...");
@@ -93,7 +93,7 @@ function bindLoginForm(){
         bindLoginForm.request.done(function (loggedIn) {
             $('.login').addClass('hidden');
             $('#main').removeClass('hidden');
-            if ( loggedIn.api_level < SUPPORTED_API_LEVEL) {
+            if (loggedIn.api_level < SUPPORTED_API_LEVEL) {
                 window.alert("Current TT-RSS API version (" + loggedIn.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
                 logoutToHomepage();
             }
@@ -114,7 +114,7 @@ function bindLoginForm(){
     //end of #login function
 }
 
-function bindLoadMore(){
+function bindLoadMore() {
     bindClick('#load-more-items', function () {
         let last;
         if (appState.orderBy == "date_reverse") {
@@ -170,7 +170,7 @@ function bindViewMode() {
 
 function bindSortMode() {
     $('#' + appState.orderBy).addClass('g2tt-option-selected');
-        bindClick('.sortItem', function () {
+    bindClick('.sortItem', function () {
         appState.orderBy = $(this).attr('id');
         setCookie('g2tt_orderBy', appState.orderBy);
         $('.sortItem').removeClass('g2tt-option-selected');
@@ -283,7 +283,7 @@ function bindLogout() {
     });
 }
 
-function bindNavigation(){
+function bindNavigation() {
     bindLoadMore();
     bindHeader();
     bindViewMode();
@@ -296,7 +296,7 @@ function bindNavigation(){
     bindLogout();
 }
 
-function bindSearchUi(){
+function bindSearchUi() {
     // Search
     // Show search
     bindClick('#menu-search', function () {
@@ -324,7 +324,7 @@ function bindSearchUi(){
     });
 }
 
-function bindSubscriptionUi(){
+function bindSubscriptionUi() {
 
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
@@ -417,8 +417,8 @@ function bindSubscriptionUi(){
     });
 }
 
-function bindKeyboardShortcuts(){
-    $(document).on('keypress', function(event) {
+function bindKeyboardShortcuts() {
+    $(document).on('keypress', function (event) {
         switch (String.fromCharCode(event.which).toLowerCase()) {
             case 'j': expandNextEntry(); break;
             case 'k': expandPreviousEntry(); break;
@@ -593,50 +593,65 @@ function apiCall(data, opts = {}) {
         async: opts.async !== false,
         timeout: opts.timeout || 15000
     })
-    .then(response => {
-        if (response.status !== STATUS_OK) {
-            handleApiStatusError(response);
-            return $.Deferred().reject(response).promise();
-        }
-      return response.content;
-    })
-    .fail((jqXHR, textStatus, errorThrown) => {
-        handleAjaxError(jqXHR, textStatus, errorThrown);
-        return $.Deferred().reject({ jqXHR, textStatus, errorThrown }).promise();
-    });
+        .then(response => {
+            if (response.status !== STATUS_OK) {
+                handleApiStatusError(response);
+                return $.Deferred().reject(response).promise();
+            }
+            return response.content;
+        })
+        .fail((jqXHR, textStatus, errorThrown) => {
+            handleAjaxError(jqXHR, textStatus, errorThrown);
+            return $.Deferred().reject({ jqXHR, textStatus, errorThrown }).promise();
+        });
 }
 
-function fixedEncodeURIComponent (str) {
+function fixedEncodeURIComponent(str) {
     // encodeURIComponent fails to encode, e.g., single quotes
     // https://stackoverflow.com/a/32525285
     return encodeURIComponent(str).replace(/[!'()*]/g, escape);
 }
+
+function headlineMeta(headline) {
+    let date = new Date(headline.updated * 1000);
+    return {
+        readClass: (!headline.unread) ? " read" : "",
+        starClass: headline.marked ? "starActive" : "starNotActive",
+        formattedDate: date.toLocaleString()
+    };
+}
+
+function headlineExcerpt(headline) {
+    if (headline.excerpt && headline.excerpt !== '&hellip;') {
+        return headline.excerpt;
+    }
+    return $(headline.content).text().substr(0, 100) + '&hellip;';
+}
+
+function headlineContentHtml(content) {
+    let html = $(content);
+    if (html.length === 1 && html.is("img")) {
+        let alt = html.attr("title") || html.attr("alt");
+        if (alt) {
+            return `<div>${html[0].outerHTML}<div>${alt}</div></div>`;
+        }
+    }
+    let container = $("<div></div>");
+    container.append(html);
+    return container[0].outerHTML;
+}
+
 function buildHeadlinesEntry(headline) {
     let email_subject = headline.title;
     let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
         headline.title + '</a></h2>' + headline.content;
 
-    let content = $(headline.content);
-    let alt;
-    if (content.length == 1 &&
-            content.is("img") &&
-            (alt = (content.attr("title") || content.attr("alt")))) {
-        content = $("<div>" + content[0].outerHTML + "<div>" + alt + "</div></div>");
-    } else {
-        let container = $("<div></div>");
-        container.append(content);
-        content = container;
-    }
-
-    let date = new Date(headline.updated * 1000);
-    let read = ((!headline.unread) ? " read" : "");
-    let star = ((headline.marked) ? "starActive" : "starNotActive");
-    let excerpt = ((headline.excerpt && headline.excerpt != '&hellip;') ?
-                        headline.excerpt :
-                        $(headline.content).text().substr(0, 100) + '&hellip;')
+    let contentHtml = headlineContentHtml(headline.content);
+    let excerpt = headlineExcerpt(headline);
+    let meta = headlineMeta(headline);
 
     return `
-<div id='${headline.id}' class='entry-row whisper ${read}'>
+<div id='${headline.id}' class='entry-row whisper${meta.readClass}'>
     <div class='entry-container'>
         <div class='entry-top-bar'>
             <span class='link entry-next'>
@@ -653,7 +668,7 @@ function buildHeadlinesEntry(headline) {
         <div class='entry-header'>
             <div class='entry-icons'>
                 <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i>
-                <i class='favStar fa fa-star fa-2x ${star}'></i>
+                <i class='favStar fa fa-star fa-2x ${meta.starClass}'></i>
             </div>
             <div class='entry-header-body'>
                 <div class='text'>
@@ -664,14 +679,14 @@ function buildHeadlinesEntry(headline) {
                     <span class='item-source-title'>&nbsp;-&nbsp;${headline.feed_title}</span>
                     <div class='item-snippet'>${excerpt}</div>
                 </div>
-                <div class='entry-sub-header'>by ${headline.author}  on ${date.toLocaleString()} + "</div>
+                <div class='entry-sub-header'>by ${headline.author}  on ${meta.formattedDate} + "</div>
             </div>
         </div>
         <div class='entry'>
             <div id='entry-contents' class='entry whisper'>
                 <div class='entry-annotations'></div>
                 <div class='entry-contents-inner'>
-                    ${content[0].outerHTML}
+                    ${contentHtml}
                 </div>
             </div>
             <div class='entry-footer'>
@@ -693,6 +708,7 @@ function buildHeadlinesEntry(headline) {
     </div>
 </div>`;
 }
+
 
 function renderHeadlines(headlines) {
     $.each(headlines, function (index, headline) {
@@ -801,33 +817,32 @@ function getHeadlines(since) {
     });
 }
 
-function buildTreeRow(object) {
-    switch (object.sub) {
-        case 'open-sub-folder':
-            object.icon = 'fa-folder-open';
-            break;
-        case 'closed-sub-folder':
-            object.icon = 'fa-folder';
-            break;
-        case 'sub':
-            object.icon = 'fa-rss-square';
-            break;
-        default:
-            window.alert("Unexpected sub: " + object.sub);
-    }
-
-    let unread = ((object.obj.unread > 0) ? "unread-sub" : "no-unread-sub-row");
-    let nested = object.nested || '';
+function buildTreeRow(row) {
+    const iconMap = {
+        'open-sub-folder': 'fa-folder-open',
+        'closed-sub-folder': 'fa-folder',
+        'sub': 'fa-rss-square'
+    };
+    const icon = iconMap[row.sub] || 'fa-question-circle';
+    const unread = row.obj.unread > 0 ? 'unread-sub' : 'no-unread-sub-row';
+    const classes = [
+        'row',
+        'whisper',
+        'sub-row',
+        row.sub,
+        unread,
+        row.nested
+    ].filter(Boolean).join(' ');
 
     return `
-<div class='row whisper sub-row ${object.sub} ${unread} ${nested}' id='tree-item-${object.obj.id}'>
+<div class='${classes}' id='tree-item-${row.obj.id}'>
     <div class='icon-cell'>
-        <i class='fa ${object.icon} fa-lg'></i>
+        <i class='fa ${icon} fa-lg'></i>
     </div>
-    <div class='text sub-item'> ${object.obj.title} </div>
+    <div class='text sub-item'> ${row.obj.title} </div>
     <div class='item-count larger whisper'>
-        <span class='item-count-value' id='tree-item-${object.obj.id}-unread-count'>
-            ${object.obj.unread}
+        <span class='item-count-value' id='tree-item-${row.obj.id}-unread-count'>
+            ${row.obj.unread}
         </span>
     </div>
 </div>`;
@@ -1152,7 +1167,7 @@ function subscribe(feedurl, categoryID) {
          *  6 - Content is an invalid XML.
          */
         switch (statusCode) {
-            case 0:{
+            case 0: {
                 //0 - OK, Feed already exists
                 //let status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
                 $('#indicator').addClass('hidden');
@@ -1161,8 +1176,9 @@ function subscribe(feedurl, categoryID) {
                 //uncomment next line if you'd like it to close pop-up when they press OK.
                 //$( "#dialog-form" ).dialog( "close" );
 
-                break;}
-            case 1:{
+                break;
+            }
+            case 1: {
                 //1 - OK, Feed added
                 $('#indicator').addClass('hidden');
                 let tips = $(".validateTips");
@@ -1175,24 +1191,27 @@ function subscribe(feedurl, categoryID) {
 
                     $('#feedURL').val("");
                 }, 100);
-                break;}
-            case 2:{
+                break;
+            }
+            case 2: {
                 //2 - Invalid URL
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
                 $('#multipleFeedsSelect').addClass('hidden');
                 window.alert('Invalid URL submitted. Please check URL and try again.');
-                break;}
-            case 3:{
+                break;
+            }
+            case 3: {
                 //3 - URL content is HTML, no feeds available
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
                 $('#multipleFeedsSelect').addClass('hidden');
                 window.alert(
                     'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
-                );}
+                );
+            }
                 break;
-            case 4:{
+            case 4: {
                 //4 - URL content is HTML which contains multiple feeds.
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').removeClass('hidden');
@@ -1201,8 +1220,9 @@ function subscribe(feedurl, categoryID) {
                     $('#feedsAvail').append($('<option></option>').val(url).html(title));
 
                 });
-                break;}
-            case 5:{
+                break;
+            }
+            case 5: {
                 //5 - Couldn't download the URL content.
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
@@ -1210,8 +1230,9 @@ function subscribe(feedurl, categoryID) {
                 window.alert(
                     'Unable to download the URL content. Please check your internet connection or the URL and try again.'
                 );
-                break;}
-            case 6:{
+                break;
+            }
+            case 6: {
                 //6 - Content is an invalid XML.
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
@@ -1219,7 +1240,8 @@ function subscribe(feedurl, categoryID) {
                 window.alert(
                     'Content is an invalid XML format. Please visit the website you are trying to add to verify they use XML feed output.'
                 );
-                break;}
+                break;
+            }
         }
         return content;
     });
