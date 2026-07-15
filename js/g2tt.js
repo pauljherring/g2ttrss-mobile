@@ -877,6 +877,16 @@ function buildTreeRow(row) {
 </div>`;
 }
 
+function compareBySortMode(a, b) {
+    const db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
+    const alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
+    if (appState.feedSort == '1') {
+        return alpha_order;
+    } else {
+        return db_order;
+    }
+}
+
 function getTopCategories() {
     $('#nav-title').html('');
     $('#sub-list-back').addClass('hidden');
@@ -920,15 +930,7 @@ function getTopCategories() {
         let cats = apiCall(data);
 
         cats.done(function (cats) {
-            cats.sort(function (a, b) {
-                let db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
-                let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
-                if (appState.feedSort == '1') {
-                    return alpha_order;
-                } else {
-                    return db_order;
-                }
-            });
+            cats.sort(compareBySortMode);
             $.each(cats, function (index, cat) {
                 $('#sub--4').append(buildCategoryRow(cat));
 
@@ -986,14 +988,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         let feeds = apiCall(data);
 
         feeds.done(function (feeds) {
-            feeds.sort(function (a, b) {
-                let alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
-                if (appState.feedSort == '1') {
-                    return alpha_order;
-                } else {
-                    return ((a.cat_id < b.cat_id) ? -1 : ((a.cat_id > b.cat_id) ? 1 : 0));
-                }
-            });
+            feeds.sort(compareBySortMode);
             $('#subscriptions-list').append("<div id='sub-" + parent.id + "'></div>");
             $('#sub-' + parent.id).prepend(buildParentFolderRow(parent));
             $.each(feeds, function (index, feed) {
