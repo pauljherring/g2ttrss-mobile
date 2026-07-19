@@ -231,7 +231,6 @@ function bindBackButtons() {
         getFeeds(appState.backCat.pop());
         if (appState.parentId == '-4'){
             $('#add-new-subscription').removeClass('hidden');
-            console.log('back to feeds from sub - show subscription - parent = ' + appState.parentId);
         }
     });
 }
@@ -243,7 +242,6 @@ function bindSubscriptionRowActions() {
         .off('click', '.sub')
         .off('click', '#tree-item--4')
         .on('click', '.closed-sub-folder', function () {
-            console.log('closed-sub-folder - push ' + appState.parentId);
             appState.backCat.push(appState.parentId);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds(
@@ -252,7 +250,6 @@ function bindSubscriptionRowActions() {
                 $(this).find('.item-count-value').html());
         })
         .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
-            console.log('open-sub-folder[id!="tree-item--4"]');
             setCookie('g2tt_feed', $(this).attr('id').substring(10));
             setCookie('g2tt_isCat', true);
             appState.feedId = readCookie('g2tt_feed');
@@ -267,7 +264,6 @@ function bindSubscriptionRowActions() {
             getData();
         })
         .on('click', '#tree-item--4', function () {
-            console.log('click #tree-item--4');
             setCookie('g2tt_feed', $(this).attr('id').substring(10));
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
@@ -325,6 +321,24 @@ function bindLogout() {
     });
 }
 
+function bindEmail() {
+    $('#feed')
+        .off('click', '.createmail')
+        .on('click', '.createmail', function () {
+            const entryContainer = $(this).closest(".entry-container");
+            const title = entryContainer.find(".item-title-collapsed").html();
+            const body = entryContainer.find(".entry-contents-inner").html();
+            const anchor = entryContainer.find(".entry-header-body .text a.item-title-link").attr("href");
+            const anchorText = entryContainer.find(".entry-header-body .text a.item-title-link").text().trim();
+            const email_subject = title;
+            const email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + anchor + '">' +
+        anchorText + '</a></h2>' + body;
+
+            const mailto=`mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}`;
+            window.open(mailto, '_self');
+        });
+}
+
 function bindNavigation() {
     bindLoadMore();
     bindHeader();
@@ -336,6 +350,7 @@ function bindNavigation() {
     bindBackButtons();
     bindMarkRead();
     bindLogout();
+    bindEmail();
     bindSubscriptionRowActions();
 }
 
@@ -557,13 +572,9 @@ function showFeeds() {
     //added to show + for adding new subscriptions
     $('#add-new-subscription').removeClass('hidden');
     if (appState.parentId != -4) {
-        console.log("parent != -4; hide subscription")
         $('#sub-list-back').removeClass('hidden');
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
-
-    } else {
-        console.log('parent == -4, show subscriptions')
     }
     $('#nav-title').html('');
 }
@@ -688,10 +699,6 @@ function headlineContentHtml(content) {
 }
 
 function buildHeadlinesEntry(headline) {
-    let email_subject = headline.title;
-    let email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + headline.link + '">' +
-        headline.title + '</a></h2>' + headline.content;
-
     let contentHtml = headlineContentHtml(headline.content);
     let excerpt = headlineExcerpt(headline);
     let meta = headlineMeta(headline);
@@ -741,9 +748,9 @@ function buildHeadlinesEntry(headline) {
                         <span class='read-state link unselectable' title='Toggle read'>
                             <i class='fa fa-book-open'></i>&nbsp;Mark unread\
                         </span>
-                        <span class='link unselectable' title='Sent by mail'>
+                        <span class='link unselectable' title='Send by mail'>
                             <i class='fa fa-envelope' style='vertical-align:top;'></i>
-                            <a class='link unselectable' href="mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}">E-Mail</a>
+                            <span class='createmail link'>E-Mail</a>
                         </span>
                         <wbr />
                     </div>
