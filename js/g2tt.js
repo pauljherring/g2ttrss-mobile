@@ -229,9 +229,51 @@ function bindBackButtons() {
     bindClick('#sub-list-back', function () {
         refreshCats();
         getFeeds(appState.backCat.pop());
-        $('#add-new-subscription').removeClass('hidden');
-
+        if (appState.parentId == '-4'){
+            $('#add-new-subscription').removeClass('hidden');
+            console.log('back to feeds from sub - show subscription - parent = ' + appState.parentId);
+        }
     });
+}
+
+function bindSubscriptionRowActions() {
+    $('#subscriptions-list')
+        .off('click', '.closed-sub-folder')
+        .off('click', '.open-sub-folder[id!="tree-item--4"]')
+        .off('click', '.sub')
+        .off('click', '#tree-item--4')
+        .on('click', '.closed-sub-folder', function () {
+            console.log('closed-sub-folder - push ' + appState.parentId);
+            appState.backCat.push(appState.parentId);
+            $('#subscriptions-list').children().addClass('hidden');
+            getFeeds(
+                $(this).attr('id').substring(10),
+                $(this).find('.sub-item').html(),
+                $(this).find('.item-count-value').html());
+        })
+        .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
+            console.log('open-sub-folder[id!="tree-item--4"]');
+            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            setCookie('g2tt_isCat', true);
+            appState.feedId = readCookie('g2tt_feed');
+            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            getData();
+        })
+        .on('click', '.sub', function () {
+            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            setCookie('g2tt_isCat', false);
+            appState.feedId = readCookie('g2tt_feed');
+            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            getData();
+        })
+        .on('click', '#tree-item--4', function () {
+            console.log('click #tree-item--4');
+            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            setCookie('g2tt_isCat', false);
+            appState.feedId = readCookie('g2tt_feed');
+            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            getData();
+        });
 }
 
 function bindMarkRead() {
@@ -294,6 +336,7 @@ function bindNavigation() {
     bindBackButtons();
     bindMarkRead();
     bindLogout();
+    bindSubscriptionRowActions();
 }
 
 function bindSearchUi() {
@@ -460,7 +503,7 @@ function refreshCats() {
             }
         }
         $('.sub-row').each(function (_i, _j) {
-            let id = $(this).attr('id').substring(10);
+            const id = $(this).attr('id').substring(10);
             let is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
             if (id == "-4" || id == "-1") {
@@ -513,11 +556,14 @@ function showFeeds() {
     $('.feedsMenu').removeClass('hidden');
     //added to show + for adding new subscriptions
     $('#add-new-subscription').removeClass('hidden');
-    if (appState.parentId != '-4') {
+    if (appState.parentId != -4) {
+        console.log("parent != -4; hide subscription")
         $('#sub-list-back').removeClass('hidden');
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
 
+    } else {
+        console.log('parent == -4, show subscriptions')
     }
     $('#nav-title').html('');
 }
@@ -893,12 +939,7 @@ function getTopCategories() {
     if ($('#sub--4').length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
-        bindClick('.closed-sub-folder', function () {
-            appState.backCat.push("-4");
-            $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
-                '.item-count-value').html());
-        });
+        appState.parentId = '-4';
     } else {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
@@ -913,14 +954,6 @@ function getTopCategories() {
             content.id = -4;
             content.title = 'All articles'
             $('#sub--4').prepend(buildAllArticlesRow(content));
-
-            bindClick('#tree-item--4', function () {
-                setCookie('g2tt_feed', $(this).attr('id').substring(10));
-                setCookie('g2tt_isCat', false);
-                appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
-                getData();
-            });
         });
 
         data = {
@@ -935,15 +968,7 @@ function getTopCategories() {
                 $('#sub--4').append(buildCategoryRow(cat));
 
             });
-
-            bindClick('.closed-sub-folder', function () {
-                appState.backCat.push("-4");
-                $('#subscriptions-list').children().addClass('hidden');
-                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
-                    .find('.item-count-value').html());
-            });
-
-            // Done loading
+            appState.parentId = '-4';
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
@@ -970,12 +995,6 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     if ($('#sub-' + parent.id).length != 0) {
         $('#subscriptions-list').children().addClass('hidden');
         $('#sub-' + parent.id).removeClass('hidden');
-        bindClick('.closed-sub-folder', function () {
-            appState.backCat.push(parent.id);
-            $('#subscriptions-list').children().addClass('hidden');
-            getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this).find(
-                '.item-count-value').html());
-        });
     } else {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
@@ -995,31 +1014,6 @@ function getFeeds(parent_id, parent_title, parent_unread) {
                 $('#sub-' + parent.id).append(buildFeedRow(feed));
 
             });
-
-            bindClick('.closed-sub-folder', function () {
-                appState.backCat.push(parent.id);
-                $('#subscriptions-list').children().addClass('hidden');
-                getFeeds($(this).attr('id').substring(10), $(this).find('.sub-item').html(), $(this)
-                    .find('.item-count-value').html());
-            });
-
-            bindClick('.open-sub-folder[id!="tree-item--4"]', function () {
-                setCookie('g2tt_feed', $(this).attr('id').substring(10));
-                setCookie('g2tt_isCat', true);
-                appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
-                getData();
-            });
-
-            bindClick('.sub', function () {
-                setCookie('g2tt_feed', $(this).attr('id').substring(10));
-                setCookie('g2tt_isCat', false);
-                appState.feedId = readCookie('g2tt_feed');
-                appState.isCategory = (readCookie('g2tt_isCat') === 'true');
-                getData();
-            });
-
-            // Done loading
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
         });
