@@ -1257,6 +1257,54 @@ function subscribe(feedurl, categoryID) {
     });
 }
 
+function collectCategoryOptions(cats) {
+    const options = [];
+
+    $.each(cats, function (index, cat) {
+        $.each(cat.items, function (index, catObject) {
+            $.each(buildCategoryOptionItems(catObject), function (index, option) {
+                options.push(option);
+            });
+        });
+    });
+
+    return options;
+}
+
+function buildCategoryOptionItems(catObject) {
+    const options = [];
+
+    if (catObject.bare_id != -1 && catObject.bare_id != 0) {
+        options.push({
+            parent_id: catObject.bare_id,
+            child_id: catObject.bare_id,
+            Name: catObject.name
+        });
+    }
+
+    $.each(catObject.items, function (index, subcatObject) {
+        if (subcatObject.type == "category") {
+            options.push({
+                parent_id: catObject.bare_id,
+                child_id: subcatObject.bare_id,
+                Name: subcatObject.name
+            });
+        }
+    });
+
+    return options;
+}
+
+function appendCategoryOptions(options) {
+    $.each(options, function (index, objects) {
+        if (objects.parent_id == objects.child_id) {
+            $('#catItems').append($('<option></option>').val(objects.parent_id).html(objects.Name));
+        } else {
+            $('#catItems').append($('<option></option>').val(objects.child_id).html('&lfloor; ' + objects.Name));
+        }
+    });
+}
+
 function getCategoriesForNewSubscribe() {
     const data = {
         op: "getFeedTree",
@@ -1268,40 +1316,7 @@ function getCategoriesForNewSubscribe() {
     catsForNew.done(function (catsForNew) {
         $('#catItems').find('option').remove();
         $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
-
-        $.each(catsForNew, function (index, cat) {
-            $.each(cat.items, function (index, catObject) {
-                let catObjectIds = [];
-                if (catObject.bare_id != -1 && catObject.bare_id != 0) {
-                    catObjectIds.push({
-                        "parent_id": catObject.bare_id,
-                        "child_id": catObject.bare_id,
-                        "Name": catObject.name
-                    });
-                }
-                $.each(catObject.items, function (index, subcatObject) {
-                    if (subcatObject.type == "category") {
-                        catObjectIds.push({
-                            "parent_id": catObject.bare_id,
-                            "child_id": subcatObject.bare_id,
-                            "Name": subcatObject.name
-                        });
-                    }
-                });
-
-                //put Uncategorized first
-                $.each(catObjectIds, function (index, objects) {
-                    if (objects.parent_id == objects.child_id) {
-                        $('#catItems').append($('<option></option>').val(objects
-                            .parent_id).html(objects.Name));
-                    } else {
-                        const _newOptionCat = $('#catItems').append($('<option></option>')
-                            .val(objects.child_id).html('&lfloor; ' + objects.Name));
-                    }
-                });
-
-            });
-        });
+        appendCategoryOptions(collectCategoryOptions(catsForNew));
     });
 }
 
