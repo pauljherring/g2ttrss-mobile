@@ -18,15 +18,13 @@ globalThis.appState.orderBy = readCookie('g2tt_orderBy', globalThis.appState.ord
 globalThis.appState.feedSort = readCookie('g2tt_feedSort', globalThis.appState.feedSort);
 globalThis.appState.feedLimit = readCookie('g2tt_feedLimit', globalThis.appState.feedLimit);
 
-// let appState.feedLimit = globalThis.appState.feedLimit;
-
 function readCookie(name, fallback = undefined) {
     const value = $.cookie(name);
     return typeof value !== 'undefined' ? value : fallback;
 }
 
 function setCookie(name, value, days = undefined) {
-    let oldVal = readCookie(name);
+    const oldVal = readCookie(name);
     if (typeof days === 'undefined') {
         $.cookie(name, value);
     } else {
@@ -38,7 +36,7 @@ function setCookie(name, value, days = undefined) {
 }
 
 function delCookie(name) {
-    let oldVal = readCookie(name);
+    const oldVal = readCookie(name);
     $.removeCookie(name);
     return oldVal;
 }
@@ -73,14 +71,14 @@ function bindLoginForm() {
             console.log(bindLoginForm.request);
         }
 
-        let loginForm = $(this);
-        let inputs = loginForm.find("input");
+        const loginForm = $(this);
+        const inputs = loginForm.find("input");
         let values = {};
         inputs.each(function () {
             values[this.name] = $(this).val();
         });
 
-        let data = {
+        const data = {
             'op': 'login',
             'user': values.Username,
             'password': values.Passwd,
@@ -279,13 +277,13 @@ function bindMarkRead() {
         $('.load-more-message').html('Marking as read...');
         //remove those that need to be kept unread
         keepUnread.removeFromArray(appState.itemIds);
-        let data = {
+        const data = {
             op: "updateArticle",
             article_ids: appState.itemIds.join(','),
             mode: 0,
             field: 2
         };
-        let request = apiCall(data);
+        const request = apiCall(data);
 
         request.done(function (_response) {
             $('#entries').empty();
@@ -310,10 +308,10 @@ function logoutToHomepage() {
 
 function bindLogout() {
     bindClick('#menu-logout', function () {
-        let data = {
+        const data = {
             op: "logout"
         };
-        let request = apiCall(data);
+        const request = apiCall(data);
 
         request.done(function (_content) {
             logoutToHomepage();
@@ -387,7 +385,7 @@ function bindSubscriptionUi() {
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
 
-    let feedURL = $("#feedURL"),
+    const feedURL = $("#feedURL"),
         //password = $( "#password" ),
         allFields = $([]).add(feedURL),
         tips = $(".validateTips");
@@ -417,7 +415,7 @@ function bindSubscriptionUi() {
     }
 
     function checkRegexp(o, regexp, n) {
-        let makeOvalidHttp = o.val().trim();
+        const makeOvalidHttp = o.val().trim();
         if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
             o.addClass("ui-state-error");
             updateTips(n);
@@ -451,10 +449,10 @@ function bindSubscriptionUi() {
                 // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
 
                 if (bValid) {
-                    let catIDnum = $("#catItems option:selected").val();
-                    let feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
+                    const catIDnum = $("#catItems option:selected").val();
+                    const feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
 
-                    let multipleFeedSelected = $("#feedsAvail option:selected").val();
+                    const multipleFeedSelected = $("#feedsAvail option:selected").val();
 
                     if (multipleFeedSelected == null) {
                         $('#feedURL').val(feedURLTrimmed);
@@ -500,11 +498,11 @@ $(document).ready(function () {
 });
 
 function refreshCats() {
-    let data = {
+    const data = {
         op: "getCounters",
         output_mode: "fc"
     };
-    let request = apiCall(data);
+    const request = apiCall(data);
 
     request.done(function (counters) {
         let cats = [];
@@ -519,7 +517,7 @@ function refreshCats() {
         }
         $('.sub-row').each(function (_i, _j) {
             const id = $(this).attr('id').substring(10);
-            let is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
+            const is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
             if (id == "-4" || id == "-1") {
                 $(this).find('.item-count-value').html(feeds['global-unread'].counter);
@@ -557,7 +555,7 @@ function refreshCats() {
 }
 
 function showEmpty() {
-    let visible = $('#sub-' + appState.parentId).children(':visible');
+    const visible = $('#sub-' + appState.parentId).children(':visible');
     if (visible.length == 0) {
         $('#subscriptions').removeClass('show-unread').addClass('show-all');
     }
@@ -670,7 +668,7 @@ function fixedEncodeURIComponent(str) {
 }
 
 function headlineMeta(headline) {
-    let date = new Date(headline.updated * 1000);
+    const date = new Date(headline.updated * 1000);
     return {
         readClass: (!headline.unread) ? " read" : "",
         starClass: headline.marked ? "starActive" : "starNotActive",
@@ -686,22 +684,22 @@ function headlineExcerpt(headline) {
 }
 
 function headlineContentHtml(content) {
-    let html = $(content);
+    const html = $(content);
     if (html.length === 1 && html.is("img")) {
-        let alt = html.attr("title") || html.attr("alt");
+        const alt = html.attr("title") || html.attr("alt");
         if (alt) {
             return `<div>${html[0].outerHTML}<div>${alt}</div></div>`;
         }
     }
-    let container = $("<div></div>");
+    const container = $("<div></div>");
     container.append(html);
     return container[0].outerHTML;
 }
 
 function buildHeadlinesEntry(headline) {
-    let contentHtml = headlineContentHtml(headline.content);
-    let excerpt = headlineExcerpt(headline);
-    let meta = headlineMeta(headline);
+    const contentHtml = headlineContentHtml(headline.content);
+    const excerpt = headlineExcerpt(headline);
+    const meta = headlineMeta(headline);
 
     return `
 <div id='${headline.id}' class='entry-row whisper${meta.readClass}'>
@@ -794,13 +792,13 @@ function bindHeadlineEvents() {
 
     // Mark NewFont (star) entry
     bindClick('.favStarDiv', function () {
-        let data = {
+        const data = {
             op: "updateArticle",
             article_ids: $(this).closest('.entry-row').attr('id'),
             mode: 2,
             field: 0
         };
-        let _response = apiCall(data);
+        const _response = apiCall(data);
 
         $(this).next().toggleClass('starNotActive').toggleClass('starActive');
     });
@@ -821,8 +819,8 @@ function finaliseHeadlines(headlines) {
 function getHeadlinesRequest(since) {
     if (typeof (since) === 'undefined') since = 0;
 
-    let search = $('#search-input').val();
-    let data = {
+    const search = $('#search-input').val();
+    const data = {
         op: "getHeadlines",
         feed_id: appState.feedId,
         limit: appState.feedLimit,
@@ -956,7 +954,7 @@ function getTopCategories() {
         let data = {
             op: "getUnread"
         };
-        let unread = apiCall(data);
+        const unread = apiCall(data);
         unread.done(function (content) {
             content.id = -4;
             content.title = 'All articles'
@@ -967,7 +965,7 @@ function getTopCategories() {
             op: "getCategories",
             enable_nested: true
         };
-        let cats = apiCall(data);
+        const cats = apiCall(data);
 
         cats.done(function (cats) {
             cats.sort(compareBySortMode);
@@ -984,7 +982,7 @@ function getTopCategories() {
 
 function getFeeds(parent_id, parent_title, parent_unread) {
     appState.parentId = parent_id;
-    let parent = {
+    const parent = {
         id: parent_id,
         title: parent_title,
         unread: parent_unread,
@@ -1006,12 +1004,12 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('body').addClass('loading').addClass('sub-tree');
         $('#loading-area-container').removeClass('hidden');
 
-        let data = {
+        const data = {
             op: "getFeeds",
             cat_id: parent.id,
             include_nested: true
         };
-        let feeds = apiCall(data);
+        const feeds = apiCall(data);
 
         feeds.done(function (feeds) {
             feeds.sort(compareBySortMode);
@@ -1036,7 +1034,7 @@ function getTitle() {
         data.cat_id = "-4";
     }
 
-    let request = apiCall(data);
+    const request = apiCall(data);
 
     request.done(function (items) {
         $.each(items, function (index, item) {
@@ -1075,7 +1073,7 @@ function getData() {
 var keepUnread = new function () {
     this.keepUnreadIdMap = undefined;
 
-    let getIdMap = function () {
+    const getIdMap = function () {
         if (undefined == this.keepUnreadIdMap) {
             //attempt to load from cookie
             this.keepUnreadIdMap = [];
@@ -1083,7 +1081,7 @@ var keepUnread = new function () {
             savedKeepUnread_ids = readCookie('g2tt_keepUnread_ids');
 
             if (savedKeepUnread_ids && savedKeepUnread_ids.length > 0) {
-                let idList = savedKeepUnread_ids.split(',');
+                const idList = savedKeepUnread_ids.split(',');
                 for (let i = 0; i < idList.length; i++) {
                     this.keepUnreadIdMap[idList[i]] = true;
                 }
@@ -1104,7 +1102,7 @@ var keepUnread = new function () {
     };
     this.clean = function (ids) {
         //check that global_keepUnread_ids does not contain items which are no longer in appState.itemIds
-        let keepUnreadIds = getIdMap();
+        const keepUnreadIds = getIdMap();
         if (ids.length > 0) {
             for (let id in keepUnreadIds) {
                 id = id || 0; //id must be numeric
@@ -1118,10 +1116,10 @@ var keepUnread = new function () {
 
     /*given array of ids, remove all that need to be kept unread*/
     this.removeFromArray = function (ids) {
-        let keepUnreadIds = getIdMap();
+        const keepUnreadIds = getIdMap();
         for (let id in keepUnreadIds) {
             id = id || 0; //id must be numeric
-            let index = $.inArray(id, ids);
+            const index = $.inArray(id, ids);
             if (index >= 0) {
                 ids.splice(index, 1);
             }
@@ -1129,7 +1127,7 @@ var keepUnread = new function () {
     };
     this.save = function () {
         let strVal = '';
-        let keepIdMap = getIdMap();
+        const keepIdMap = getIdMap();
         for (let articleId in keepIdMap) {
             if (strVal.length > 0) {
                 strVal += ',';
@@ -1141,22 +1139,22 @@ var keepUnread = new function () {
 };
 
 function subscribe(feedurl, categoryID) {
-    let data = {
+    const data = {
         op: "subscribeToFeed",
         feed_url: feedurl,
         category_id: categoryID
     };
     $('#indicator').removeClass('hidden');
-    let request = apiCall(data);
+    const request = apiCall(data);
 
     request.done(function (content) {
-        let status = content.status;
-        let _message = status.message;
-        let statusCode = status.code;
+        const status = content.status;
+        const _message = status.message;
+        const statusCode = status.code;
         //let feeds = [];
-        let feeds = status.feeds;
-        let feedUrls = [];
-        let feedUrlsTitles = [];
+        const feeds = status.feeds;
+        const feedUrls = [];
+        const feedUrlsTitles = [];
 
         for (let key in feeds) {
             if (Object.hasOwn(feeds, "key")) {
@@ -1193,7 +1191,7 @@ function subscribe(feedurl, categoryID) {
             case 1: {
                 //1 - OK, Feed added
                 $('#indicator').addClass('hidden');
-                let tips = $(".validateTips");
+                const tips = $(".validateTips");
                 tips.text('Your Feed was Added')
                     .addClass("ui-state-highlight").removeClass("hidden");
                 $('#multipleFeedNotice').addClass('hidden');
@@ -1260,12 +1258,12 @@ function subscribe(feedurl, categoryID) {
 }
 
 function getCategoriesForNewSubscribe() {
-    let data = {
+    const data = {
         op: "getFeedTree",
         include_empty: true,
         enable_nested: false
     };
-    let catsForNew = apiCall(data);
+    const catsForNew = apiCall(data);
 
     catsForNew.done(function (catsForNew) {
         $('#catItems').find('option').remove();
@@ -1297,7 +1295,7 @@ function getCategoriesForNewSubscribe() {
                         $('#catItems').append($('<option></option>').val(objects
                             .parent_id).html(objects.Name));
                     } else {
-                        let _newOptionCat = $('#catItems').append($('<option></option>')
+                        const _newOptionCat = $('#catItems').append($('<option></option>')
                             .val(objects.child_id).html('&lfloor; ' + objects.Name));
                     }
                 });
@@ -1322,13 +1320,13 @@ function expandEntry(entryRow) {
     // Mark as read
     if (!entryRow.hasClass('read')) {
         entryRow.addClass('read');
-        let data = {
+        const data = {
             op: "updateArticle",
             article_ids: entryRow.attr('id'),
             mode: 0,
             field: 2
         };
-        let _response = apiCall(data);
+        const _response = apiCall(data);
     }
 }
 
@@ -1367,7 +1365,7 @@ function expandPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-    let previous = $('.current-entry').prev();
+    const previous = $('.current-entry').prev();
     if (!previous.is('.entry-row')) {
         return;
     }
@@ -1378,7 +1376,6 @@ function jumpNextEntry() {
     let nextEntry;
     if (!$('.current-entry').length) {
         nextEntry = $('.entry-row').eq(0);
-
     } else {
         nextEntry = $('.current-entry').next();
     }
@@ -1396,7 +1393,7 @@ function jumpPreviousEntry() {
     if (!$('.current-entry').length) {
         return;
     }
-    let previous = $('.current-entry').prev();
+    const previous = $('.current-entry').prev();
     if (!previous.is('.entry-row')) {
         return;
     }
@@ -1414,7 +1411,7 @@ function toggleEntryAsRead(entryRow) {
     if (!entryRow.hasClass('read')) {
         entryRow.find(".read-state").html("<i class='fa fa-book'></i>&nbsp;Mark read");
         for (let i = 0; i < appState.itemIds.length; i++) {
-            let articleId = entryRow.attr('id');
+            const articleId = entryRow.attr('id');
             if (appState.itemIds[i] == articleId) {
                 appState.itemIds.splice(i, 1);
                 keepUnread.addId(articleId);
@@ -1422,18 +1419,18 @@ function toggleEntryAsRead(entryRow) {
         }
     } else {
         entryRow.find(".read-state").html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
-        let articleId = entryRow.attr('id');
+        const articleId = entryRow.attr('id');
         appState.itemIds.push(articleId);
         keepUnread.removeId(articleId);
     }
 
-    let data = {
+    const data = {
         op: "updateArticle",
         article_ids: entryRow.attr('id'),
         mode: 2,
         field: 2
     };
-    let _response = apiCall(data);
+    const _response = apiCall(data);
 }
 
 function toggleCurrentEntryAsRead(_entryRow) {
@@ -1449,7 +1446,7 @@ function isElementInViewport(el) {
         el = el[0];
     }
 
-    let rect = el.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
 
     return (
         rect.top >= 0 &&
