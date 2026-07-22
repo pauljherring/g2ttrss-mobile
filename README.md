@@ -66,7 +66,7 @@ Current features
 * mark as read/unread article
 * iPhone webapp support (startup image & icon)
 * login/logout support
-* load more articles (15 at a time)
+* load more articles (25, default, at a time)
 * search for keywords in feeds
 * Google Reader style hotkeys (`j`, `k`, `n`, `p`, `o`, `m`)
 
@@ -96,7 +96,7 @@ Options:
 * **globalThis.appState.feedId** (String, default: `-4`, all items)
 
     The default feed to display. Available values:
-    * >0 - A specific feed
+    * \>0 - A specific feed
     * 0 - Uncategorized
     * -1 - Special (e.g. Starred, Published, Archived, etc.)
     * -2 - Labels
