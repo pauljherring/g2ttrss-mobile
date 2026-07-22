@@ -10,12 +10,17 @@ What is it?
 This mobile-oriented webapp is a client for [Tiny Tiny RSS](http://tt-rss.org)(TT-RSS).
 The webapp uses TT-RSS's [JSON API](https://tt-rss.org/docs/API-Reference.html).
 
-The [original author](https://github.com/g2ttrss/g2ttrss-mobile) was a big user of Google Reader's mobile webapp and when
-Google announced the end of Reader, they switched to TT-RSS. They were not
-satisfied with any of the other mobile interfaces out there for TT-RSS and
-they decided to build their own based on the CSS styles from Google.
+The [original author](https://github.com/g2ttrss/g2ttrss-mobile) was a big user
+of Google Reader's mobile webapp and when Google announced the end of Reader,
+they switched to TT-RSS. They were not satisfied with any of the other mobile
+interfaces out there for TT-RSS and they decided to build their own based on the
+CSS styles from Google.
 
-g2ttrss-mobile uses:
+This fork was created to address some issues with the (incompatible) updates to
+the TTRSS API, since the original project hadn't been updated in 11 years, and
+it didn't look like anyone was actively monitoring the project.
+
+`g2ttrss-mobile` uses:
 
  * [jQuery](http://jquery.com/)
  * [jQuery UI](https://jqueryui.com/)
@@ -83,12 +88,12 @@ are options to change your personal preference for how the interface works.
 
 Options:
 
-* **globalThis.appState.url** (Default: _("/tt-rss/")_)
+* **globalThis.appState.url** (Default: `/tt-rss`)
 
     The path to your TT-RSS installation relative to your domain. It accesses the
     `/api` endpoint on the end of that URL.
 
-* **globalThis.appState.feedId** (String, default: _('-4')_, all items)
+* **globalThis.appState.feedId** (String, default: `-4`, all items)
 
     The default feed to display. Available values:
     * >0 - A specific feed
@@ -98,26 +103,26 @@ Options:
     * -3 - All feeds, excluding virtual feeds (e.g. Labels and such)
     * -4 - All feeds, including virtual feeds
 
-* **globalThis.appState.viewMode** (Default: _('unread')_, unread articles only)
+* **globalThis.appState.viewMode** (Default: `unread`, unread articles only)
 
     Show unread or all articles? Available values:
     * unread - show unread articles only
     * all - show all articles
 
-* **globalThis.appState.orderBy** (Default: _('date_reverse')_, oldest first)
+* **globalThis.appState.orderBy** (Default: `date_reverse`, oldest first)
 
     Sort order of the articles/items. Available values:
     * date_reverse - oldest first
     * feed_dates - newest first, goes by feed date
     * (nothing) - TT-RSS's default (whatever that is)
 
-* **globalThis.appState.feedSort** (Default: _('0')_, do not sort feeds)
+* **globalThis.appState.feedSort** (Default: `0`, do not sort feeds)
 
     Sort the feeds (categories) in alphabetical order or not. Availables values:
     * 0 - do not sort feeds, display in the order TT-RSS returns them
     * 1 - sort the feeds in alphabetical order (A-Z)
 
-* **globalThis.appState.startCategory** (Default: _('0')_, start showing articles)
+* **globalThis.appState.startCategory** (Default: `false` start showing articles)
 
     Start showing the feeds (categories) or articles (items)
     * false - start showing articles

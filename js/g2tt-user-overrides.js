@@ -1,6 +1,6 @@
 if (globalThis.appState) {
 
-	/* URL for the /api parent URL. Can omit https://<hostname>/
+	/* URL for the /api parent URL. Can omit https://<hostname>/ if on the same host
 	 * e.g for https://www.example.com/tt-rss/api, use
 	 * - "https://www.example.com/tt-rss" or
 	 * - "/tt-rss"
