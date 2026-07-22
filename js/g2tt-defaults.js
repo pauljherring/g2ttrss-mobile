@@ -14,6 +14,15 @@ globalThis.appState = {
     orderBy: 'date_reverse', // was pref-OrderBy
     feedSort: 0, // was pref_FeedSort
     feedLimit: 25, // was pref_Feed_Limit
+    keyboardShortcuts: {
+        nextEntry: 'j',
+        previousEntry: 'k',
+        nextPage: 'n',
+        previousPage: 'p',
+        toggleExpand: 'o',
+        toggleRead: 'm',
+        toggleStar: 's'
+    },
     startCategory: false, // was pref_StartInCat
 
     // required for main js file, but do not change these here or in user-overrides

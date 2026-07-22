@@ -475,15 +475,33 @@ function bindSubscriptionUi() {
 
 function bindKeyboardShortcuts() {
     $(document).on('keypress', function (event) {
-        switch (String.fromCharCode(event.which).toLowerCase()) {
-            case 'j': expandNextEntry(); break;
-            case 'k': expandPreviousEntry(); break;
-            case 'n': jumpNextEntry(); break;
-            case 'p': jumpPreviousEntry(); break;
-            case 'o': toggleCurrentEntryAsExpanded(); break;
-            case 'm': toggleCurrentEntryAsRead(); break;
+        const shortcuts = globalThis.appState.keyboardShortcuts || {};
+        const key = String.fromCharCode(event.which).toLowerCase();
+
+        if (key === (shortcuts.nextEntry || 'j')) {
+            expandNextEntry();
+        } else if (key === (shortcuts.previousEntry || 'k')) {
+            expandPreviousEntry();
+        } else if (key === (shortcuts.nextPage || 'n')) {
+            jumpNextEntry();
+        } else if (key === (shortcuts.previousPage || 'p')) {
+            jumpPreviousEntry();
+        } else if (key === (shortcuts.toggleExpand || 'o')) {
+            toggleCurrentEntryAsExpanded();
+        } else if (key === (shortcuts.toggleRead || 'm')) {
+            toggleCurrentEntryAsRead();
+        } else if (key === (shortcuts.toggleStar || 's')) {
+            toggleCurrentEntryAsStar();
         }
     });
+}
+
+function toggleCurrentEntryAsStar(_entryRow) {
+    if (!$('.current-entry').length) {
+        return;
+    }
+
+    toggleEntryStar($('.current-entry'));
 }
 
 $(document).ready(function () {
@@ -792,16 +810,24 @@ function bindHeadlineEvents() {
 
     // Mark NewFont (star) entry
     bindClick('.favStarDiv', function () {
-        const data = {
-            op: "updateArticle",
-            article_ids: $(this).closest('.entry-row').attr('id'),
-            mode: 2,
-            field: 0
-        };
-        const _response = apiCall(data);
-
-        $(this).next().toggleClass('starNotActive').toggleClass('starActive');
+        toggleEntryStar($(this).closest('.entry-row'));
     });
+}
+
+function toggleEntryStar(entryRow) {
+    if (!entryRow.length) {
+        return;
+    }
+
+    const starIcon = entryRow.find('.favStarDiv').next();
+    const data = {
+        op: "updateArticle",
+        article_ids: entryRow.attr('id'),
+        mode: 2,
+        field: 0
+    };
+    apiCall(data);
+    starIcon.toggleClass('starNotActive').toggleClass('starActive');
 }
 
 function finaliseHeadlines(headlines) {

@@ -47,6 +47,19 @@ if (globalThis.appState) {
 	// globalThis.appState.feedLimit = 25;
 	globalThis.appState.feedLimit = 50;
 
+	/* Keyboard shortcuts can be customized here. Use lowercase letters.
+	 * Example:
+	 * globalThis.appState.keyboardShortcuts = {
+	 *     nextEntry: 'j',
+	 *     previousEntry: 'k',
+	 *     nextPage: 'n',
+	 *     previousPage: 'p',
+	 *     toggleExpand: 'o',
+	 *     toggleRead: 'm',
+	 *     toggleStar: 's'
+	 * };
+	 */
+
 };
 
 

@@ -70,8 +70,8 @@ Current features
 * search for keywords in feeds
 * Google Reader style hotkeys (`j`, `k`, `n`, `p`, `o`, `m`)
 
-Hotkeys
--------
+Default Hotkeys
+---------------
 
 * `j` - Jump and expand next item.
 * `k` - Jump and expand previous item.
@@ -127,3 +127,14 @@ Options:
     Start showing the feeds (categories) or articles (items)
     * false - start showing articles
     * true - start showing feeds
+
+* **globalThis.appState.keyboardShortcuts.**
+
+    Which keys perform which action
+
+    - `nextEntry` - `j`
+    - `previousEntry` - `k`
+    - `nextPage` - `n`
+    - `previousPage` - `p`
+    - `toggleExpand` - `o`
+    - `toggleRead` - `m`
