@@ -79,6 +79,7 @@ Default Hotkeys
 * `p` - Jump to previous item.
 * `o` - Expand/collapse current item.
 * `m` - Mark current item as read/unread.
+* `s` - Star/unstar current article.
 
 Configuration Options
 ---------------------
@@ -132,9 +133,10 @@ Options:
 
     Which keys perform which action
 
-    - `nextEntry` - `j`
-    - `previousEntry` - `k`
-    - `nextPage` - `n`
-    - `previousPage` - `p`
-    - `toggleExpand` - `o`
-    - `toggleRead` - `m`
+    - `nextEntry` - `j` open next artible
+    - `previousEntry` - `k` open previous article
+    - `nextPage` - `n` select next item
+    - `previousPage` - `p` select previous item
+    - `toggleExpand` - `o` toggle expansion of current article
+    - `toggleRead` - `m` toggle read status
+    - `toggleStar` - `s` toggle star status
