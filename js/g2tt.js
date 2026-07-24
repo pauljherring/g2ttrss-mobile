@@ -319,19 +319,41 @@ function bindLogout() {
     });
 }
 
+const loadScript = function (url, callback) {
+    jQuery.ajax({
+        url: url,
+        dataType: 'script',
+        success: callback,
+        async: false
+    });
+}
+
+function logTurndown(script, status, _object) {
+    if (status != 'success') {
+        window.alert("Couldn't load conversion tool (Turndown)");
+        throw new Error("Turndown missing");
+    }
+}
+
 function bindEmail() {
     $('#feed')
         .off('click', '.createmail')
         .on('click', '.createmail', function () {
+            if (typeof TurndownService == 'undefined') {
+                loadScript('js/turndown.js', logTurndown);
+            }
+
             const entryContainer = $(this).closest(".entry-container");
             const title = entryContainer.find(".item-title-collapsed").html();
             const body = entryContainer.find(".entry-contents-inner").html();
             const anchor = entryContainer.find(".entry-header-body .text a.item-title-link").attr("href");
             const anchorText = entryContainer.find(".entry-header-body .text a.item-title-link").text().trim();
             const email_subject = title;
-            const email_body = '<br><h4>Sent to you via tt-rss</h4><h2><a href="' + anchor + '">' +
-        anchorText + '</a></h2>' + body;
-
+            const turndownService = new TurndownService();
+            let email_body = turndownService.turndown('<br><h4>Sent to you via tt-rss</h4><h2><a href="' + anchor + '">' + anchorText + '</a></h2>' + body);
+            if (email_body.length > 2500) {
+                email_body = email_body.slice(0, 2000) + " [truncated - visit URL for full article]";
+            }
             const mailto=`mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}`;
             window.open(mailto, '_self');
         });
