@@ -21,10 +21,10 @@ globalThis.appState = {
         previousPage: 'p',
         toggleExpand: 'o',
         toggleRead: 'm',
-        toggleStar: 's'
+        toggleStar: 's',
     },
     startCategory: false, // was pref_StartInCat
-
+    lastOpenId: 0,
     // required for main js file, but do not change these here or in user-overrides
     isCategory: false,
     parentId: '-4',

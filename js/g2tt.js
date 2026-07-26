@@ -1,7 +1,7 @@
 const SUPPORTED_API_LEVEL = 23;
 
-const STATUS_OK = 0;
-const STATUS_ERR = 1; // eslint-disable-line no-unused-vars
+const C_STATUS_OK = 0;
+const C_STATUS_ERR = 1;
 
 const E_API_DISABLED = "API_DISABLED";
 const E_NOT_LOGGED_IN = "NOT_LOGGED_IN";
@@ -10,6 +10,18 @@ const E_INCORRECT_USAGE = "INCORRECT_USAGE";
 const E_UNKNOWN_METHOD = "UNKNOWN_METHOD";
 const E_OPERATION_FAILED = "E_OPERATION_FAILED";
 const E_NOT_FOUND = "E_NOT_FOUND";
+
+/* updateArticle constants */
+/* modes */
+const C_UA_FALSE = 0;
+const C_UA_TRUE = 1;
+const C_UA_TOGGLE = 2;
+/* fields */
+const C_UA_STAR = 0;
+const C_UA_PUBLISH = 1;
+const C_UA_UNREAD = 2;
+const C_UA_ARTICLE = 3;
+
 
 globalThis.appState.feedId = readCookie('g2tt_feed', globalThis.appState.feedId);
 globalThis.appState.isCategory = readCookie('g2tt_isCat', globalThis.appState.isCategory);
@@ -219,6 +231,7 @@ function bindSort() {
 function bindBackButtons() {
     // Back to Feeds
     bindClick('.back-to-feeds', function () {
+        markEntryRead();
         refreshCats();
         showFeeds();
     });
@@ -280,8 +293,8 @@ function bindMarkRead() {
         const data = {
             op: "updateArticle",
             article_ids: appState.itemIds.join(','),
-            mode: 0,
-            field: 2
+            mode: C_UA_FALSE,
+            field: C_UA_UNREAD
         };
         const request = apiCall(data);
 
@@ -631,11 +644,11 @@ function showArticles() {
 
 function handleAjaxError(jqXHR, textStatus, errorThrown) {
     if (jqXHR.content === undefined || jqXHR.status === undefined) {
-        window.alert("Unexpected response from server");
+        window.alert("Unexpected (non-)response from server: " + textStatus);
         console.error(jqXHR);
         console.error(textStatus);
         console.error(errorThrown);
-        throw new Error("Unexpected response");
+        // throw new Error("Unexpected response");
     }
 
     if (jqXHR.content.error == E_API_DISABLED) {
@@ -689,7 +702,7 @@ function apiCall(data, opts = {}) {
         timeout: opts.timeout || 15000
     })
         .then(response => {
-            if (response.status !== STATUS_OK) {
+            if (response.status !== C_STATUS_OK) {
                 handleApiStatusError(response);
                 return $.Deferred().reject(response).promise();
             }
@@ -845,8 +858,8 @@ function toggleEntryStar(entryRow) {
     const data = {
         op: "updateArticle",
         article_ids: entryRow.attr('id'),
-        mode: 2,
-        field: 0
+        mode: C_UA_TOGGLE,
+        field: C_UA_STAR
     };
     apiCall(data);
     starIcon.toggleClass('starNotActive').toggleClass('starActive');
@@ -1368,6 +1381,22 @@ function getCategoriesForNewSubscribe() {
     });
 }
 
+function markEntryRead(id = null) {
+    if (id == null) {
+        id = appState.lastOpenId;
+        appState.lastOpenId = 0;
+    }
+    if (id > 0) {
+        const data = {
+            op: "updateArticle",
+            article_ids: id,
+            mode: C_UA_FALSE,
+            field: C_UA_UNREAD
+        };
+        const _response = apiCall(data);
+    }
+}
+
 function expandEntry(entryRow) {
     if (entryRow.hasClass('expanded')) {
         return;
@@ -1380,16 +1409,12 @@ function expandEntry(entryRow) {
     $('.current-entry').removeClass('current-entry');
     entryRow.addClass('current-entry');
 
-    // Mark as read
+    // Mark previously opened as read
+    markEntryRead();
+
     if (!entryRow.hasClass('read')) {
         entryRow.addClass('read');
-        const data = {
-            op: "updateArticle",
-            article_ids: entryRow.attr('id'),
-            mode: 0,
-            field: 2
-        };
-        const _response = apiCall(data);
+        appState.lastOpenId = entryRow.attr('id');
     }
 }
 
@@ -1487,12 +1512,14 @@ function toggleEntryAsRead(entryRow) {
         keepUnread.removeId(articleId);
     }
 
+    const id = entryRow.attr('id');
     const data = {
         op: "updateArticle",
-        article_ids: entryRow.attr('id'),
-        mode: 2,
-        field: 2
+        article_ids: id,
+        field: C_UA_UNREAD,
+        mode: appState.lastOpenId == id,
     };
+    appState.lastOpenId = (appState.lastOpenId == id)?0:id; // swap state of lastOpenId
     const _response = apiCall(data);
 }
 
