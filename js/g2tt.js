@@ -107,6 +107,7 @@ function bindLoginForm() {
                 window.alert("Current TT-RSS API version (" + loggedIn.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
                 logoutToHomepage();
             }
+            clearCookies();
             setCookie('g2tt_sid', loggedIn.session_id, 7);
             load();
         });
