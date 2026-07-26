@@ -559,14 +559,14 @@ function refreshCats() {
     const request = apiCall(data);
 
     request.done(function (counters) {
-        let cats = [];
-        let feeds = [];
+        appState.cCats = [];
+        appState.cFeeds = [];
 
         for (let i = 0; i < counters.length; i++) {
             if (counters[i].kind == 'cat') {
-                cats[counters[i].id] = (counters[i]);
+                appState.cCats[counters[i].id] = (counters[i]);
             } else {
-                feeds[counters[i].id] = (counters[i]);
+                appState.cFeeds[counters[i].id] = (counters[i]);
             }
         }
         $('.sub-row').each(function (_i, _j) {
@@ -574,8 +574,8 @@ function refreshCats() {
             const is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
 
             if (id == "-4" || id == "-1") {
-                $(this).find('.item-count-value').html(feeds['global-unread'].counter);
-                if (feeds['global-unread'].counter == '0') {
+                $(this).find('.item-count-value').html(appState.cFeeds['global-unread'].counter);
+                if (appState.cFeeds['global-unread'].counter == '0') {
                     $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                     $('#subscriptions').removeClass('show-unread').addClass('show-all');
                 } else {
@@ -585,16 +585,16 @@ function refreshCats() {
                     }
                 }
             } else if (is_cat) {
-                $(this).find('.item-count-value').html(cats[id].counter);
-                if (cats[id].counter == '0') {
+                $(this).find('.item-count-value').html(appState.cCats[id].counter);
+                if (appState.cCats[id].counter == '0') {
                     $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                 } else {
                     $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
                 }
             } else {
-                if (typeof feeds[id] !== 'undefined') {
-                    $(this).find('.item-count-value').html(feeds[id].counter);
-                    if (feeds[id].counter == '0') {
+                if (typeof appState.cFeeds[id] !== 'undefined') {
+                    $(this).find('.item-count-value').html(appState.cFeeds[id].counter);
+                    if (appState.cFeeds[id].counter == '0') {
                         $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
                     } else {
                         $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
@@ -874,7 +874,16 @@ function finaliseHeadlines(headlines) {
     } else {
         $('.load-more-message').html(''); // effectively invisible?
     }
-    $('.entries-count').html('Showing ' + $('.entry-row').length + ' items');
+    const { isCategory, feedId, cCats, cFeeds } = appState;
+    let total = isCategory
+        ? (cCats[feedId]?.counter ?? "undef")
+        : (cFeeds[feedId]?.counter ?? "undef");
+    if (total > 50) {
+        // hacky - TTRSS counter totals don't necessarily match up with the
+        // actual number of rows displayed. Don't know why.
+        total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total/10)*10}</abbr>`;
+    }
+    $('.entries-count').html(`Showing ${$('.entry-row').length}/${total} items`);
     keepUnread.clean(appState.itemIds);
 }
 

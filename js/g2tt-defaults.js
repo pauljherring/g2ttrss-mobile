@@ -30,4 +30,6 @@ globalThis.appState = {
     parentId: '-4',
     itemIds: [],
     backCat: [],
+    cCats: [],
+    cFeeds: [],
 };
