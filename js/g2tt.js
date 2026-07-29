@@ -303,6 +303,7 @@ function bindMarkRead() {
             $('#entries').empty();
             getHeadlines();
         });
+        refreshCats(true);
     });
 }
 
@@ -551,7 +552,7 @@ $(document).ready(function () {
 
 });
 
-function refreshCats() {
+function refreshCats(countersOnly = false) {
     const data = {
         op: "getCounters",
         output_mode: "fc"
@@ -568,6 +569,9 @@ function refreshCats() {
             } else {
                 appState.cFeeds[counters[i].id] = (counters[i]);
             }
+        }
+        if (countersOnly) {
+            return;
         }
         $('.sub-row').each(function (_i, _j) {
             const id = $(this).attr('id').substring(10);
@@ -1122,9 +1126,11 @@ function load() {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
     } else if (appState.startCategory == '1') {
+        refreshCats(true);
         showFeeds();
         getTopCategories();
     } else {
+        refreshCats(true);
         getTitle();
         getHeadlines();
         getTopCategories();
