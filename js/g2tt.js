@@ -3,13 +3,13 @@ const SUPPORTED_API_LEVEL = 23;
 const C_STATUS_OK = 0;
 const C_STATUS_ERR = 1;
 
-const E_API_DISABLED = "API_DISABLED";
-const E_NOT_LOGGED_IN = "NOT_LOGGED_IN";
-const E_LOGIN_ERROR = "LOGIN_ERROR";
-const E_INCORRECT_USAGE = "INCORRECT_USAGE";
-const E_UNKNOWN_METHOD = "UNKNOWN_METHOD";
-const E_OPERATION_FAILED = "E_OPERATION_FAILED";
-const E_NOT_FOUND = "E_NOT_FOUND";
+const E_API_DISABLED = 'API_DISABLED';
+const E_NOT_LOGGED_IN = 'NOT_LOGGED_IN';
+const E_LOGIN_ERROR = 'LOGIN_ERROR';
+const E_INCORRECT_USAGE = 'INCORRECT_USAGE';
+const E_UNKNOWN_METHOD = 'UNKNOWN_METHOD';
+const E_OPERATION_FAILED = 'E_OPERATION_FAILED';
+const E_NOT_FOUND = 'E_NOT_FOUND';
 
 /* updateArticle constants */
 /* modes */
@@ -22,13 +22,30 @@ const C_UA_PUBLISH = 1;
 const C_UA_UNREAD = 2;
 const C_UA_ARTICLE = 3;
 
-
-globalThis.appState.feedId = readCookie('g2tt_feed', globalThis.appState.feedId);
-globalThis.appState.isCategory = readCookie('g2tt_isCat', globalThis.appState.isCategory);
-globalThis.appState.viewMode = readCookie('g2tt_viewMode', globalThis.appState.viewMode);
-globalThis.appState.orderBy = readCookie('g2tt_orderBy', globalThis.appState.orderBy);
-globalThis.appState.feedSort = readCookie('g2tt_feedSort', globalThis.appState.feedSort);
-globalThis.appState.feedLimit = readCookie('g2tt_feedLimit', globalThis.appState.feedLimit);
+globalThis.appState.feedId = readCookie(
+    'g2tt_feed',
+    globalThis.appState.feedId
+);
+globalThis.appState.isCategory = readCookie(
+    'g2tt_isCat',
+    globalThis.appState.isCategory
+);
+globalThis.appState.viewMode = readCookie(
+    'g2tt_viewMode',
+    globalThis.appState.viewMode
+);
+globalThis.appState.orderBy = readCookie(
+    'g2tt_orderBy',
+    globalThis.appState.orderBy
+);
+globalThis.appState.feedSort = readCookie(
+    'g2tt_feedSort',
+    globalThis.appState.feedSort
+);
+globalThis.appState.feedLimit = readCookie(
+    'g2tt_feedLimit',
+    globalThis.appState.feedLimit
+);
 
 function readCookie(name, fallback = undefined) {
     const value = $.cookie(name);
@@ -41,7 +58,7 @@ function setCookie(name, value, days = undefined) {
         $.cookie(name, value);
     } else {
         $.cookie(name, value, {
-            expires: days
+            expires: days,
         });
     }
     return oldVal;
@@ -78,25 +95,28 @@ function bindGlobalUi() {
 
 function bindLoginForm() {
     bindClick('#login', function (event) {
-        if (bindLoginForm.request !== undefined && bindLoginForm.request.abort !== undefined) {
-            console.log("Aborting previous login request...");
+        if (
+            bindLoginForm.request !== undefined &&
+            bindLoginForm.request.abort !== undefined
+        ) {
+            console.log('Aborting previous login request...');
             console.log(bindLoginForm.request);
         }
 
         const loginForm = $(this);
-        const inputs = loginForm.find("input");
+        const inputs = loginForm.find('input');
         let values = {};
         inputs.each(function () {
             values[this.name] = $(this).val();
         });
 
         const data = {
-            'op': 'login',
-            'user': values.Username,
-            'password': values.Passwd,
+            op: 'login',
+            user: values.Username,
+            password: values.Passwd,
         };
 
-        inputs.prop("disabled", true);
+        inputs.prop('disabled', true);
 
         bindLoginForm.request = apiCall(data);
 
@@ -104,7 +124,12 @@ function bindLoginForm() {
             $('.login').addClass('hidden');
             $('#main').removeClass('hidden');
             if (loggedIn.api_level < SUPPORTED_API_LEVEL) {
-                window.alert("Current TT-RSS API version (" + loggedIn.api_level + ") is unsupported, require at least version " + SUPPORTED_API_LEVEL);
+                window.alert(
+                    'Current TT-RSS API version (' +
+                        loggedIn.api_level +
+                        ') is unsupported, require at least version ' +
+                        SUPPORTED_API_LEVEL
+                );
                 logoutToHomepage();
             }
             clearCookies();
@@ -116,7 +141,7 @@ function bindLoginForm() {
         // if the request failed or succeeded
         bindLoginForm.request.always(function () {
             // reenable the inputs
-            inputs.prop("disabled", false);
+            inputs.prop('disabled', false);
         });
 
         // prevent default posting of form
@@ -128,7 +153,7 @@ function bindLoginForm() {
 function bindLoadMore() {
     bindClick('#load-more-items', function () {
         let last;
-        if (appState.orderBy == "date_reverse") {
+        if (appState.orderBy == 'date_reverse') {
             last = $('.entry-row').last().attr('id');
         } else {
             last = $('.entry-row').length;
@@ -146,7 +171,7 @@ function bindHeader() {
         //Adjust the placement of the menu based on the height of the Nav bar
         //(for when category title is long)
         $('.g2tt-menu').css({
-            top: parseInt($('.nav-bar-container').height()) - 8 + "px"
+            top: parseInt($('.nav-bar-container').height()) - 8 + 'px',
         });
         $('.g2tt-menu').toggle();
         event.stopPropagation();
@@ -202,14 +227,17 @@ function bindFeedsMenu() {
         $(this).addClass('g2tt-option-selected');
         $('.showItem').removeClass('g2tt-option-selected');
         $('#' + appState.viewMode).addClass('g2tt-option-selected');
-        $('#subscriptions').attr('class', 'show-' + $(this).attr('id').substring(6));
+        $('#subscriptions').attr(
+            'class',
+            'show-' + $(this).attr('id').substring(6)
+        );
     });
 }
 
 function bindSubscription() {
     bindClick('#add-new-subscription', function () {
         getCategoriesForNewSubscribe();
-        $("#dialog-form").dialog("open");
+        $('#dialog-form').dialog('open');
     });
 }
 
@@ -241,7 +269,7 @@ function bindBackButtons() {
     bindClick('#sub-list-back', function () {
         refreshCats();
         getFeeds(appState.backCat.pop());
-        if (appState.parentId == '-4'){
+        if (appState.parentId == '-4') {
             $('#add-new-subscription').removeClass('hidden');
         }
     });
@@ -259,27 +287,28 @@ function bindSubscriptionRowActions() {
             getFeeds(
                 $(this).attr('id').substring(10),
                 $(this).find('.sub-item').html(),
-                $(this).find('.item-count-value').html());
+                $(this).find('.item-count-value').html()
+            );
         })
         .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
             setCookie('g2tt_feed', $(this).attr('id').substring(10));
             setCookie('g2tt_isCat', true);
             appState.feedId = readCookie('g2tt_feed');
-            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         })
         .on('click', '.sub', function () {
             setCookie('g2tt_feed', $(this).attr('id').substring(10));
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
-            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         })
         .on('click', '#tree-item--4', function () {
             setCookie('g2tt_feed', $(this).attr('id').substring(10));
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
-            appState.isCategory = (readCookie('g2tt_isCat') === 'true');
+            appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         });
 }
@@ -292,10 +321,10 @@ function bindMarkRead() {
         //remove those that need to be kept unread
         keepUnread.removeFromArray(appState.itemIds);
         const data = {
-            op: "updateArticle",
+            op: 'updateArticle',
             article_ids: appState.itemIds.join(','),
             mode: C_UA_FALSE,
-            field: C_UA_UNREAD
+            field: C_UA_UNREAD,
         };
         const request = apiCall(data);
 
@@ -324,7 +353,7 @@ function logoutToHomepage() {
 function bindLogout() {
     bindClick('#menu-logout', function () {
         const data = {
-            op: "logout"
+            op: 'logout',
         };
         const request = apiCall(data);
 
@@ -339,14 +368,14 @@ const loadScript = function (url, callback) {
         url: url,
         dataType: 'script',
         success: callback,
-        async: false
+        async: false,
     });
-}
+};
 
 function logTurndown(script, status, _object) {
     if (status != 'success') {
         window.alert("Couldn't load conversion tool (Turndown)");
-        throw new Error("Turndown missing");
+        throw new Error('Turndown missing');
     }
 }
 
@@ -358,18 +387,32 @@ function bindEmail() {
                 loadScript('js/turndown.js', logTurndown);
             }
 
-            const entryContainer = $(this).closest(".entry-container");
-            const title = entryContainer.find(".item-title-collapsed").html();
-            const body = entryContainer.find(".entry-contents-inner").html();
-            const anchor = entryContainer.find(".entry-header-body .text a.item-title-link").attr("href");
-            const anchorText = entryContainer.find(".entry-header-body .text a.item-title-link").text().trim();
+            const entryContainer = $(this).closest('.entry-container');
+            const title = entryContainer.find('.item-title-collapsed').html();
+            const body = entryContainer.find('.entry-contents-inner').html();
+            const anchor = entryContainer
+                .find('.entry-header-body .text a.item-title-link')
+                .attr('href');
+            const anchorText = entryContainer
+                .find('.entry-header-body .text a.item-title-link')
+                .text()
+                .trim();
             const email_subject = title;
             const turndownService = new TurndownService();
-            let email_body = turndownService.turndown('<br><h4>Sent to you via tt-rss</h4><h2><a href="' + anchor + '">' + anchorText + '</a></h2>' + body);
+            let email_body = turndownService.turndown(
+                '<br><h4>Sent to you via tt-rss</h4><h2><a href="' +
+                    anchor +
+                    '">' +
+                    anchorText +
+                    '</a></h2>' +
+                    body
+            );
             if (email_body.length > 2500) {
-                email_body = email_body.slice(0, 2000) + " [truncated - visit URL for full article]";
+                email_body =
+                    email_body.slice(0, 2000) +
+                    ' [truncated - visit URL for full article]';
             }
-            const mailto=`mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}`;
+            const mailto = `mailto:?subject=${fixedEncodeURIComponent(email_subject)}&body=${fixedEncodeURIComponent(email_body)}`;
             window.open(mailto, '_self');
         });
 }
@@ -418,29 +461,33 @@ function bindSearchUi() {
 }
 
 function bindSubscriptionUi() {
-
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
 
-    const feedURL = $("#feedURL"),
+    const feedURL = $('#feedURL'),
         //password = $( "#password" ),
         allFields = $([]).add(feedURL),
-        tips = $(".validateTips");
+        tips = $('.validateTips');
 
     function updateTips(t) {
-        tips
-            .text(t)
-            .addClass("ui-state-highlight").removeClass("hidden");
+        tips.text(t).addClass('ui-state-highlight').removeClass('hidden');
         setTimeout(function () {
-            tips.removeClass("ui-state-highlight", 1500);
+            tips.removeClass('ui-state-highlight', 1500);
         }, 500);
     }
 
     function checkLength(o, n, min, max) {
         if (o.val().length > max || o.val().length < min) {
-            o.addClass("ui-state-error");
-            updateTips("Length of " + n + " must be between " +
-                min + " and " + max + ".");
+            o.addClass('ui-state-error');
+            updateTips(
+                'Length of ' +
+                    n +
+                    ' must be between ' +
+                    min +
+                    ' and ' +
+                    max +
+                    '.'
+            );
             return false;
         } else {
             return true;
@@ -453,8 +500,8 @@ function bindSubscriptionUi() {
 
     function checkRegexp(o, regexp, n) {
         const makeOvalidHttp = o.val().trim();
-        if (!(regexp.test(firstToUpperCase(makeOvalidHttp)))) {
-            o.addClass("ui-state-error");
+        if (!regexp.test(firstToUpperCase(makeOvalidHttp))) {
+            o.addClass('ui-state-error');
             updateTips(n);
             return false;
         } else {
@@ -462,10 +509,10 @@ function bindSubscriptionUi() {
         }
     }
 
-    $("#dialog-form").dialog({
+    $('#dialog-form').dialog({
         autoOpen: false,
         //height: 300,
-        dialogClass: "dialog-nav-bar",
+        dialogClass: 'dialog-nav-bar',
         draggable: false,
         resizable: false,
         //position: { my: "left top", at: "left top" } ,
@@ -473,23 +520,31 @@ function bindSubscriptionUi() {
         width: 300,
         modal: true,
         buttons: {
-            "Subscribe": function () {
+            Subscribe: function () {
                 let bValid = true;
-                allFields.removeClass("ui-state-error");
-                tips.addClass("hidden");
+                allFields.removeClass('ui-state-error');
+                tips.addClass('hidden');
 
-                bValid = bValid && checkLength(feedURL, "URL", 5, 1000);
-                bValid = bValid && checkRegexp(feedURL,
-                    /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?$/,
-                    "URL must be a valid URL. Make sure the URL is correct and re-submit");
+                bValid = bValid && checkLength(feedURL, 'URL', 5, 1000);
+                bValid =
+                    bValid &&
+                    checkRegexp(
+                        feedURL,
+                        /^(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?$/,
+                        'URL must be a valid URL. Make sure the URL is correct and re-submit'
+                    );
 
                 // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
 
                 if (bValid) {
-                    const catIDnum = $("#catItems option:selected").val();
-                    const feedURLTrimmed = firstToUpperCase(feedURL.val().trim());
+                    const catIDnum = $('#catItems option:selected').val();
+                    const feedURLTrimmed = firstToUpperCase(
+                        feedURL.val().trim()
+                    );
 
-                    const multipleFeedSelected = $("#feedsAvail option:selected").val();
+                    const multipleFeedSelected = $(
+                        '#feedsAvail option:selected'
+                    ).val();
 
                     if (multipleFeedSelected == null) {
                         $('#feedURL').val(feedURLTrimmed);
@@ -501,12 +556,12 @@ function bindSubscriptionUi() {
                 }
             },
             Cancel: function () {
-                $(this).dialog("close");
-            }
+                $(this).dialog('close');
+            },
         },
         close: function () {
-            allFields.val("").removeClass("ui-state-error");
-        }
+            allFields.val('').removeClass('ui-state-error');
+        },
     });
 }
 
@@ -549,13 +604,12 @@ $(document).ready(function () {
     bindSubscriptionUi();
     bindKeyboardShortcuts();
     load();
-
 });
 
 function refreshCats(countersOnly = false) {
     const data = {
-        op: "getCounters",
-        output_mode: "fc"
+        op: 'getCounters',
+        output_mode: 'fc',
     };
     const request = apiCall(data);
 
@@ -565,9 +619,9 @@ function refreshCats(countersOnly = false) {
 
         for (let i = 0; i < counters.length; i++) {
             if (counters[i].kind == 'cat') {
-                appState.cCats[counters[i].id] = (counters[i]);
+                appState.cCats[counters[i].id] = counters[i];
             } else {
-                appState.cFeeds[counters[i].id] = (counters[i]);
+                appState.cFeeds[counters[i].id] = counters[i];
             }
         }
         if (countersOnly) {
@@ -575,33 +629,60 @@ function refreshCats(countersOnly = false) {
         }
         $('.sub-row').each(function (_i, _j) {
             const id = $(this).attr('id').substring(10);
-            const is_cat = ($(this).hasClass('open-sub-folder') || $(this).hasClass('closed-sub-folder'));
+            const is_cat =
+                $(this).hasClass('open-sub-folder') ||
+                $(this).hasClass('closed-sub-folder');
 
-            if (id == "-4" || id == "-1") {
-                $(this).find('.item-count-value').html(appState.cFeeds['global-unread'].counter);
+            if (id == '-4' || id == '-1') {
+                $(this)
+                    .find('.item-count-value')
+                    .html(appState.cFeeds['global-unread'].counter);
                 if (appState.cFeeds['global-unread'].counter == '0') {
-                    $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
-                    $('#subscriptions').removeClass('show-unread').addClass('show-all');
+                    $(this)
+                        .addClass('no-unread-sub-row')
+                        .removeClass('unread-sub');
+                    $('#subscriptions')
+                        .removeClass('show-unread')
+                        .addClass('show-all');
                 } else {
-                    $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
-                    if (appState.viewMode == 'unread' && $('#subscriptions').hasClass('show-all')) {
-                        $('#subscriptions').removeClass('show-all').addClass('show-unread');
+                    $(this)
+                        .removeClass('no-unread-sub-row')
+                        .addClass('unread-sub');
+                    if (
+                        appState.viewMode == 'unread' &&
+                        $('#subscriptions').hasClass('show-all')
+                    ) {
+                        $('#subscriptions')
+                            .removeClass('show-all')
+                            .addClass('show-unread');
                     }
                 }
             } else if (is_cat) {
-                $(this).find('.item-count-value').html(appState.cCats[id].counter);
+                $(this)
+                    .find('.item-count-value')
+                    .html(appState.cCats[id].counter);
                 if (appState.cCats[id].counter == '0') {
-                    $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
+                    $(this)
+                        .addClass('no-unread-sub-row')
+                        .removeClass('unread-sub');
                 } else {
-                    $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
+                    $(this)
+                        .removeClass('no-unread-sub-row')
+                        .addClass('unread-sub');
                 }
             } else {
                 if (typeof appState.cFeeds[id] !== 'undefined') {
-                    $(this).find('.item-count-value').html(appState.cFeeds[id].counter);
+                    $(this)
+                        .find('.item-count-value')
+                        .html(appState.cFeeds[id].counter);
                     if (appState.cFeeds[id].counter == '0') {
-                        $(this).addClass('no-unread-sub-row').removeClass('unread-sub');
+                        $(this)
+                            .addClass('no-unread-sub-row')
+                            .removeClass('unread-sub');
                     } else {
-                        $(this).removeClass('no-unread-sub-row').addClass('unread-sub');
+                        $(this)
+                            .removeClass('no-unread-sub-row')
+                            .addClass('unread-sub');
                     }
                 }
             }
@@ -649,7 +730,7 @@ function showArticles() {
 
 function handleAjaxError(jqXHR, textStatus, errorThrown) {
     if (jqXHR.content === undefined || jqXHR.status === undefined) {
-        window.alert("Unexpected (non-)response from server: " + textStatus);
+        window.alert('Unexpected (non-)response from server: ' + textStatus);
         console.error(jqXHR);
         console.error(textStatus);
         console.error(errorThrown);
@@ -658,36 +739,28 @@ function handleAjaxError(jqXHR, textStatus, errorThrown) {
 
     if (jqXHR.content.error == E_API_DISABLED) {
         window.alert(
-            "The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences."
+            'The API Settings are disabled. Login on the desktop version and enable both API settings in the Preferences.'
         );
         logoutToHomepage();
     }
     if (jqXHR.content.error == E_NOT_LOGGED_IN) {
-        window.alert("You are not logged in or your session has expired.");
+        window.alert('You are not logged in or your session has expired.');
         logoutToHomepage();
     }
     if (jqXHR.content.error == E_LOGIN_ERROR) {
-        window.alert("Username and/or password were incorrect.");
+        window.alert('Username and/or password were incorrect.');
     }
     if (jqXHR.content.error == E_INCORRECT_USAGE) {
-        window.alert(
-            "API error: Incorrect usage"
-        );
+        window.alert('API error: Incorrect usage');
     }
     if (jqXHR.content.error == E_UNKNOWN_METHOD) {
-        window.alert(
-            "API error: Unknown method called"
-        );
+        window.alert('API error: Unknown method called');
     }
     if (jqXHR.content.error == E_OPERATION_FAILED) {
-        window.alert(
-            "API error: Operation failed"
-        );
+        window.alert('API error: Operation failed');
     }
     if (jqXHR.content.error == E_NOT_FOUND) {
-        window.alert(
-            "API error: Icon not found)"
-        );
+        window.alert('API error: Icon not found)');
     }
 }
 
@@ -698,15 +771,15 @@ function handleApiStatusError(response) {
 function apiCall(data, opts = {}) {
     data.sid = readCookie('g2tt_sid');
     return $.ajax({
-        url: appState.url + "/api/",
-        type: "POST",
-        contentType: "application/json",
-        dataType: "json",
+        url: appState.url + '/api/',
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
         data: JSON.stringify(data),
         async: opts.async !== false,
-        timeout: opts.timeout || 15000
+        timeout: opts.timeout || 15000,
     })
-        .then(response => {
+        .then((response) => {
             if (response.status !== C_STATUS_OK) {
                 handleApiStatusError(response);
                 return $.Deferred().reject(response).promise();
@@ -715,7 +788,9 @@ function apiCall(data, opts = {}) {
         })
         .fail((jqXHR, textStatus, errorThrown) => {
             handleAjaxError(jqXHR, textStatus, errorThrown);
-            return $.Deferred().reject({ jqXHR, textStatus, errorThrown }).promise();
+            return $.Deferred()
+                .reject({ jqXHR, textStatus, errorThrown })
+                .promise();
         });
 }
 
@@ -728,9 +803,9 @@ function fixedEncodeURIComponent(str) {
 function headlineMeta(headline) {
     const date = new Date(headline.updated * 1000);
     return {
-        readClass: (!headline.unread) ? " read" : "",
-        starClass: headline.marked ? "starActive" : "starNotActive",
-        formattedDate: date.toLocaleString()
+        readClass: !headline.unread ? ' read' : '',
+        starClass: headline.marked ? 'starActive' : 'starNotActive',
+        formattedDate: date.toLocaleString(),
     };
 }
 
@@ -743,13 +818,13 @@ function headlineExcerpt(headline) {
 
 function headlineContentHtml(content) {
     const html = $(content);
-    if (html.length === 1 && html.is("img")) {
-        const alt = html.attr("title") || html.attr("alt");
+    if (html.length === 1 && html.is('img')) {
+        const alt = html.attr('title') || html.attr('alt');
         if (alt) {
             return `<div>${html[0].outerHTML}<div>${alt}</div></div>`;
         }
     }
-    const container = $("<div></div>");
+    const container = $('<div></div>');
     container.append(html);
     return container[0].outerHTML;
 }
@@ -818,7 +893,6 @@ function buildHeadlinesEntry(headline) {
 </div>`;
 }
 
-
 function renderHeadlines(headlines) {
     $.each(headlines, function (index, headline) {
         appState.itemIds.push(headline.id);
@@ -861,10 +935,10 @@ function toggleEntryStar(entryRow) {
 
     const starIcon = entryRow.find('.favStarDiv').next();
     const data = {
-        op: "updateArticle",
+        op: 'updateArticle',
         article_ids: entryRow.attr('id'),
         mode: C_UA_TOGGLE,
-        field: C_UA_STAR
+        field: C_UA_STAR,
     };
     apiCall(data);
     starIcon.toggleClass('starNotActive').toggleClass('starActive');
@@ -879,24 +953,27 @@ function finaliseHeadlines(headlines) {
         $('.load-more-message').html(''); // effectively invisible?
     }
     const { isCategory, feedId, cCats, cFeeds } = appState;
-    let total = isCategory
-        ? (cCats[feedId]?.counter ?? "undef")
-        : (cFeeds[feedId]?.counter ?? "undef");
+    let total =
+        isCategory ?
+            (cCats[feedId]?.counter ?? 'undef')
+        :   (cFeeds[feedId]?.counter ?? 'undef');
     if (total > 50) {
         // hacky - TTRSS counter totals don't necessarily match up with the
         // actual number of rows displayed. Don't know why.
-        total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total/10)*10}</abbr>`;
+        total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total / 10) * 10}</abbr>`;
     }
-    $('.entries-count').html(`Showing ${$('.entry-row').length}/${total} items`);
+    $('.entries-count').html(
+        `Showing ${$('.entry-row').length}/${total} items`
+    );
     keepUnread.clean(appState.itemIds);
 }
 
 function getHeadlinesRequest(since) {
-    if (typeof (since) === 'undefined') since = 0;
+    if (typeof since === 'undefined') since = 0;
 
     const search = $('#search-input').val();
     const data = {
-        op: "getHeadlines",
+        op: 'getHeadlines',
         feed_id: appState.feedId,
         limit: appState.feedLimit,
         show_excerpt: 1,
@@ -906,10 +983,10 @@ function getHeadlinesRequest(since) {
         is_cat: appState.isCategory,
         include_nested: true,
         order_by: appState.orderBy,
-        search: search
+        search: search,
     };
 
-    if (appState.orderBy == "date_reverse") {
+    if (appState.orderBy == 'date_reverse') {
         data.since_id = since;
     } else {
         data.skip = since;
@@ -946,7 +1023,7 @@ function getHeadlines(since) {
 function buildAllArticlesRow(content) {
     return buildTreeRow({
         obj: content,
-        sub: 'open-sub-folder'
+        sub: 'open-sub-folder',
     });
 }
 
@@ -954,21 +1031,21 @@ function buildCategoryRow(cat) {
     return buildTreeRow({
         obj: cat,
         sub: 'closed-sub-folder',
-        nested: 'nested-sub'
+        nested: 'nested-sub',
     });
 }
 
 function buildParentFolderRow(parent) {
     return buildTreeRow({
         obj: parent,
-        sub: 'open-sub-folder'
+        sub: 'open-sub-folder',
     });
 }
 
 function buildFeedRow(feed) {
     return buildTreeRow({
         obj: feed,
-        sub: feed.is_cat ? 'closed-sub-folder' : 'sub'
+        sub: feed.is_cat ? 'closed-sub-folder' : 'sub',
     });
 }
 
@@ -976,18 +1053,13 @@ function buildTreeRow(row) {
     const iconMap = {
         'open-sub-folder': 'fa-folder-open',
         'closed-sub-folder': 'fa-folder',
-        'sub': 'fa-rss-square'
+        sub: 'fa-rss-square',
     };
     const icon = iconMap[row.sub] || 'fa-question-circle';
     const unread = row.obj.unread > 0 ? 'unread-sub' : 'no-unread-sub-row';
-    const classes = [
-        'row',
-        'whisper',
-        'sub-row',
-        row.sub,
-        unread,
-        row.nested
-    ].filter(Boolean).join(' ');
+    const classes = ['row', 'whisper', 'sub-row', row.sub, unread, row.nested]
+        .filter(Boolean)
+        .join(' ');
 
     return `
 <div class='${classes}' id='tree-item-${row.obj.id}'>
@@ -1004,8 +1076,14 @@ function buildTreeRow(row) {
 }
 
 function compareBySortMode(a, b) {
-    const db_order = ((a.order_id < b.order_id) ? -1 : ((a.order_id > b.order_id) ? 1 : 0));
-    const alpha_order = ((a.title < b.title) ? -1 : ((a.title > b.title) ? 1 : 0));
+    const db_order =
+        a.order_id < b.order_id ? -1
+        : a.order_id > b.order_id ? 1
+        : 0;
+    const alpha_order =
+        a.title < b.title ? -1
+        : a.title > b.title ? 1
+        : 0;
     if (appState.feedSort == '1') {
         return alpha_order;
     } else {
@@ -1027,18 +1105,18 @@ function getTopCategories() {
         $('#subscriptions-list').append("<div id='sub--4'></div>");
 
         let data = {
-            op: "getUnread"
+            op: 'getUnread',
         };
         const unread = apiCall(data);
         unread.done(function (content) {
             content.id = -4;
-            content.title = 'All articles'
+            content.title = 'All articles';
             $('#sub--4').prepend(buildAllArticlesRow(content));
         });
 
         data = {
-            op: "getCategories",
-            enable_nested: true
+            op: 'getCategories',
+            enable_nested: true,
         };
         const cats = apiCall(data);
 
@@ -1046,7 +1124,6 @@ function getTopCategories() {
             cats.sort(compareBySortMode);
             $.each(cats, function (index, cat) {
                 $('#sub--4').append(buildCategoryRow(cat));
-
             });
             appState.parentId = '-4';
             $('body').removeClass('loading').addClass('loaded');
@@ -1080,19 +1157,20 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         $('#loading-area-container').removeClass('hidden');
 
         const data = {
-            op: "getFeeds",
+            op: 'getFeeds',
             cat_id: parent.id,
-            include_nested: true
+            include_nested: true,
         };
         const feeds = apiCall(data);
 
         feeds.done(function (feeds) {
             feeds.sort(compareBySortMode);
-            $('#subscriptions-list').append("<div id='sub-" + parent.id + "'></div>");
+            $('#subscriptions-list').append(
+                "<div id='sub-" + parent.id + "'></div>"
+            );
             $('#sub-' + parent.id).prepend(buildParentFolderRow(parent));
             $.each(feeds, function (index, feed) {
                 $('#sub-' + parent.id).append(buildFeedRow(feed));
-
             });
             $('body').removeClass('loading').addClass('loaded');
             $('#loading-area-container').addClass('hidden');
@@ -1103,10 +1181,10 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 function getTitle() {
     let data = {};
     if (appState.isCategory === true) {
-        data.op = "getCategories";
+        data.op = 'getCategories';
     } else {
-        data.op = "getFeeds";
-        data.cat_id = "-4";
+        data.op = 'getFeeds';
+        data.cat_id = '-4';
     }
 
     const request = apiCall(data);
@@ -1122,7 +1200,7 @@ function getTitle() {
 }
 
 function load() {
-    if (typeof ($.cookie('g2tt_sid')) === 'undefined') {
+    if (typeof $.cookie('g2tt_sid') === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
     } else if (appState.startCategory == '1') {
@@ -1147,7 +1225,7 @@ function getData() {
     getHeadlines();
 }
 
-var keepUnread = new function () {
+var keepUnread = new (function () {
     this.keepUnreadIdMap = undefined;
 
     const getIdMap = function () {
@@ -1213,13 +1291,13 @@ var keepUnread = new function () {
         }
         setCookie('g2tt_keepUnread_ids', strVal);
     };
-};
+})();
 
 function subscribe(feedurl, categoryID) {
     const data = {
-        op: "subscribeToFeed",
+        op: 'subscribeToFeed',
         feed_url: feedurl,
-        category_id: categoryID
+        category_id: categoryID,
     };
     $('#indicator').removeClass('hidden');
     const request = apiCall(data);
@@ -1234,7 +1312,7 @@ function subscribe(feedurl, categoryID) {
         const feedUrlsTitles = [];
 
         for (let key in feeds) {
-            if (Object.hasOwn(feeds, "key")) {
+            if (Object.hasOwn(feeds, 'key')) {
                 feedUrls.push(key);
                 feedUrlsTitles.push(feeds[key]);
             }
@@ -1268,15 +1346,16 @@ function subscribe(feedurl, categoryID) {
             case 1: {
                 //1 - OK, Feed added
                 $('#indicator').addClass('hidden');
-                const tips = $(".validateTips");
+                const tips = $('.validateTips');
                 tips.text('Your Feed was Added')
-                    .addClass("ui-state-highlight").removeClass("hidden");
+                    .addClass('ui-state-highlight')
+                    .removeClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
                 $('#multipleFeedsSelect').addClass('hidden');
                 setTimeout(function () {
                     //tips.removeClass( "ui-state-highlight", 1500 );
 
-                    $('#feedURL').val("");
+                    $('#feedURL').val('');
                 }, 100);
                 break;
             }
@@ -1285,18 +1364,21 @@ function subscribe(feedurl, categoryID) {
                 $('#indicator').addClass('hidden');
                 $('#multipleFeedNotice').addClass('hidden');
                 $('#multipleFeedsSelect').addClass('hidden');
-                window.alert('Invalid URL submitted. Please check URL and try again.');
+                window.alert(
+                    'Invalid URL submitted. Please check URL and try again.'
+                );
                 break;
             }
-            case 3: {
-                //3 - URL content is HTML, no feeds available
-                $('#indicator').addClass('hidden');
-                $('#multipleFeedNotice').addClass('hidden');
-                $('#multipleFeedsSelect').addClass('hidden');
-                window.alert(
-                    'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
-                );
-            }
+            case 3:
+                {
+                    //3 - URL content is HTML, no feeds available
+                    $('#indicator').addClass('hidden');
+                    $('#multipleFeedNotice').addClass('hidden');
+                    $('#multipleFeedsSelect').addClass('hidden');
+                    window.alert(
+                        'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
+                    );
+                }
                 break;
             case 4: {
                 //4 - URL content is HTML which contains multiple feeds.
@@ -1304,8 +1386,9 @@ function subscribe(feedurl, categoryID) {
                 $('#multipleFeedNotice').removeClass('hidden');
                 $('#multipleFeedsSelect').removeClass('hidden');
                 $.each(feeds, function (url, title) {
-                    $('#feedsAvail').append($('<option></option>').val(url).html(title));
-
+                    $('#feedsAvail').append(
+                        $('<option></option>').val(url).html(title)
+                    );
                 });
                 break;
             }
@@ -1339,9 +1422,12 @@ function collectCategoryOptions(cats) {
 
     $.each(cats, function (index, cat) {
         $.each(cat.items, function (index, catObject) {
-            $.each(buildCategoryOptionItems(catObject), function (index, option) {
-                options.push(option);
-            });
+            $.each(
+                buildCategoryOptionItems(catObject),
+                function (index, option) {
+                    options.push(option);
+                }
+            );
         });
     });
 
@@ -1355,16 +1441,16 @@ function buildCategoryOptionItems(catObject) {
         options.push({
             parent_id: catObject.bare_id,
             child_id: catObject.bare_id,
-            Name: catObject.name
+            Name: catObject.name,
         });
     }
 
     $.each(catObject.items, function (index, subcatObject) {
-        if (subcatObject.type == "category") {
+        if (subcatObject.type == 'category') {
             options.push({
                 parent_id: catObject.bare_id,
                 child_id: subcatObject.bare_id,
-                Name: subcatObject.name
+                Name: subcatObject.name,
             });
         }
     });
@@ -1375,24 +1461,32 @@ function buildCategoryOptionItems(catObject) {
 function appendCategoryOptions(options) {
     $.each(options, function (index, objects) {
         if (objects.parent_id == objects.child_id) {
-            $('#catItems').append($('<option></option>').val(objects.parent_id).html(objects.Name));
+            $('#catItems').append(
+                $('<option></option>').val(objects.parent_id).html(objects.Name)
+            );
         } else {
-            $('#catItems').append($('<option></option>').val(objects.child_id).html('&lfloor; ' + objects.Name));
+            $('#catItems').append(
+                $('<option></option>')
+                    .val(objects.child_id)
+                    .html('&lfloor; ' + objects.Name)
+            );
         }
     });
 }
 
 function getCategoriesForNewSubscribe() {
     const data = {
-        op: "getFeedTree",
+        op: 'getFeedTree',
         include_empty: true,
-        enable_nested: false
+        enable_nested: false,
     };
     const catsForNew = apiCall(data);
 
     catsForNew.done(function (catsForNew) {
         $('#catItems').find('option').remove();
-        $('#catItems').append($('<option></option>').val(0).html('Uncategorized'));
+        $('#catItems').append(
+            $('<option></option>').val(0).html('Uncategorized')
+        );
         appendCategoryOptions(collectCategoryOptions(catsForNew));
     });
 }
@@ -1404,10 +1498,10 @@ function markEntryRead(id = null) {
     }
     if (id > 0) {
         const data = {
-            op: "updateArticle",
+            op: 'updateArticle',
             article_ids: id,
             mode: C_UA_FALSE,
-            field: C_UA_UNREAD
+            field: C_UA_UNREAD,
         };
         const _response = apiCall(data);
     }
@@ -1513,7 +1607,9 @@ function toggleEntryAsRead(entryRow) {
     entryRow.toggleClass('read');
 
     if (!entryRow.hasClass('read')) {
-        entryRow.find(".read-state").html("<i class='fa fa-book'></i>&nbsp;Mark read");
+        entryRow
+            .find('.read-state')
+            .html("<i class='fa fa-book'></i>&nbsp;Mark read");
         for (let i = 0; i < appState.itemIds.length; i++) {
             const articleId = entryRow.attr('id');
             if (appState.itemIds[i] == articleId) {
@@ -1522,7 +1618,9 @@ function toggleEntryAsRead(entryRow) {
             }
         }
     } else {
-        entryRow.find(".read-state").html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
+        entryRow
+            .find('.read-state')
+            .html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
         const articleId = entryRow.attr('id');
         appState.itemIds.push(articleId);
         keepUnread.removeId(articleId);
@@ -1530,12 +1628,12 @@ function toggleEntryAsRead(entryRow) {
 
     const id = entryRow.attr('id');
     const data = {
-        op: "updateArticle",
+        op: 'updateArticle',
         article_ids: id,
         field: C_UA_UNREAD,
         mode: appState.lastOpenId == id,
     };
-    appState.lastOpenId = (appState.lastOpenId == id)?0:id; // swap state of lastOpenId
+    appState.lastOpenId = appState.lastOpenId == id ? 0 : id; // swap state of lastOpenId
     const _response = apiCall(data);
 }
 
@@ -1548,7 +1646,7 @@ function toggleCurrentEntryAsRead(_entryRow) {
 // source: http://stackoverflow.com/a/7557433/1135429
 function isElementInViewport(el) {
     //special bonus for those using jQuery
-    if (typeof jQuery === "function" && el instanceof jQuery) {
+    if (typeof jQuery === 'function' && el instanceof jQuery) {
         el = el[0];
     }
 
@@ -1557,7 +1655,12 @@ function isElementInViewport(el) {
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /*or $(window).height() */
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
+        rect.bottom <=
+            (window.innerHeight ||
+                document.documentElement
+                    .clientHeight) /*or $(window).height() */ &&
+        rect.right <=
+            (window.innerWidth ||
+                document.documentElement.clientWidth) /*or $(window).width() */
     );
 }

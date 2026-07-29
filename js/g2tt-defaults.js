@@ -6,7 +6,6 @@
 // not everything here is designed to be configurable, do not override anything
 // not currently mentioned in g2tt-user-overrides.js
 globalThis.appState = {
-
     // things overridable in user-overrides
     url: '/tt-rss', // was global_ttrssUrl
     feedId: -4, // was pref_Feed
