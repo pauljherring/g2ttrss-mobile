@@ -31,4 +31,5 @@ globalThis.appState = {
     backCat: [],
     cCats: [],
     cFeeds: [],
+    historylist: [],
 };

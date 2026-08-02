@@ -22,6 +22,133 @@ const C_UA_PUBLISH = 1;
 const C_UA_UNREAD = 2;
 const C_UA_ARTICLE = 3;
 
+if (!Array.prototype.peek) {
+    Object.defineProperty(Array.prototype, 'peek', {
+        value: function (p = 1) {
+            // "this" refers to whatever array calls the method
+            if (this.length > p - 1) {
+                return this[this.length - p];
+            }
+            return '';
+        },
+        enumerable: false, // Keeps it hidden from for...in loops
+        configurable: true, // Allows redefinition if needed
+        writable: true, // Allows value changes
+    });
+}
+
+function getErrorObject() {
+    try {
+        throw Error('');
+    } catch (err) {
+        return err;
+    }
+}
+function callee() {
+    var err = getErrorObject();
+    var caller_line = err.stack.split('\n')[3];
+    var index = caller_line.indexOf('at ');
+    var clean = caller_line.slice(index + 2, caller_line.length);
+    return clean;
+}
+
+function readCookie(name, fallback = undefined) {
+    const value = $.cookie(name);
+    return typeof value !== 'undefined' ? value : fallback;
+}
+
+function setCookie(name, value, days = undefined) {
+    const oldVal = readCookie(name);
+    if (typeof days === 'undefined') {
+        $.cookie(name, value);
+    } else {
+        $.cookie(name, value, {
+            expires: days,
+        });
+    }
+    return oldVal;
+}
+
+function delCookie(name) {
+    const oldVal = readCookie(name);
+    $.removeCookie(name);
+    return oldVal;
+}
+
+function setHash(h) {
+    var oldLocation = '';
+    if (window.location) {
+        oldLocation = window.location.hash.slice(1); // remove # from the start
+        window.location.hash = h;
+    }
+    // console.log(callee() + ' setHash(' + h + ')');
+    return oldLocation;
+}
+
+function getHash() {
+    // eslint-disable-line no-unused-vars
+    if (window.location && window.location.hash) {
+        return window.location.hash.slice(1);
+    }
+    return '';
+}
+
+function pushHistory(t) {
+    const { historylist } = globalThis.appState;
+    historylist.push(t);
+    setHash(historylist.peek());
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+    // console.log(callee() + ' pushHistory(' + t + ')');
+    // console.log(JSON.stringify(historylist));
+}
+
+function popHistory() {
+    const { historylist } = globalThis.appState;
+    var h = historylist.pop();
+    setHash(historylist.peek());
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+    // console.log(callee() + ' popHistory()');
+    // console.log(JSON.stringify(historylist));
+    return h;
+}
+
+function resetHistory() {
+    let { historylist } = globalThis.appState;
+    historylist.length = 0;
+    setCookie('g2tt_history', JSON.stringify([]));
+    setHash('');
+}
+
+
+
+function JSONSafeParse(str) {
+    // Check for empty input
+    if (!str || typeof str !== 'string') {
+        console.error('Invalid input: expected non-empty string');
+        return null;
+    }
+
+    // Trim whitespace and BOM
+    str = str.trim().replace(/^\uFEFF/, '');
+
+    try {
+        return JSON.parse(str);
+    } catch (error) {
+        console.error('JSON parse error:', error.message);
+
+        // Try to identify the problem location
+        const match = error.message.match(/position (\d+)/);
+        if (match) {
+            const pos = parseInt(match[1]);
+            console.error(
+                'Error near:',
+                str.substring(Math.max(0, pos - 20), pos + 20)
+            );
+        }
+        return [];
+    }
+}
+
 globalThis.appState.feedId = readCookie(
     'g2tt_feed',
     globalThis.appState.feedId
@@ -46,29 +173,8 @@ globalThis.appState.feedLimit = readCookie(
     'g2tt_feedLimit',
     globalThis.appState.feedLimit
 );
-
-function readCookie(name, fallback = undefined) {
-    const value = $.cookie(name);
-    return typeof value !== 'undefined' ? value : fallback;
-}
-
-function setCookie(name, value, days = undefined) {
-    const oldVal = readCookie(name);
-    if (typeof days === 'undefined') {
-        $.cookie(name, value);
-    } else {
-        $.cookie(name, value, {
-            expires: days,
-        });
-    }
-    return oldVal;
-}
-
-function delCookie(name) {
-    const oldVal = readCookie(name);
-    $.removeCookie(name);
-    return oldVal;
-}
+globalThis.appState.historylist =
+    JSONSafeParse(readCookie('g2tt_history', '[]')) || [];
 
 function bindClick(selector, callback) {
     let eventType = 'click';
@@ -260,6 +366,8 @@ function bindSort() {
 function bindBackButtons() {
     // Back to Feeds
     bindClick('.back-to-feeds', function () {
+        popHistory();
+        popHistory(); // dunno why twice is needed, but it is
         markEntryRead();
         refreshCats();
         showFeeds();
@@ -267,6 +375,7 @@ function bindBackButtons() {
 
     // Back to Feeds from sub category
     bindClick('#sub-list-back', function () {
+        popHistory();
         refreshCats();
         getFeeds(appState.backCat.pop());
         if (appState.parentId == '-4') {
@@ -282,32 +391,40 @@ function bindSubscriptionRowActions() {
         .off('click', '.sub')
         .off('click', '#tree-item--4')
         .on('click', '.closed-sub-folder', function () {
+            const id = $(this).attr('id').substring(10);
             appState.backCat.push(appState.parentId);
+            pushHistory('category/' + id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds(
-                $(this).attr('id').substring(10),
+                id,
                 $(this).find('.sub-item').html(),
                 $(this).find('.item-count-value').html()
             );
         })
         .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            const id = $(this).attr('id').substring(10);
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', true);
             appState.feedId = readCookie('g2tt_feed');
+            pushHistory('categoryfeed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         })
         .on('click', '.sub', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            const id = $(this).attr('id').substring(10);
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
+            pushHistory('feed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         })
         .on('click', '#tree-item--4', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+            const id = $(this).attr('id').substring(10);
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
+            pushHistory('categoryfeed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
         });
@@ -343,6 +460,7 @@ function clearCookies() {
     delCookie('g2tt_orderBy');
     delCookie('g2tt_keepUnread_ids');
     delCookie('g2tt_sid');
+    delCookie('g2tt_history');
 }
 
 function logoutToHomepage() {
@@ -358,6 +476,7 @@ function bindLogout() {
         const request = apiCall(data);
 
         request.done(function (_content) {
+            resetHistory();
             logoutToHomepage();
         });
     });
@@ -614,8 +733,8 @@ function refreshCats(countersOnly = false) {
     const request = apiCall(data);
 
     request.done(function (counters) {
-        appState.cCats = [];
-        appState.cFeeds = [];
+        appState.cCats.length = 0;
+        appState.cFeeds.length = 0;
 
         for (let i = 0; i < counters.length; i++) {
             if (counters[i].kind == 'cat') {
@@ -713,6 +832,7 @@ function showFeeds() {
         //added to show + for hiding new subscriptions
         $('#add-new-subscription').addClass('hidden');
     }
+    pushHistory('category/' + appState.parentId);
     $('#nav-title').html('');
 }
 
@@ -894,10 +1014,22 @@ function buildHeadlinesEntry(headline) {
 }
 
 function renderHeadlines(headlines) {
-    $.each(headlines, function (index, headline) {
+    if (!headlines || !headlines.length) {
+        return;
+    }
+
+    const entries = $('#entries');
+    const fragments = [];
+
+    for (let index = 0; index < headlines.length; index += 1) {
+        const headline = headlines[index];
         appState.itemIds.push(headline.id);
-        $('#entries').append(buildHeadlinesEntry(headline));
-    });
+        fragments.push(buildHeadlinesEntry(headline));
+    }
+
+    if (fragments.length > 0) {
+        entries.append(fragments.join(''));
+    }
 }
 
 function bindHeadlineEvents() {
@@ -953,23 +1085,28 @@ function finaliseHeadlines(headlines) {
         $('.load-more-message').html(''); // effectively invisible?
     }
     const { isCategory, feedId, cCats, cFeeds } = appState;
-    let total =
-        isCategory ?
+    let total = '/' +
+        (isCategory ?
             (cCats[feedId]?.counter ?? 'undef')
-        :   (cFeeds[feedId]?.counter ?? 'undef');
+        :   (cFeeds[feedId]?.counter ?? 'undef'));
     if (total > 50) {
         // hacky - TTRSS counter totals don't necessarily match up with the
         // actual number of rows displayed. Don't know why.
         total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total / 10) * 10}</abbr>`;
     }
+    if (total == '/0') {
+        total = '';
+    }
     $('.entries-count').html(
-        `Showing ${$('.entry-row').length}/${total} items`
+        `Showing ${$('.entry-row').length}${total} items`
     );
     keepUnread.clean(appState.itemIds);
 }
 
 function getHeadlinesRequest(since) {
     if (typeof since === 'undefined') since = 0;
+
+    console.log('*** getHeadlinesRequest(' + since + ')');
 
     const search = $('#search-input').val();
     const data = {
@@ -985,6 +1122,10 @@ function getHeadlinesRequest(since) {
         order_by: appState.orderBy,
         search: search,
     };
+    console.log(('appState.feedId: ' + appState.feedId));
+    console.log('view_mode: ' + appState.viewMode);
+    console.log('is_cat: ' + appState.isCategory);
+    console.log('order_by: ' + appState.orderBy);
 
     if (appState.orderBy == 'date_reverse') {
         data.since_id = since;
@@ -1179,6 +1320,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 }
 
 function getTitle() {
+    console.log('*** getTitle()***');
     let data = {};
     if (appState.isCategory === true) {
         data.op = 'getCategories';
@@ -1186,6 +1328,10 @@ function getTitle() {
         data.op = 'getFeeds';
         data.cat_id = '-4';
     }
+
+    console.log('appstate.isCategory: ' + appState.isCategory);
+    console.log('appstate.op: ' + data.op);
+    console.log('data.cat_id: ' + data.cat_id);
 
     const request = apiCall(data);
 
@@ -1200,6 +1346,7 @@ function getTitle() {
 }
 
 function load() {
+    console.log('load() called, getHash() = ' + getHash());
     if (typeof $.cookie('g2tt_sid') === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
@@ -1220,7 +1367,7 @@ function getData() {
     $('body').removeClass('loaded').addClass('loading');
     $('.load-more-message').html('Marking as read...');
     $('#entries').empty();
-    appState.itemIds = [];
+    appState.itemIds.length = 0;
     getTitle();
     getHeadlines();
 }
@@ -1306,10 +1453,9 @@ function subscribe(feedurl, categoryID) {
         const status = content.status;
         const _message = status.message;
         const statusCode = status.code;
-        //let feeds = [];
         const feeds = status.feeds;
-        const feedUrls = [];
-        const feedUrlsTitles = [];
+        let feedUrls = [];
+        let feedUrlsTitles = [];
 
         for (let key in feeds) {
             if (Object.hasOwn(feeds, 'key')) {
@@ -1418,7 +1564,7 @@ function subscribe(feedurl, categoryID) {
 }
 
 function collectCategoryOptions(cats) {
-    const options = [];
+    let options = [];
 
     $.each(cats, function (index, cat) {
         $.each(cat.items, function (index, catObject) {
@@ -1435,7 +1581,7 @@ function collectCategoryOptions(cats) {
 }
 
 function buildCategoryOptionItems(catObject) {
-    const options = [];
+    let options = [];
 
     if (catObject.bare_id != -1 && catObject.bare_id != 0) {
         options.push({
