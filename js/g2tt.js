@@ -164,16 +164,22 @@ function bindLoadMore() {
 function bindHeader() {
     // Menu button
     bindClick('#header-menu', function (event) {
-        $(this).toggleClass('m-button-pressed');
-        $('#menuDown').toggleClass('hidden');
-        $('#menuUp').toggleClass('hidden');
+        const headerMenu = $(this);
+        const menuDown = $('#menuDown');
+        const menuUp = $('#menuUp');
+        const menus = $('.g2tt-menu');
+        const navBar = $('.nav-bar-container');
+
+        headerMenu.toggleClass('m-button-pressed');
+        menuDown.toggleClass('hidden');
+        menuUp.toggleClass('hidden');
 
         //Adjust the placement of the menu based on the height of the Nav bar
         //(for when category title is long)
-        $('.g2tt-menu').css({
-            top: parseInt($('.nav-bar-container').height()) - 8 + 'px',
+        menus.css({
+            top: parseInt(navBar.height()) - 8 + 'px',
         });
-        $('.g2tt-menu').toggle();
+        menus.toggle();
         event.stopPropagation();
     });
 
@@ -189,48 +195,61 @@ function bindHeader() {
 }
 
 function bindViewMode() {
+    const viewModeItems = $('.showItem');
+    const feedItems = $('.feedsItem');
+    const subscriptions = $('#subscriptions');
+    const entries = $('#entries');
+
     // View mode menu selection
     $('#' + appState.viewMode).addClass('g2tt-option-selected');
     bindClick('.showItem', function () {
-        appState.viewMode = $(this).attr('id');
+        const selected = $(this);
+        appState.viewMode = selected.attr('id');
         setCookie('g2tt_viewMode', appState.viewMode);
-        $('.showItem').removeClass('g2tt-option-selected');
-        $(this).addClass('g2tt-option-selected');
-        $('.feedsItem').removeClass('g2tt-option-selected');
+        viewModeItems.removeClass('g2tt-option-selected');
+        selected.addClass('g2tt-option-selected');
+        feedItems.removeClass('g2tt-option-selected');
         $('#feeds-' + appState.viewMode).addClass('g2tt-option-selected');
-        $('#entries').empty();
-        $('#subscriptions').attr('class', 'hidden show-' + appState.viewMode);
+        entries.empty();
+        subscriptions.attr('class', 'hidden show-' + appState.viewMode);
         getHeadlines();
     });
 }
 
 function bindSortMode() {
+    const sortItems = $('.sortItem');
+    const entries = $('#entries');
+
     $('#' + appState.orderBy).addClass('g2tt-option-selected');
     bindClick('.sortItem', function () {
-        appState.orderBy = $(this).attr('id');
+        const selected = $(this);
+        appState.orderBy = selected.attr('id');
         setCookie('g2tt_orderBy', appState.orderBy);
-        $('.sortItem').removeClass('g2tt-option-selected');
-        $(this).addClass('g2tt-option-selected');
-        $('#entries').empty();
+        sortItems.removeClass('g2tt-option-selected');
+        selected.addClass('g2tt-option-selected');
+        entries.empty();
         getHeadlines();
     });
 }
 
 function bindFeedsMenu() {
+    const feedItems = $('.feedsItem');
+    const viewModeItems = $('.showItem');
+    const subscriptions = $('#subscriptions');
+
     // View mode feeds menu selection
     $('#feeds-' + appState.viewMode).addClass('g2tt-option-selected');
-    $('#subscriptions').addClass('show-' + appState.viewMode);
+    subscriptions.addClass('show-' + appState.viewMode);
     bindClick('.feedsItem', function () {
-        appState.viewMode = $(this).attr('id').substring(6);
+        const selected = $(this);
+        const viewMode = selected.attr('id').substring(6);
+        appState.viewMode = viewMode;
         setCookie('g2tt_viewMode', appState.viewMode);
-        $('.feedsItem').removeClass('g2tt-option-selected');
-        $(this).addClass('g2tt-option-selected');
-        $('.showItem').removeClass('g2tt-option-selected');
+        feedItems.removeClass('g2tt-option-selected');
+        selected.addClass('g2tt-option-selected');
+        viewModeItems.removeClass('g2tt-option-selected');
         $('#' + appState.viewMode).addClass('g2tt-option-selected');
-        $('#subscriptions').attr(
-            'class',
-            'show-' + $(this).attr('id').substring(6)
-        );
+        subscriptions.attr('class', 'show-' + viewMode);
     });
 }
 
@@ -433,16 +452,20 @@ function bindNavigation() {
 }
 
 function bindSearchUi() {
+    const searchBox = $('.search-box');
+    const searchInput = $('#search-input');
+    const entries = $('#entries');
+
     // Search
     // Show search
     bindClick('#menu-search', function () {
-        $('.search-box').removeClass('hidden');
-        $('#search-input').trigger('focus');
+        searchBox.removeClass('hidden');
+        searchInput.trigger('focus');
     });
     // Clear and hide search
     bindClick('#search-cancel', function () {
-        $('#search-input').val('');
-        $('.search-box').addClass('hidden');
+        searchInput.val('');
+        searchBox.addClass('hidden');
     });
     // Enter in search field searches
     bindClick('#search-input', function (e) {
@@ -454,7 +477,7 @@ function bindSearchUi() {
     });
     // Remove currently displayed headlines and search
     bindClick('#search-submit', function () {
-        $('#entries').empty();
+        entries.empty();
         getHeadlines();
         return false;
     });
@@ -464,10 +487,9 @@ function bindSubscriptionUi() {
     //Added for Subscribe to New Feeds
     $('.ui-loader').remove();
 
-    const feedURL = $('#feedURL'),
-        //password = $( "#password" ),
-        allFields = $([]).add(feedURL),
-        tips = $('.validateTips');
+    const feedURL = $('#feedURL');
+    const allFields = $([]).add(feedURL);
+    const tips = $('.validateTips');
 
     function updateTips(t) {
         tips.text(t).addClass('ui-state-highlight').removeClass('hidden');
@@ -589,11 +611,12 @@ function bindKeyboardShortcuts() {
 }
 
 function toggleCurrentEntryAsStar(_entryRow) {
-    if (!$('.current-entry').length) {
+    const currentEntry = $('.current-entry');
+    if (!currentEntry.length) {
         return;
     }
 
-    toggleEntryStar($('.current-entry'));
+    toggleEntryStar(currentEntry);
 }
 
 $(document).ready(function () {
@@ -617,7 +640,7 @@ function refreshCats(countersOnly = false) {
         appState.cCats = [];
         appState.cFeeds = [];
 
-        for (let i = 0; i < counters.length; i++) {
+        for (let i = 0; i < counters.length; i += 1) {
             if (counters[i].kind == 'cat') {
                 appState.cCats[counters[i].id] = counters[i];
             } else {
@@ -627,63 +650,46 @@ function refreshCats(countersOnly = false) {
         if (countersOnly) {
             return;
         }
-        $('.sub-row').each(function (_i, _j) {
-            const id = $(this).attr('id').substring(10);
-            const is_cat =
-                $(this).hasClass('open-sub-folder') ||
-                $(this).hasClass('closed-sub-folder');
+
+        const subscriptions = $('#subscriptions');
+        const subRows = $('.sub-row');
+
+        subRows.each(function () {
+            const row = $(this);
+            const id = row.attr('id').substring(10);
+            const isCat =
+                row.hasClass('open-sub-folder') ||
+                row.hasClass('closed-sub-folder');
+            const countValue = row.find('.item-count-value');
+            let counter = 0;
 
             if (id == '-4' || id == '-1') {
-                $(this)
-                    .find('.item-count-value')
-                    .html(appState.cFeeds['global-unread'].counter);
-                if (appState.cFeeds['global-unread'].counter == '0') {
-                    $(this)
-                        .addClass('no-unread-sub-row')
-                        .removeClass('unread-sub');
-                    $('#subscriptions')
+                counter = appState.cFeeds['global-unread']?.counter ?? 0;
+            } else if (isCat) {
+                counter = appState.cCats[id]?.counter ?? 0;
+            } else if (typeof appState.cFeeds[id] !== 'undefined') {
+                counter = appState.cFeeds[id].counter;
+            }
+
+            countValue.html(counter);
+            if (counter == '0' || counter === 0) {
+                row.addClass('no-unread-sub-row').removeClass('unread-sub');
+            } else {
+                row.removeClass('no-unread-sub-row').addClass('unread-sub');
+            }
+
+            if (id == '-4' || id == '-1') {
+                if (counter == '0' || counter === 0) {
+                    subscriptions
                         .removeClass('show-unread')
                         .addClass('show-all');
-                } else {
-                    $(this)
-                        .removeClass('no-unread-sub-row')
-                        .addClass('unread-sub');
-                    if (
-                        appState.viewMode == 'unread' &&
-                        $('#subscriptions').hasClass('show-all')
-                    ) {
-                        $('#subscriptions')
-                            .removeClass('show-all')
-                            .addClass('show-unread');
-                    }
-                }
-            } else if (is_cat) {
-                $(this)
-                    .find('.item-count-value')
-                    .html(appState.cCats[id].counter);
-                if (appState.cCats[id].counter == '0') {
-                    $(this)
-                        .addClass('no-unread-sub-row')
-                        .removeClass('unread-sub');
-                } else {
-                    $(this)
-                        .removeClass('no-unread-sub-row')
-                        .addClass('unread-sub');
-                }
-            } else {
-                if (typeof appState.cFeeds[id] !== 'undefined') {
-                    $(this)
-                        .find('.item-count-value')
-                        .html(appState.cFeeds[id].counter);
-                    if (appState.cFeeds[id].counter == '0') {
-                        $(this)
-                            .addClass('no-unread-sub-row')
-                            .removeClass('unread-sub');
-                    } else {
-                        $(this)
-                            .removeClass('no-unread-sub-row')
-                            .addClass('unread-sub');
-                    }
+                } else if (
+                    appState.viewMode == 'unread' &&
+                    subscriptions.hasClass('show-all')
+                ) {
+                    subscriptions
+                        .removeClass('show-all')
+                        .addClass('show-unread');
                 }
             }
         });
@@ -695,8 +701,9 @@ function refreshCats(countersOnly = false) {
 
 function showEmpty() {
     const visible = $('#sub-' + appState.parentId).children(':visible');
+    const subscriptions = $('#subscriptions');
     if (visible.length == 0) {
-        $('#subscriptions').removeClass('show-unread').addClass('show-all');
+        subscriptions.removeClass('show-unread').addClass('show-all');
     }
 }
 
@@ -800,15 +807,6 @@ function fixedEncodeURIComponent(str) {
     return encodeURIComponent(str).replace(/[!'()*]/g, escape);
 }
 
-function headlineMeta(headline) {
-    const date = new Date(headline.updated * 1000);
-    return {
-        readClass: !headline.unread ? ' read' : '',
-        starClass: headline.marked ? 'starActive' : 'starNotActive',
-        formattedDate: date.toLocaleString(),
-    };
-}
-
 function headlineExcerpt(headline) {
     if (headline.excerpt && headline.excerpt !== '&hellip;') {
         return headline.excerpt;
@@ -824,6 +822,9 @@ function headlineContentHtml(content) {
             return `<div>${html[0].outerHTML}<div>${alt}</div></div>`;
         }
     }
+    if (html.length === 1) {
+        return html[0].outerHTML;
+    }
     const container = $('<div></div>');
     container.append(html);
     return container[0].outerHTML;
@@ -832,10 +833,12 @@ function headlineContentHtml(content) {
 function buildHeadlinesEntry(headline) {
     const contentHtml = headlineContentHtml(headline.content);
     const excerpt = headlineExcerpt(headline);
-    const meta = headlineMeta(headline);
+    const readClass = !headline.unread ? ' read' : '';
+    const starClass = headline.marked ? 'starActive' : 'starNotActive';
+    const formattedDate = new Date(headline.updated * 1000).toLocaleString();
 
     return `
-<div id='${headline.id}' class='entry-row whisper${meta.readClass}'>
+<div id='${headline.id}' class='entry-row whisper${readClass}'>
     <div class='entry-container'>
         <div class='entry-top-bar'>
             <span class='link entry-next'>
@@ -852,7 +855,7 @@ function buildHeadlinesEntry(headline) {
         <div class='entry-header'>
             <div class='entry-icons'>
                 <i class='favStarDiv fa-regular fa-star fa-2x starBorder'> </i>
-                <i class='favStar fa fa-star fa-2x ${meta.starClass}'></i>
+                <i class='favStar fa fa-star fa-2x ${starClass}'></i>
             </div>
             <div class='entry-header-body'>
                 <div class='text'>
@@ -863,7 +866,7 @@ function buildHeadlinesEntry(headline) {
                     <span class='item-source-title'>&nbsp;-&nbsp;${headline.feed_title}</span>
                     <div class='item-snippet'>${excerpt}</div>
                 </div>
-                <div class='entry-sub-header'>by ${headline.author}  on ${meta.formattedDate} + "</div>
+                <div class='entry-sub-header'>by ${headline.author}  on ${formattedDate} + "</div>
             </div>
         </div>
         <div class='entry'>
@@ -894,10 +897,22 @@ function buildHeadlinesEntry(headline) {
 }
 
 function renderHeadlines(headlines) {
-    $.each(headlines, function (index, headline) {
+    if (!headlines || !headlines.length) {
+        return;
+    }
+
+    const entries = $('#entries');
+    let html = '';
+
+    for (let index = 0; index < headlines.length; index += 1) {
+        const headline = headlines[index];
         appState.itemIds.push(headline.id);
-        $('#entries').append(buildHeadlinesEntry(headline));
-    });
+        html += buildHeadlinesEntry(headline);
+    }
+
+    if (html) {
+        entries.append(html);
+    }
 }
 
 function bindHeadlineEvents() {
@@ -945,12 +960,17 @@ function toggleEntryStar(entryRow) {
 }
 
 function finaliseHeadlines(headlines) {
+    const body = $('body');
+    const loadMoreMessage = $('.load-more-message');
+    const entriesCount = $('.entries-count');
+    const entryRows = $('.entry-row');
+
     // Done loading
-    $('body').removeClass('loading').addClass('loaded');
+    body.removeClass('loading').addClass('loaded');
     if (headlines.length > 0) {
-        $('.load-more-message').html('Mark these items as read');
+        loadMoreMessage.html('Mark these items as read');
     } else {
-        $('.load-more-message').html(''); // effectively invisible?
+        loadMoreMessage.html(''); // effectively invisible?
     }
     const { isCategory, feedId, cCats, cFeeds } = appState;
     let total =
@@ -962,9 +982,7 @@ function finaliseHeadlines(headlines) {
         // actual number of rows displayed. Don't know why.
         total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total / 10) * 10}</abbr>`;
     }
-    $('.entries-count').html(
-        `Showing ${$('.entry-row').length}/${total} items`
-    );
+    entriesCount.html(`Showing ${entryRows.length}/${total} items`);
     keepUnread.clean(appState.itemIds);
 }
 
@@ -1020,6 +1038,12 @@ function getHeadlines(since) {
     });
 }
 
+const TREE_ROW_ICON_MAP = Object.freeze({
+    'open-sub-folder': 'fa-folder-open',
+    'closed-sub-folder': 'fa-folder',
+    sub: 'fa-rss-square',
+});
+
 function buildAllArticlesRow(content) {
     return buildTreeRow({
         obj: content,
@@ -1050,12 +1074,7 @@ function buildFeedRow(feed) {
 }
 
 function buildTreeRow(row) {
-    const iconMap = {
-        'open-sub-folder': 'fa-folder-open',
-        'closed-sub-folder': 'fa-folder',
-        sub: 'fa-rss-square',
-    };
-    const icon = iconMap[row.sub] || 'fa-question-circle';
+    const icon = TREE_ROW_ICON_MAP[row.sub] || 'fa-question-circle';
     const unread = row.obj.unread > 0 ? 'unread-sub' : 'no-unread-sub-row';
     const classes = ['row', 'whisper', 'sub-row', row.sub, unread, row.nested]
         .filter(Boolean)
@@ -1092,17 +1111,23 @@ function compareBySortMode(a, b) {
 }
 
 function getTopCategories() {
-    $('#nav-title').html('');
-    $('#sub-list-back').addClass('hidden');
+    const subscriptionsList = $('#subscriptions-list');
+    const navTitle = $('#nav-title');
+    const subListBack = $('#sub-list-back');
+    const loadingArea = $('#loading-area-container');
+
+    navTitle.html('');
+    subListBack.addClass('hidden');
     if ($('#sub--4').length != 0) {
-        $('#subscriptions-list').children().addClass('hidden');
+        subscriptionsList.children().addClass('hidden');
         $('#sub--4').removeClass('hidden');
         appState.parentId = '-4';
     } else {
         $('body').addClass('loading').addClass('sub-tree');
-        $('#loading-area-container').removeClass('hidden');
+        loadingArea.removeClass('hidden');
 
-        $('#subscriptions-list').append("<div id='sub--4'></div>");
+        subscriptionsList.append("<div id='sub--4'></div>");
+        const subRoot = $('#sub--4');
 
         let data = {
             op: 'getUnread',
@@ -1111,7 +1136,7 @@ function getTopCategories() {
         unread.done(function (content) {
             content.id = -4;
             content.title = 'All articles';
-            $('#sub--4').prepend(buildAllArticlesRow(content));
+            subRoot.prepend(buildAllArticlesRow(content));
         });
 
         data = {
@@ -1122,12 +1147,14 @@ function getTopCategories() {
 
         cats.done(function (cats) {
             cats.sort(compareBySortMode);
-            $.each(cats, function (index, cat) {
-                $('#sub--4').append(buildCategoryRow(cat));
-            });
+            const categoryHtml = [];
+            for (let index = 0; index < cats.length; index += 1) {
+                categoryHtml.push(buildCategoryRow(cats[index]));
+            }
+            subRoot.append(categoryHtml.join(''));
             appState.parentId = '-4';
             $('body').removeClass('loading').addClass('loaded');
-            $('#loading-area-container').addClass('hidden');
+            loadingArea.addClass('hidden');
         });
     }
 }
@@ -1144,17 +1171,24 @@ function getFeeds(parent_id, parent_title, parent_unread) {
         getTopCategories();
         return;
     }
-    $('#nav-title').html('');
-    $('#sub-list-back').removeClass('hidden');
-    //added to show + for adding new subscriptions
-    $('#add-new-subscription').addClass('hidden');
+    const subscriptionsList = $('#subscriptions-list');
+    const navTitle = $('#nav-title');
+    const subListBack = $('#sub-list-back');
+    const addNewSubscription = $('#add-new-subscription');
+    const loadingArea = $('#loading-area-container');
 
-    if ($('#sub-' + parent.id).length != 0) {
-        $('#subscriptions-list').children().addClass('hidden');
-        $('#sub-' + parent.id).removeClass('hidden');
+    navTitle.html('');
+    subListBack.removeClass('hidden');
+    //added to show + for adding new subscriptions
+    addNewSubscription.addClass('hidden');
+
+    const containerId = '#sub-' + parent.id;
+    if ($(containerId).length != 0) {
+        subscriptionsList.children().addClass('hidden');
+        $(containerId).removeClass('hidden');
     } else {
         $('body').addClass('loading').addClass('sub-tree');
-        $('#loading-area-container').removeClass('hidden');
+        loadingArea.removeClass('hidden');
 
         const data = {
             op: 'getFeeds',
@@ -1165,15 +1199,15 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
         feeds.done(function (feeds) {
             feeds.sort(compareBySortMode);
-            $('#subscriptions-list').append(
-                "<div id='sub-" + parent.id + "'></div>"
-            );
-            $('#sub-' + parent.id).prepend(buildParentFolderRow(parent));
-            $.each(feeds, function (index, feed) {
-                $('#sub-' + parent.id).append(buildFeedRow(feed));
-            });
+            const subRoot = $('<div id="sub-' + parent.id + '"></div>');
+            const rowHtml = [buildParentFolderRow(parent)];
+            for (let index = 0; index < feeds.length; index += 1) {
+                rowHtml.push(buildFeedRow(feeds[index]));
+            }
+            subscriptionsList.append(subRoot);
+            subRoot.append(rowHtml.join(''));
             $('body').removeClass('loading').addClass('loaded');
-            $('#loading-area-container').addClass('hidden');
+            loadingArea.addClass('hidden');
         });
     }
 }
@@ -1334,13 +1368,8 @@ function subscribe(feedurl, categoryID) {
         switch (statusCode) {
             case 0: {
                 //0 - OK, Feed already exists
-                //let status0 = confirm('Feed already exists in your feed list. Press OK to return to feed list, or Cancel to try again.');
                 $('#indicator').addClass('hidden');
                 window.alert('Feed already exists in your feed list.');
-
-                //uncomment next line if you'd like it to close pop-up when they press OK.
-                //$( "#dialog-form" ).dialog( "close" );
-
                 break;
             }
             case 1: {
@@ -1353,8 +1382,6 @@ function subscribe(feedurl, categoryID) {
                 $('#multipleFeedNotice').addClass('hidden');
                 $('#multipleFeedsSelect').addClass('hidden');
                 setTimeout(function () {
-                    //tips.removeClass( "ui-state-highlight", 1500 );
-
                     $('#feedURL').val('');
                 }, 100);
                 break;
@@ -1369,17 +1396,16 @@ function subscribe(feedurl, categoryID) {
                 );
                 break;
             }
-            case 3:
-                {
-                    //3 - URL content is HTML, no feeds available
-                    $('#indicator').addClass('hidden');
-                    $('#multipleFeedNotice').addClass('hidden');
-                    $('#multipleFeedsSelect').addClass('hidden');
-                    window.alert(
-                        'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
-                    );
-                }
+            case 3: {
+                //3 - URL content is HTML, no feeds available
+                $('#indicator').addClass('hidden');
+                $('#multipleFeedNotice').addClass('hidden');
+                $('#multipleFeedsSelect').addClass('hidden');
+                window.alert(
+                    'URL content is HTML, no feeds available. Please check that URL has feeds and try again.'
+                );
                 break;
+            }
             case 4: {
                 //4 - URL content is HTML which contains multiple feeds.
                 $('#indicator').addClass('hidden');
@@ -1419,7 +1445,6 @@ function subscribe(feedurl, categoryID) {
 
 function collectCategoryOptions(cats) {
     const options = [];
-
     $.each(cats, function (index, cat) {
         $.each(cat.items, function (index, catObject) {
             $.each(
@@ -1436,7 +1461,6 @@ function collectCategoryOptions(cats) {
 
 function buildCategoryOptionItems(catObject) {
     const options = [];
-
     if (catObject.bare_id != -1 && catObject.bare_id != 0) {
         options.push({
             parent_id: catObject.bare_id,
@@ -1512,11 +1536,15 @@ function expandEntry(entryRow) {
         return;
     }
 
-    $('.expanded').removeClass('expanded');
+    const currentEntry = $('.current-entry');
+    const expandedEntries = $('.expanded');
+    const entryId = entryRow.attr('id');
+
+    expandedEntries.removeClass('expanded');
     entryRow.addClass('expanded');
     $('html,body').scrollTop(entryRow.offset().top);
 
-    $('.current-entry').removeClass('current-entry');
+    currentEntry.removeClass('current-entry');
     entryRow.addClass('current-entry');
 
     // Mark previously opened as read
@@ -1524,7 +1552,7 @@ function expandEntry(entryRow) {
 
     if (!entryRow.hasClass('read')) {
         entryRow.addClass('read');
-        appState.lastOpenId = entryRow.attr('id');
+        appState.lastOpenId = entryId;
     }
 }
 
@@ -1541,17 +1569,19 @@ function toggleEntryAsExpanded(entryRow) {
 }
 
 function toggleCurrentEntryAsExpanded(_entryRow) {
-    if ($('.current-entry').length) {
-        toggleEntryAsExpanded($('.current-entry'));
+    const currentEntry = $('.current-entry');
+    if (currentEntry.length) {
+        toggleEntryAsExpanded(currentEntry);
     }
 }
 
 function expandNextEntry() {
+    const currentEntry = $('.current-entry');
     let nextEntry;
-    if (!$('.current-entry').length) {
+    if (!currentEntry.length) {
         nextEntry = $('.entry-row').eq(0);
     } else {
-        nextEntry = $('.current-entry').next();
+        nextEntry = currentEntry.next();
     }
     if (!nextEntry.is('.entry-row')) {
         return;
@@ -1560,10 +1590,11 @@ function expandNextEntry() {
 }
 
 function expandPreviousEntry() {
-    if (!$('.current-entry').length) {
+    const currentEntry = $('.current-entry');
+    if (!currentEntry.length) {
         return;
     }
-    const previous = $('.current-entry').prev();
+    const previous = currentEntry.prev();
     if (!previous.is('.entry-row')) {
         return;
     }
@@ -1571,69 +1602,67 @@ function expandPreviousEntry() {
 }
 
 function jumpNextEntry() {
+    const currentEntry = $('.current-entry');
     let nextEntry;
-    if (!$('.current-entry').length) {
+    if (!currentEntry.length) {
         nextEntry = $('.entry-row').eq(0);
     } else {
-        nextEntry = $('.current-entry').next();
+        nextEntry = currentEntry.next();
     }
     if (!nextEntry.is('.entry-row')) {
         return;
     }
-    $('.current-entry').removeClass('current-entry');
+    currentEntry.removeClass('current-entry');
     nextEntry.addClass('current-entry');
-    if (!isElementInViewport($('.current-entry'))) {
-        $('.current-entry')[0].scrollIntoView(false);
+    if (!isElementInViewport(nextEntry)) {
+        nextEntry[0].scrollIntoView(false);
     }
 }
 
 function jumpPreviousEntry() {
-    if (!$('.current-entry').length) {
+    const currentEntry = $('.current-entry');
+    if (!currentEntry.length) {
         return;
     }
-    const previous = $('.current-entry').prev();
+    const previous = currentEntry.prev();
     if (!previous.is('.entry-row')) {
         return;
     }
-    $('.current-entry').removeClass('current-entry');
+    currentEntry.removeClass('current-entry');
     previous.addClass('current-entry');
 
-    if (!isElementInViewport($('.current-entry'))) {
-        $('.current-entry')[0].scrollIntoView();
+    if (!isElementInViewport(previous)) {
+        previous[0].scrollIntoView();
     }
 }
 
 function toggleEntryAsRead(entryRow) {
-    entryRow.toggleClass('read');
+    const articleId = entryRow.attr('id');
+    const readState = entryRow.find('.read-state');
+    const isRead = entryRow.toggleClass('read').hasClass('read');
 
-    if (!entryRow.hasClass('read')) {
-        entryRow
-            .find('.read-state')
-            .html("<i class='fa fa-book'></i>&nbsp;Mark read");
-        for (let i = 0; i < appState.itemIds.length; i++) {
-            const articleId = entryRow.attr('id');
+    if (!isRead) {
+        readState.html("<i class='fa fa-book'></i>&nbsp;Mark read");
+        for (let i = 0; i < appState.itemIds.length; i += 1) {
             if (appState.itemIds[i] == articleId) {
                 appState.itemIds.splice(i, 1);
                 keepUnread.addId(articleId);
+                break;
             }
         }
     } else {
-        entryRow
-            .find('.read-state')
-            .html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
-        const articleId = entryRow.attr('id');
+        readState.html("<i class='fa fa-book-open'></i>&nbsp;Mark unread");
         appState.itemIds.push(articleId);
         keepUnread.removeId(articleId);
     }
 
-    const id = entryRow.attr('id');
     const data = {
         op: 'updateArticle',
-        article_ids: id,
+        article_ids: articleId,
         field: C_UA_UNREAD,
-        mode: appState.lastOpenId == id,
+        mode: appState.lastOpenId == articleId,
     };
-    appState.lastOpenId = appState.lastOpenId == id ? 0 : id; // swap state of lastOpenId
+    appState.lastOpenId = appState.lastOpenId == articleId ? 0 : articleId; // swap state of lastOpenId
     const _response = apiCall(data);
 }
 
