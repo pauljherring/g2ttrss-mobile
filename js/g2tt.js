@@ -85,11 +85,20 @@ function getHistoryBasePath() {
         return '/';
     }
 
-    if (/\/index\.(htm|html|php|asp|shtml)$/i.test(trimmed)) {
-        return trimmed.replace(/\/index\.(htm|html|php|asp|shtml)$/i, '');
+    const segments = trimmed.split('/').filter(Boolean);
+    const routeTypes = ['category', 'categoryfeed', 'feed'];
+
+    if (segments.length >= 2 && routeTypes.includes(segments[segments.length - 2])) {
+        const baseSegments = segments.slice(0, -2);
+        return baseSegments.length ? `/${baseSegments.join('/')}` : '/';
     }
 
-    return trimmed;
+    if (segments.length >= 1 && /^(index\.(htm|html|php|asp|shtml))$/i.test(segments[segments.length - 1])) {
+        const baseSegments = segments.slice(0, -1);
+        return baseSegments.length ? `/${baseSegments.join('/')}` : '/';
+    }
+
+    return `/${segments.join('/')}`;
 }
 
 function buildHistoryUrl(entry) {
@@ -101,8 +110,9 @@ function buildHistoryUrl(entry) {
         return basePath === '/' ? '/' : `${basePath}/`;
     }
 
-    const path = `${basePath === '/' ? '' : basePath}/${cleanedRoute}`;
-    return path.replace(/\/+/g, '/');
+    const prefix = basePath === '/' ? '' : basePath;
+    const path = `${prefix}/${cleanedRoute}`.replace(/\/+/g, '/');
+    return path || '/';
 }
 
 function normalizeRoute(route) {
@@ -791,10 +801,21 @@ function toggleCurrentEntryAsStar(_entryRow) {
 function bindBackFunctions() {
     $(window).on('popstate', function (event) {
         const state = event.originalEvent ? event.originalEvent.state : null;
-        const route = state && state.page ? state.page : window.location.pathname;
+        const route = normalizeRoute(state && state.page ? state.page : window.location.pathname || window.location.search);
         if (!route) {
             return;
         }
+
+        const lastEntry = globalThis.appState.historylist[globalThis.appState.historylist.length - 1];
+        if (lastEntry && lastEntry !== route) {
+            const existingIndex = globalThis.appState.historylist.indexOf(route);
+            if (existingIndex >= 0) {
+                globalThis.appState.historylist.length = existingIndex + 1;
+            } else {
+                globalThis.appState.historylist.push(route);
+            }
+        }
+
         applyRoute(route);
     });
 }
