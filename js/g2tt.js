@@ -1320,48 +1320,52 @@ function getTopCategories() {
     const navTitle = $('#nav-title');
     const subListBack = $('#sub-list-back');
     const loadingArea = $('#loading-area-container');
+    const existingSubRoot = $('#sub--4');
 
     navTitle.html('');
     subListBack.addClass('hidden');
-    if ($('#sub--4').length != 0) {
+    if (existingSubRoot.length != 0) {
         subscriptionsList.children().addClass('hidden');
-        $('#sub--4').removeClass('hidden');
+        existingSubRoot.removeClass('hidden');
         appState.parentId = '-4';
-    } else {
-        $('body').addClass('loading').addClass('sub-tree');
-        loadingArea.removeClass('hidden');
-
-        subscriptionsList.append("<div id='sub--4'></div>");
-        const subRoot = $('#sub--4');
-
-        let data = {
-            op: 'getUnread',
-        };
-        const unread = apiCall(data);
-        unread.done(function (content) {
-            content.id = -4;
-            content.title = 'All articles';
-            subRoot.prepend(buildAllArticlesRow(content));
-        });
-
-        data = {
-            op: 'getCategories',
-            enable_nested: true,
-        };
-        const cats = apiCall(data);
-
-        cats.done(function (cats) {
-            cats.sort(compareBySortMode);
-            const categoryHtml = [];
-            for (let index = 0; index < cats.length; index += 1) {
-                categoryHtml.push(buildCategoryRow(cats[index]));
-            }
-            subRoot.append(categoryHtml.join(''));
-            appState.parentId = '-4';
-            $('body').removeClass('loading').addClass('loaded');
-            loadingArea.addClass('hidden');
-        });
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+        return;
     }
+
+    $('body').addClass('loading').addClass('sub-tree');
+    loadingArea.removeClass('hidden');
+
+    subscriptionsList.append("<div id='sub--4'></div>");
+    const subRoot = $('#sub--4');
+
+    let data = {
+        op: 'getUnread',
+    };
+    const unread = apiCall(data);
+    unread.done(function (content) {
+        content.id = -4;
+        content.title = 'All articles';
+        subRoot.prepend(buildAllArticlesRow(content));
+    });
+
+    data = {
+        op: 'getCategories',
+        enable_nested: true,
+    };
+    const cats = apiCall(data);
+
+    cats.done(function (cats) {
+        cats.sort(compareBySortMode);
+        const categoryHtml = [];
+        for (let index = 0; index < cats.length; index += 1) {
+            categoryHtml.push(buildCategoryRow(cats[index]));
+        }
+        subRoot.append(categoryHtml.join(''));
+        appState.parentId = '-4';
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+    });
 }
 
 function getFeeds(parent_id, parent_title, parent_unread) {
@@ -1388,33 +1392,37 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     addNewSubscription.addClass('hidden');
 
     const containerId = '#sub-' + parent.id;
-    if ($(containerId).length != 0) {
+    const existingSubRoot = $(containerId);
+    if (existingSubRoot.length != 0) {
         subscriptionsList.children().addClass('hidden');
-        $(containerId).removeClass('hidden');
-    } else {
-        $('body').addClass('loading').addClass('sub-tree');
-        loadingArea.removeClass('hidden');
-
-        const data = {
-            op: 'getFeeds',
-            cat_id: parent.id,
-            include_nested: true,
-        };
-        const feeds = apiCall(data);
-
-        feeds.done(function (feeds) {
-            feeds.sort(compareBySortMode);
-            const subRoot = $('<div id="sub-' + parent.id + '"></div>');
-            const rowHtml = [buildParentFolderRow(parent)];
-            for (let index = 0; index < feeds.length; index += 1) {
-                rowHtml.push(buildFeedRow(feeds[index]));
-            }
-            subscriptionsList.append(subRoot);
-            subRoot.append(rowHtml.join(''));
-            $('body').removeClass('loading').addClass('loaded');
-            loadingArea.addClass('hidden');
-        });
+        existingSubRoot.removeClass('hidden');
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+        return;
     }
+
+    $('body').addClass('loading').addClass('sub-tree');
+    loadingArea.removeClass('hidden');
+
+    const data = {
+        op: 'getFeeds',
+        cat_id: parent.id,
+        include_nested: true,
+    };
+    const feeds = apiCall(data);
+
+    feeds.done(function (feeds) {
+        feeds.sort(compareBySortMode);
+        const subRoot = $('<div id="sub-' + parent.id + '"></div>');
+        const rowHtml = [buildParentFolderRow(parent)];
+        for (let index = 0; index < feeds.length; index += 1) {
+            rowHtml.push(buildFeedRow(feeds[index]));
+        }
+        subscriptionsList.append(subRoot);
+        subRoot.append(rowHtml.join(''));
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+    });
 }
 
 function getTitle() {
