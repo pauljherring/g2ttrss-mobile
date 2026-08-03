@@ -1263,7 +1263,7 @@ const TREE_ROW_ICON_MAP = Object.freeze({
 function buildAllArticlesRow(content) {
     return buildTreeRow({
         obj: content,
-        sub: 'open-sub-folder',
+        sub: 'sub',
     });
 }
 
