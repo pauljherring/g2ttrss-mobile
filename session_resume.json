@@ -1,0 +1,28 @@
+{
+  "saved_at": "2026-08-03T00:00:00Z",
+  "cwd": "/var/www/shabble.co.uk/g2ttrss_development",
+  "modified_files": [
+    "g2ttrss-mobile/js/g2tt.js"
+  ],
+  "todo": [
+    { "id": 6, "title": "Run final grep to confirm event handlers are namespaced (.g2tt)", "status": "not-started" },
+    { "id": 1, "title": "Investigate duplicate rendering", "status": "completed" },
+    { "id": 2, "title": "Prevent duplicate event bindings", "status": "completed" },
+    { "id": 3, "title": "Guard append operations to avoid duplicate DOM inserts", "status": "completed" },
+    { "id": 4, "title": "Run ESLint and smoke-checks", "status": "completed" },
+    { "id": 5, "title": "Report fixes and next steps", "status": "not-started" }
+  ],
+  "actions_taken": [
+    "Namespaced subscription and global event handlers (.g2tt)",
+    "Made getTopCategories/getFeeds idempotent to avoid duplicate subtree inserts",
+    "Ran npx eslint on g2ttrss-mobile/js/g2tt.js"
+  ],
+  "last_command": "npx eslint g2ttrss-mobile/js/g2tt.js",
+  "resume_instructions": [
+    "Run a final grep to confirm all event handlers are namespaced (search for '.g2tt' and '.off/.on' in g2ttrss-mobile/js/g2tt.js)",
+    "Open g2ttrss-mobile/js/g2tt.js and review recent edits",
+    "Run 'npx eslint g2ttrss-mobile/js/g2tt.js' to verify linting",
+    "Start a browser and open g2ttrss-mobile/index.htm to exercise the UI flows: open/close categories, click All Articles, navigate back/forward",
+    "If duplicates persist, run a grep for append/prepend handlers and consider clearing target containers before render"
+  ]
+}

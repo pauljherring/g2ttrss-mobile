@@ -446,11 +446,11 @@ function bindBackButtons() {
 
 function bindSubscriptionRowActions() {
     $('#subscriptions-list')
-        .off('click', '.closed-sub-folder')
-        .off('click', '.open-sub-folder[id!="tree-item--4"]')
-        .off('click', '.sub')
-        .off('click', '#tree-item--4')
-        .on('click', '.closed-sub-folder', function () {
+        .off('click.g2tt', '.closed-sub-folder')
+        .off('click.g2tt', '.open-sub-folder[id!="tree-item--4"]')
+        .off('click.g2tt', '.sub')
+        .off('click.g2tt', '#tree-item--4')
+        .on('click.g2tt', '.closed-sub-folder', function () {
             const id = $(this).attr('id').substring(10);
             appState.backCat.push(appState.parentId);
             $('#subscriptions-list').children().addClass('hidden');
@@ -461,7 +461,7 @@ function bindSubscriptionRowActions() {
             );
             pushHistory('category/' + id);
         })
-        .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
+        .on('click.g2tt', '.open-sub-folder[id!="tree-item--4"]', function () {
             const id = $(this).attr('id').substring(10);
             setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', true);
@@ -470,7 +470,7 @@ function bindSubscriptionRowActions() {
             getData();
             pushHistory('categoryfeed/' + id);
         })
-        .on('click', '.sub', function () {
+        .on('click.g2tt', '.sub', function () {
             const id = $(this).attr('id').substring(10);
             setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
@@ -479,7 +479,7 @@ function bindSubscriptionRowActions() {
             getData();
             pushHistory('feed/' + id);
         })
-        .on('click', '#tree-item--4', function () {
+        .on('click.g2tt', '#tree-item--4', function () {
             const id = $(this).attr('id').substring(10);
             if (id === '-4') {
                 setCookie('g2tt_feed', id);
@@ -569,8 +569,8 @@ function logTurndown(script, status, _object) {
 
 function bindEmail() {
     $('#feed')
-        .off('click', '.createmail')
-        .on('click', '.createmail', function () {
+        .off('click.g2tt', '.createmail')
+        .on('click.g2tt', '.createmail', function () {
             if (typeof TurndownService == 'undefined') {
                 loadScript('js/turndown.js', logTurndown);
             }
@@ -757,7 +757,7 @@ function bindSubscriptionUi() {
 }
 
 function bindKeyboardShortcuts() {
-    $(document).on('keypress', function (event) {
+    $(document).off('keypress.g2tt').on('keypress.g2tt', function (event) {
         const shortcuts = globalThis.appState.keyboardShortcuts || {};
         const key = String.fromCharCode(event.which).toLowerCase();
 
@@ -789,7 +789,7 @@ function toggleCurrentEntryAsStar(_entryRow) {
 }
 
 function bindBackFunctions() {
-    $(window).on('hashchange', function () {
+    $(window).off('hashchange.g2tt').on('hashchange.g2tt', function () {
         const route = normalizeRoute(window.location.hash || window.location.pathname);
         if (!route) {
             return;
