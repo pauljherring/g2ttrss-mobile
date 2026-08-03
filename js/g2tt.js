@@ -77,82 +77,87 @@ function delCookie(name) {
     return oldVal;
 }
 
-function setHash(h) {
-    var oldLocation = '';
-    if (window.location) {
-        oldLocation = window.location.hash.slice(1); // remove # from the start
-        window.location.hash = h;
-    }
-    console.log(callee() + ' setHash(' + h + ')');
-    return oldLocation;
-}
-
-function getHash() {
-    if (window.location && window.location.hash) {
-        return window.location.hash.slice(1);
-    }
-    return '';
-}
-
 function getHistoryBasePath() {
     const pathname = window.location.pathname || '/';
-    const normalizedPath = pathname.replace(/\/+$/, '');
+    const trimmed = pathname.replace(/\/+$/, '');
 
-    if (!normalizedPath || normalizedPath === '/') {
-        return '';
+    if (!trimmed || trimmed === '/') {
+        return '/';
     }
 
-    const lastSegment = normalizedPath.split('/').pop();
-    if (lastSegment && /^(index\.(htm|html|php|asp|shtml))$/i.test(lastSegment)) {
-        const basePath = normalizedPath.slice(0, normalizedPath.lastIndexOf('/'));
-        return basePath || '/';
+    if (/\/index\.(htm|html|php|asp|shtml)$/i.test(trimmed)) {
+        return trimmed.replace(/\/index\.(htm|html|php|asp|shtml)$/i, '');
     }
 
-    return normalizedPath;
+    return trimmed;
 }
 
 function buildHistoryUrl(entry) {
-    const cleanedEntry = String(entry || '').replace(/^\/+|\/+$/g, '');
     const basePath = getHistoryBasePath();
+    const route = normalizeRoute(entry);
+    const cleanedRoute = String(route || '').replace(/^\/+|\/+$/g, '');
 
-    if (!cleanedEntry) {
-        return basePath && basePath !== '/' ? basePath : '/';
+    if (!cleanedRoute || cleanedRoute === 'category/-4') {
+        return basePath === '/' ? '/' : `${basePath}/`;
     }
 
-    if (!basePath || basePath === '/') {
-        return `/${cleanedEntry}`;
+    const path = `${basePath === '/' ? '' : basePath}/${cleanedRoute}`;
+    return path.replace(/\/+/g, '/');
+}
+
+function normalizeRoute(route) {
+    const raw = String(route || '');
+    const withoutOrigin = raw.replace(/^https?:\/\/[^/]+/, '');
+    const withQuery = withoutOrigin.replace(/^#/, '');
+    const [pathPart, queryPart] = withQuery.split('?');
+    const routeFromQuery = queryPart ? new URLSearchParams(queryPart).get('route') : null;
+    const cleaned = String(routeFromQuery || pathPart || '').replace(/^\/+|\/+$/g, '');
+
+    if (!cleaned) {
+        const hash = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
+        if (hash) {
+            return normalizeRoute(hash);
+        }
+        return 'category/-4';
     }
 
-    return `${basePath}/${cleanedEntry}`;
+    const parts = cleaned.split('/').filter(Boolean);
+    if (parts.length === 1) {
+        return `category/${parts[0]}`;
+    }
+
+    if (parts.length >= 2 && ['category', 'categoryfeed', 'feed'].includes(parts[0])) {
+        return `${parts[0]}/${parts[1]}`;
+    }
+
+    return 'category/-4';
 }
 
 function pushHistory(t) {
     const { historylist } = globalThis.appState;
-    historylist.push(t);
-    history.pushState({ page: t }, '', buildHistoryUrl(t));
-    setHash(historylist.peek());
+    const entry = normalizeRoute(t);
+    historylist.push(entry);
+    history.pushState({ page: entry }, '', buildHistoryUrl(entry));
     setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
-    // console.log(callee() + ' pushHistory(' + t + ')');
-    console.log("Pushed to history: " + t + " - stack: " + JSON.stringify(historylist));
+    console.log('Pushed to history: ' + entry + ' - stack: ' + JSON.stringify(historylist));
 }
 
 function popHistory() {
     const { historylist } = globalThis.appState;
-    var h = historylist.pop();
+    const h = historylist.pop();
     const nextEntry = historylist.peek();
-    history.replaceState({ page: nextEntry || '' }, '', buildHistoryUrl(nextEntry));
-    setHash(nextEntry);
+    const entry = nextEntry || 'category/-4';
+    history.replaceState({ page: entry }, '', buildHistoryUrl(entry));
     setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
-    // console.log(callee() + ' popHistory()');
-    console.log("Popped from history: " + h + " - stack: " + JSON.stringify(historylist));
-    return h;
+    console.log('Popped from history: ' + h + ' - stack: ' + JSON.stringify(historylist));
+    return entry;
 }
 
 function resetHistory() {
     let { historylist } = globalThis.appState;
     historylist.length = 0;
     setCookie('g2tt_history', JSON.stringify([]));
-    setHash('');
+    history.replaceState({ page: 'category/-4' }, '', buildHistoryUrl('category/-4'));
 }
 
 function JSONSafeParse(str) {
@@ -415,17 +420,16 @@ function bindSort() {
 }
 
 function handleBackToFeeds() {
-    popHistory();
-    popHistory(); // dunno why twice is needed, but it is
+    const previousRoute = popHistory();
     markEntryRead();
     refreshCats();
-    showFeeds();
+    applyRoute(previousRoute);
 }
 
 function handleBackToSubCategory() {
-    popHistory();
+    const previousRoute = popHistory();
     refreshCats();
-    getFeeds(appState.backCat.pop());
+    applyRoute(previousRoute);
     if (appState.parentId == '-4') {
         $('#add-new-subscription').removeClass('hidden');
     }
@@ -452,40 +456,46 @@ function bindSubscriptionRowActions() {
         .on('click', '.closed-sub-folder', function () {
             const id = $(this).attr('id').substring(10);
             appState.backCat.push(appState.parentId);
-            pushHistory('category/' + id);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds(
                 id,
                 $(this).find('.sub-item').html(),
                 $(this).find('.item-count-value').html()
             );
+            pushHistory('category/' + id);
         })
         .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
             const id = $(this).attr('id').substring(10);
             setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', true);
             appState.feedId = readCookie('g2tt_feed');
-            pushHistory('categoryfeed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
+            pushHistory('categoryfeed/' + id);
         })
         .on('click', '.sub', function () {
             const id = $(this).attr('id').substring(10);
             setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
-            pushHistory('feed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
+            pushHistory('feed/' + id);
         })
         .on('click', '#tree-item--4', function () {
             const id = $(this).attr('id').substring(10);
+            if (id === '-4') {
+                showFeeds();
+                getTopCategories();
+                pushHistory('category/-4');
+                return;
+            }
             setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
-            pushHistory('categoryfeed/' + id);
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
             getData();
+            pushHistory('categoryfeed/' + id);
         });
 }
 
@@ -781,21 +791,17 @@ function toggleCurrentEntryAsStar(_entryRow) {
 function bindBackFunctions() {
     $(window).on('popstate', function (event) {
         const state = event.originalEvent ? event.originalEvent.state : null;
-        if (!state || !state.page) {
+        const route = state && state.page ? state.page : window.location.pathname;
+        if (!route) {
             return;
         }
-
-        if ($('.back-to-feeds').is(':visible') && !$('.back-to-feeds').hasClass('hidden')) {
-            handleBackToFeeds();
-        } else if ($('#sub-list-back').is(':visible') && !$('#sub-list-back').hasClass('hidden')) {
-            handleBackToSubCategory();
-        }
+        applyRoute(route);
     });
 }
 
 $(document).ready(function () {
-    const initialPage = window.location.pathname.replace(/^\/|\/$/g, '') || '/';
-    history.replaceState({ page: initialPage }, '', window.location.href);
+    const initialPage = normalizeRoute(window.location.pathname || window.location.search);
+    history.replaceState({ page: initialPage }, '', buildHistoryUrl(initialPage));
     console.log('initial page: ' + initialPage);
 
     bindGlobalUi();
@@ -1426,43 +1432,74 @@ function getTitle() {
     });
 }
 
-function parseHash(hash = null) {
-    if (hash === null) {
-        hash = getHash();
+function parseRoute(route = null) {
+    if (route === null) {
+        route = window.location.pathname || window.location.search || '';
     }
-    const parts = hash.split('/');
-    if (parts.length < 2) {
-        return;
-    }
+
+    const normalized = normalizeRoute(route);
+    const parts = normalized.split('/');
     const type = parts[0];
     const id = parts[1];
+
     if (type === 'category') {
         appState.isCategory = true;
         appState.feedId = id;
-    } else if (type === 'feed') {
+        appState.parentId = id;
+        return { type, id };
+    }
+
+    if (type === 'feed') {
         appState.isCategory = false;
         appState.feedId = id;
-    } else if (type === 'categoryfeed') {
+        return { type, id };
+    }
+
+    if (type === 'categoryfeed') {
         appState.isCategory = true;
         appState.feedId = id;
+        return { type, id };
     }
+
+    return null;
+}
+
+function applyRoute(route) {
+    const parsedRoute = parseRoute(route);
+    if (!parsedRoute) {
+        return;
+    }
+
+    if (parsedRoute.type === 'category') {
+        refreshCats(true);
+        showFeeds();
+        if (parsedRoute.id === '-4') {
+            getTopCategories();
+        } else {
+            getFeeds(parsedRoute.id);
+        }
+        return;
+    }
+
+    refreshCats(true);
+    appState.feedId = parsedRoute.id;
+    appState.isCategory = parsedRoute.type === 'categoryfeed';
+    getData();
 }
 
 function load() {
-    console.log('load() called, getHash() = ' + getHash());
-    parseHash();
+    console.log('load() called, location = ' + window.location.pathname + window.location.search);
     if (typeof $.cookie('g2tt_sid') === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
-    } else if (appState.startCategory == '1') {
-        refreshCats(true);
-        showFeeds();
-        getTopCategories();
     } else {
-        refreshCats(true);
-        getTitle();
-        getHeadlines();
-        getTopCategories();
+        const route = parseRoute();
+        if (route) {
+            applyRoute(route.type + '/' + route.id);
+        } else {
+            applyRoute('category/-4');
+        }
+        history.replaceState({ page: normalizeRoute(window.location.pathname || window.location.search) }, '', buildHistoryUrl(normalizeRoute(window.location.pathname || window.location.search)));
     }
 }
 
