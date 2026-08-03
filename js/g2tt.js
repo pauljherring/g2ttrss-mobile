@@ -1336,18 +1336,24 @@ function getTopCategories() {
     $('body').addClass('loading').addClass('sub-tree');
     loadingArea.removeClass('hidden');
 
-    subscriptionsList.append("<div id='sub--4'></div>");
-    const subRoot = $('#sub--4');
+        // create container if it wasn't created by a concurrent call
+        if ($('#sub--4').length === 0) {
+            subscriptionsList.append("<div id='sub--4'></div>");
+        }
+        const subRoot = $('#sub--4');
 
     let data = {
         op: 'getUnread',
     };
     const unread = apiCall(data);
-    unread.done(function (content) {
-        content.id = -4;
-        content.title = 'All articles';
-        subRoot.prepend(buildAllArticlesRow(content));
-    });
+        unread.done(function (content) {
+            content.id = -4;
+            content.title = 'All articles';
+            // avoid double-prepend if the All Articles row already exists
+            if (subRoot.find('#tree-item--4').length === 0) {
+                subRoot.prepend(buildAllArticlesRow(content));
+            }
+        });
 
     data = {
         op: 'getCategories',
@@ -1361,7 +1367,10 @@ function getTopCategories() {
         for (let index = 0; index < cats.length; index += 1) {
             categoryHtml.push(buildCategoryRow(cats[index]));
         }
-        subRoot.append(categoryHtml.join(''));
+            // avoid appending duplicate category lists if another call already populated
+            if (subRoot.children().length <= 1) {
+                subRoot.append(categoryHtml.join(''));
+            }
         appState.parentId = '-4';
         $('body').removeClass('loading').addClass('loaded');
         loadingArea.addClass('hidden');
@@ -1413,13 +1422,25 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
     feeds.done(function (feeds) {
         feeds.sort(compareBySortMode);
-        const subRoot = $('<div id="sub-' + parent.id + '"></div>');
+        // If another concurrent call already created this subtree, reuse it
+        const containerSelector = '#sub-' + parent.id;
+        const existing = $(containerSelector);
         const rowHtml = [buildParentFolderRow(parent)];
         for (let index = 0; index < feeds.length; index += 1) {
             rowHtml.push(buildFeedRow(feeds[index]));
         }
-        subscriptionsList.append(subRoot);
-        subRoot.append(rowHtml.join(''));
+
+        if (existing.length === 0) {
+            const subRoot = $('<div id="sub-' + parent.id + '"></div>');
+            subscriptionsList.append(subRoot);
+            subRoot.append(rowHtml.join(''));
+        } else {
+            // avoid appending duplicate rows if already populated
+            if (existing.children().length <= 1) {
+                existing.append(rowHtml.join(''));
+            }
+        }
+
         $('body').removeClass('loading').addClass('loaded');
         loadingArea.addClass('hidden');
     });
