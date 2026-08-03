@@ -495,9 +495,12 @@ function bindSubscriptionRowActions() {
         .on('click', '#tree-item--4', function () {
             const id = $(this).attr('id').substring(10);
             if (id === '-4') {
-                showFeeds();
-                getTopCategories();
-                pushHistory('category/-4');
+                setCookie('g2tt_feed', id);
+                setCookie('g2tt_isCat', false);
+                appState.feedId = readCookie('g2tt_feed');
+                appState.isCategory = readCookie('g2tt_isCat') === 'true';
+                getData();
+                pushHistory('feed/-4');
                 return;
             }
             setCookie('g2tt_feed', id);
@@ -1263,7 +1266,7 @@ const TREE_ROW_ICON_MAP = Object.freeze({
 function buildAllArticlesRow(content) {
     return buildTreeRow({
         obj: content,
-        sub: 'sub',
+        sub: 'open-sub-folder',
     });
 }
 
