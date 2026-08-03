@@ -79,56 +79,39 @@ function delCookie(name) {
 
 function getHistoryBasePath() {
     const pathname = window.location.pathname || '/';
-    const trimmed = pathname.replace(/\/+$/, '');
-
-    if (!trimmed || trimmed === '/') {
-        return '/';
-    }
-
-    const segments = trimmed.split('/').filter(Boolean);
-    const routeTypes = ['category', 'categoryfeed', 'feed'];
-
-    if (segments.length >= 2 && routeTypes.includes(segments[segments.length - 2])) {
-        const baseSegments = segments.slice(0, -2);
-        return baseSegments.length ? `/${baseSegments.join('/')}` : '/';
-    }
-
-    if (segments.length >= 1 && /^(index\.(htm|html|php|asp|shtml))$/i.test(segments[segments.length - 1])) {
-        const baseSegments = segments.slice(0, -1);
-        return baseSegments.length ? `/${baseSegments.join('/')}` : '/';
-    }
-
-    return `/${segments.join('/')}`;
+    const search = window.location.search || '';
+    const basePath = pathname.endsWith('/') ? pathname : `${pathname}/`;
+    return `${basePath}${search}`;
 }
 
 function buildHistoryUrl(entry) {
-    const basePath = getHistoryBasePath();
     const route = normalizeRoute(entry);
     const cleanedRoute = String(route || '').replace(/^\/+|\/+$/g, '');
+    const basePath = getHistoryBasePath();
 
     if (!cleanedRoute || cleanedRoute === 'category/-4') {
-        return basePath === '/' ? '/' : `${basePath}/`;
+        return `${basePath}#`;
     }
 
-    const prefix = basePath === '/' ? '' : basePath;
-    const path = `${prefix}/${cleanedRoute}`.replace(/\/+/g, '/');
-    return path || '/';
+    const [type, id] = cleanedRoute.split('/');
+    const compactRoute = `${type}-${id}`;
+    const baseWithoutHash = basePath.replace(/#.*/, '');
+    return `${baseWithoutHash}#${compactRoute}`;
 }
 
 function normalizeRoute(route) {
     const raw = String(route || '');
     const withoutOrigin = raw.replace(/^https?:\/\/[^/]+/, '');
-    const withQuery = withoutOrigin.replace(/^#/, '');
-    const [pathPart, queryPart] = withQuery.split('?');
-    const routeFromQuery = queryPart ? new URLSearchParams(queryPart).get('route') : null;
-    const cleaned = String(routeFromQuery || pathPart || '').replace(/^\/+|\/+$/g, '');
+    const hashValue = withoutOrigin.includes('#') ? withoutOrigin.split('#').pop() : '';
+    const cleaned = String(hashValue || withoutOrigin.replace(/^#/, '') || '').replace(/^\/+|\/+$/g, '');
 
     if (!cleaned) {
-        const hash = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
-        if (hash) {
-            return normalizeRoute(hash);
-        }
         return 'category/-4';
+    }
+
+    const compactMatch = cleaned.match(/^(category|categoryfeed|feed)-(.+)$/i);
+    if (compactMatch) {
+        return `${compactMatch[1].toLowerCase()}/${compactMatch[2]}`;
     }
 
     const parts = cleaned.split('/').filter(Boolean);
@@ -137,7 +120,7 @@ function normalizeRoute(route) {
     }
 
     if (parts.length >= 2 && ['category', 'categoryfeed', 'feed'].includes(parts[0])) {
-        return `${parts[0]}/${parts[1]}`;
+        return `${parts[0].toLowerCase()}/${parts[1]}`;
     }
 
     return 'category/-4';
@@ -146,8 +129,12 @@ function normalizeRoute(route) {
 function pushHistory(t) {
     const { historylist } = globalThis.appState;
     const entry = normalizeRoute(t);
-    historylist.push(entry);
-    history.pushState({ page: entry }, '', buildHistoryUrl(entry));
+    if (historylist[historylist.length - 1] !== entry) {
+        historylist.push(entry);
+    }
+    if (window.location.hash.replace(/^#/, '') !== entry) {
+        window.location.hash = entry;
+    }
     setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
     console.log('Pushed to history: ' + entry + ' - stack: ' + JSON.stringify(historylist));
 }
@@ -802,9 +789,8 @@ function toggleCurrentEntryAsStar(_entryRow) {
 }
 
 function bindBackFunctions() {
-    $(window).on('popstate', function (event) {
-        const state = event.originalEvent ? event.originalEvent.state : null;
-        const route = normalizeRoute(state && state.page ? state.page : window.location.pathname || window.location.search);
+    $(window).on('hashchange', function () {
+        const route = normalizeRoute(window.location.hash || window.location.pathname);
         if (!route) {
             return;
         }
@@ -824,7 +810,7 @@ function bindBackFunctions() {
 }
 
 $(document).ready(function () {
-    const initialPage = normalizeRoute(window.location.pathname || window.location.search);
+    const initialPage = normalizeRoute(window.location.hash || window.location.pathname || window.location.search);
     history.replaceState({ page: initialPage }, '', buildHistoryUrl(initialPage));
     console.log('initial page: ' + initialPage);
 
@@ -1458,7 +1444,7 @@ function getTitle() {
 
 function parseRoute(route = null) {
     if (route === null) {
-        route = window.location.pathname || window.location.search || '';
+        route = window.location.hash || window.location.pathname || window.location.search || '';
     }
 
     const normalized = normalizeRoute(route);
@@ -1523,7 +1509,7 @@ function load() {
         } else {
             applyRoute('category/-4');
         }
-        history.replaceState({ page: normalizeRoute(window.location.pathname || window.location.search) }, '', buildHistoryUrl(normalizeRoute(window.location.pathname || window.location.search)));
+        history.replaceState({ page: normalizeRoute(window.location.hash || window.location.pathname || window.location.search) }, '', buildHistoryUrl(normalizeRoute(window.location.hash || window.location.pathname || window.location.search)));
     }
 }
 
