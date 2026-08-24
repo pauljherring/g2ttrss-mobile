@@ -31,4 +31,8 @@ globalThis.appState = {
     backCat: [],
     cCats: [],
     cFeeds: [],
+    historylist: ['category/-4'],
+    parentList: {
+        '-4': 'All articles',
+    },
 };

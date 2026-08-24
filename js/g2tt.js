@@ -22,30 +22,37 @@ const C_UA_PUBLISH = 1;
 const C_UA_UNREAD = 2;
 const C_UA_ARTICLE = 3;
 
-globalThis.appState.feedId = readCookie(
-    'g2tt_feed',
-    globalThis.appState.feedId
-);
-globalThis.appState.isCategory = readCookie(
-    'g2tt_isCat',
-    globalThis.appState.isCategory
-);
-globalThis.appState.viewMode = readCookie(
-    'g2tt_viewMode',
-    globalThis.appState.viewMode
-);
-globalThis.appState.orderBy = readCookie(
-    'g2tt_orderBy',
-    globalThis.appState.orderBy
-);
-globalThis.appState.feedSort = readCookie(
-    'g2tt_feedSort',
-    globalThis.appState.feedSort
-);
-globalThis.appState.feedLimit = readCookie(
-    'g2tt_feedLimit',
-    globalThis.appState.feedLimit
-);
+if (!Array.prototype.peek) {
+    Object.defineProperty(Array.prototype, 'peek', {
+        value: function (p = 1) {
+            // "this" refers to whatever array calls the method
+            if (this.length > p - 1) {
+                return this[this.length - p];
+            }
+            return '';
+        },
+        enumerable: false, // Keeps it hidden from for...in loops
+        configurable: true, // Allows redefinition if needed
+        writable: true, // Allows value changes
+    });
+}
+
+function getErrorObject() {
+    try {
+        throw Error('');
+    } catch (err) {
+        return err;
+    }
+}
+
+/* eslint-disable-next-line no-unused-vars */
+function callee() {
+    var err = getErrorObject();
+    var caller_line = err.stack.split('\n')[3];
+    var index = caller_line.indexOf('at ');
+    var clean = caller_line.slice(index + 2, caller_line.length);
+    return clean;
+}
 
 function readCookie(name, fallback = undefined) {
     const value = $.cookie(name);
@@ -69,6 +76,152 @@ function delCookie(name) {
     $.removeCookie(name);
     return oldVal;
 }
+
+function getHistoryBasePath() {
+    const pathname = window.location.pathname || '/';
+    const search = window.location.search || '';
+    const basePath = pathname.endsWith('/') ? pathname : `${pathname}/`;
+    return `${basePath}${search}`;
+}
+
+function buildHistoryUrl(entry) {
+    const route = normalizeRoute(entry);
+    const cleanedRoute = String(route || '').replace(/^\/+|\/+$/g, '');
+    const basePath = getHistoryBasePath();
+
+    if (!cleanedRoute || cleanedRoute === 'category/-4') {
+        return `${basePath}#`;
+    }
+
+    const [type, id] = cleanedRoute.split('/');
+    const compactRoute = `${type}-${id}`;
+    const baseWithoutHash = basePath.replace(/#.*/, '');
+    return `${baseWithoutHash}#${compactRoute}`;
+}
+
+function normalizeRoute(route) {
+    const raw = String(route || '');
+    const withoutOrigin = raw.replace(/^https?:\/\/[^/]+/, '');
+    const hashValue =
+        withoutOrigin.includes('#') ? withoutOrigin.split('#').pop() : '';
+    const cleaned = String(
+        hashValue || withoutOrigin.replace(/^#/, '') || ''
+    ).replace(/^\/+|\/+$/g, '');
+
+    if (!cleaned) {
+        return 'category/-4';
+    }
+
+    const compactMatch = cleaned.match(/^(category|categoryfeed|feed)-(.+)$/i);
+    if (compactMatch) {
+        return `${compactMatch[1].toLowerCase()}/${compactMatch[2]}`;
+    }
+
+    const parts = cleaned.split('/').filter(Boolean);
+    if (parts.length === 1) {
+        return `category/${parts[0]}`;
+    }
+
+    if (
+        parts.length >= 2 &&
+        ['category', 'categoryfeed', 'feed'].includes(parts[0])
+    ) {
+        return `${parts[0].toLowerCase()}/${parts[1]}`;
+    }
+
+    return 'category/-4';
+}
+
+function pushHistory(t) {
+    const { historylist } = globalThis.appState;
+    const entry = normalizeRoute(t);
+    if (historylist[historylist.length - 1] !== entry) {
+        historylist.push(entry);
+    }
+    if (window.location.hash.replace(/^#/, '') !== entry) {
+        window.location.hash = entry;
+    }
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+}
+
+function popHistory() {
+    const { historylist } = globalThis.appState;
+    const _h = historylist.pop();
+    if (historylist.length === 0) {
+        historylist.push('category/-4');
+    }
+    const nextEntry = historylist.peek();
+    const entry = nextEntry || 'category/-4';
+    history.replaceState({ page: entry }, '', buildHistoryUrl(entry));
+    setCookie('g2tt_history', JSON.stringify(historylist.slice(-20)));
+    return entry;
+}
+
+function resetHistory() {
+    let { historylist } = globalThis.appState;
+    historylist.length = 0;
+    setCookie('g2tt_history', JSON.stringify(['category/-4']));
+    history.replaceState(
+        { page: 'category/-4' },
+        '',
+        buildHistoryUrl('category/-4')
+    );
+}
+
+function JSONSafeParse(str) {
+    // Check for empty input
+    if (!str || typeof str !== 'string') {
+        console.error('Invalid input: expected non-empty string');
+        return null;
+    }
+
+    // Trim whitespace and BOM
+    str = str.trim().replace(/^\uFEFF/, '');
+
+    try {
+        return JSON.parse(str);
+    } catch (error) {
+        console.error('JSON parse error:', error.message);
+        console.error('Input string:', str);
+
+        // Try to identify the problem location
+        const match = error.message.match(/position (\d+)/);
+        if (match) {
+            const pos = parseInt(match[1]);
+            console.error(
+                'Error near:',
+                str.substring(Math.max(0, pos - 20), pos + 20)
+            );
+        }
+        return [];
+    }
+}
+
+globalThis.appState.feedId = readCookie(
+    'g2tt_feed',
+    globalThis.appState.feedId
+);
+globalThis.appState.isCategory =
+    readCookie('g2tt_isCat', globalThis.appState.isCategory) === 'true';
+globalThis.appState.viewMode = readCookie(
+    'g2tt_viewMode',
+    globalThis.appState.viewMode
+);
+globalThis.appState.orderBy = readCookie(
+    'g2tt_orderBy',
+    globalThis.appState.orderBy
+);
+globalThis.appState.feedSort = readCookie(
+    'g2tt_feedSort',
+    globalThis.appState.feedSort
+);
+globalThis.appState.feedLimit = readCookie(
+    'g2tt_feedLimit',
+    globalThis.appState.feedLimit
+);
+globalThis.appState.historylist = JSONSafeParse(
+    readCookie('g2tt_history', JSON.stringify(['category/-4']))
+) || ['category/-4'];
 
 function bindClick(selector, callback) {
     let eventType = 'click';
@@ -95,14 +248,6 @@ function bindGlobalUi() {
 
 function bindLoginForm() {
     bindClick('#login', function (event) {
-        if (
-            bindLoginForm.request !== undefined &&
-            bindLoginForm.request.abort !== undefined
-        ) {
-            console.log('Aborting previous login request...');
-            console.log(bindLoginForm.request);
-        }
-
         const loginForm = $(this);
         const inputs = loginForm.find('input');
         let values = {};
@@ -276,59 +421,82 @@ function bindSort() {
     });
 }
 
+function handleBackToFeeds() {
+    const previousRoute = popHistory();
+    markEntryRead();
+    refreshCats();
+    applyRoute(previousRoute);
+}
+
+function handleBackToSubCategory() {
+    const previousRoute = popHistory();
+    refreshCats();
+    applyRoute(previousRoute);
+    if (appState.parentId == '-4') {
+        $('#add-new-subscription').removeClass('hidden');
+    }
+}
+
 function bindBackButtons() {
     // Back to Feeds
     bindClick('.back-to-feeds', function () {
-        markEntryRead();
-        refreshCats();
-        showFeeds();
+        handleBackToFeeds();
     });
 
     // Back to Feeds from sub category
     bindClick('#sub-list-back', function () {
-        refreshCats();
-        getFeeds(appState.backCat.pop());
-        if (appState.parentId == '-4') {
-            $('#add-new-subscription').removeClass('hidden');
-        }
+        handleBackToSubCategory();
     });
 }
 
 function bindSubscriptionRowActions() {
     $('#subscriptions-list')
-        .off('click', '.closed-sub-folder')
-        .off('click', '.open-sub-folder[id!="tree-item--4"]')
-        .off('click', '.sub')
-        .off('click', '#tree-item--4')
-        .on('click', '.closed-sub-folder', function () {
+        .off('click.g2tt', '.closed-sub-folder')
+        .off('click.g2tt', '.open-sub-folder[id!="tree-item--4"]')
+        .off('click.g2tt', '.sub')
+        .off('click.g2tt', '#tree-item--4')
+        .on('click.g2tt', '.closed-sub-folder', function () {
+            const id = $(this).attr('id').substring(10);
             appState.backCat.push(appState.parentId);
             $('#subscriptions-list').children().addClass('hidden');
             getFeeds(
-                $(this).attr('id').substring(10),
+                id,
                 $(this).find('.sub-item').html(),
                 $(this).find('.item-count-value').html()
             );
+            pushHistory('category/' + id);
         })
-        .on('click', '.open-sub-folder[id!="tree-item--4"]', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+        .on('click.g2tt', '.open-sub-folder[id!="tree-item--4"]', function () {
+            const id = $(this).attr('id').substring(10);
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', true);
             appState.feedId = readCookie('g2tt_feed');
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
-            getData();
+            pushHistory('categoryfeed/' + id);
         })
-        .on('click', '.sub', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+        .on('click.g2tt', '.sub', function () {
+            const id = $(this).attr('id').substring(10);
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
-            getData();
+            pushHistory('feed/' + id);
         })
-        .on('click', '#tree-item--4', function () {
-            setCookie('g2tt_feed', $(this).attr('id').substring(10));
+        .on('click.g2tt', '#tree-item--4', function () {
+            const id = $(this).attr('id').substring(10);
+            if (id === '-4') {
+                setCookie('g2tt_feed', id);
+                setCookie('g2tt_isCat', false);
+                appState.feedId = readCookie('g2tt_feed');
+                appState.isCategory = readCookie('g2tt_isCat') === 'true';
+                pushHistory('feed/-4');
+                return;
+            }
+            setCookie('g2tt_feed', id);
             setCookie('g2tt_isCat', false);
             appState.feedId = readCookie('g2tt_feed');
             appState.isCategory = readCookie('g2tt_isCat') === 'true';
-            getData();
+            pushHistory('categoryfeed/' + id);
         });
 }
 
@@ -357,15 +525,18 @@ function bindMarkRead() {
 
 function clearCookies() {
     delCookie('g2tt_feed');
+    delCookie('g2tt_feedSort');
     delCookie('g2tt_isCat');
     delCookie('g2tt_viewMode');
     delCookie('g2tt_orderBy');
     delCookie('g2tt_keepUnread_ids');
     delCookie('g2tt_sid');
+    delCookie('g2tt_history');
 }
 
 function logoutToHomepage() {
     clearCookies();
+    resetHistory();
     location.reload(true);
 }
 
@@ -377,6 +548,7 @@ function bindLogout() {
         const request = apiCall(data);
 
         request.done(function (_content) {
+            resetHistory();
             logoutToHomepage();
         });
     });
@@ -400,8 +572,8 @@ function logTurndown(script, status, _object) {
 
 function bindEmail() {
     $('#feed')
-        .off('click', '.createmail')
-        .on('click', '.createmail', function () {
+        .off('click.g2tt', '.createmail')
+        .on('click.g2tt', '.createmail', function () {
             if (typeof TurndownService == 'undefined') {
                 loadScript('js/turndown.js', logTurndown);
             }
@@ -588,26 +760,28 @@ function bindSubscriptionUi() {
 }
 
 function bindKeyboardShortcuts() {
-    $(document).on('keypress', function (event) {
-        const shortcuts = globalThis.appState.keyboardShortcuts || {};
-        const key = String.fromCharCode(event.which).toLowerCase();
+    $(document)
+        .off('keypress.g2tt')
+        .on('keypress.g2tt', function (event) {
+            const shortcuts = globalThis.appState.keyboardShortcuts || {};
+            const key = String.fromCharCode(event.which).toLowerCase();
 
-        if (key === (shortcuts.nextEntry || 'j')) {
-            expandNextEntry();
-        } else if (key === (shortcuts.previousEntry || 'k')) {
-            expandPreviousEntry();
-        } else if (key === (shortcuts.nextPage || 'n')) {
-            jumpNextEntry();
-        } else if (key === (shortcuts.previousPage || 'p')) {
-            jumpPreviousEntry();
-        } else if (key === (shortcuts.toggleExpand || 'o')) {
-            toggleCurrentEntryAsExpanded();
-        } else if (key === (shortcuts.toggleRead || 'm')) {
-            toggleCurrentEntryAsRead();
-        } else if (key === (shortcuts.toggleStar || 's')) {
-            toggleCurrentEntryAsStar();
-        }
-    });
+            if (key === (shortcuts.nextEntry || 'j')) {
+                expandNextEntry();
+            } else if (key === (shortcuts.previousEntry || 'k')) {
+                expandPreviousEntry();
+            } else if (key === (shortcuts.nextPage || 'n')) {
+                jumpNextEntry();
+            } else if (key === (shortcuts.previousPage || 'p')) {
+                jumpPreviousEntry();
+            } else if (key === (shortcuts.toggleExpand || 'o')) {
+                toggleCurrentEntryAsExpanded();
+            } else if (key === (shortcuts.toggleRead || 'm')) {
+                toggleCurrentEntryAsRead();
+            } else if (key === (shortcuts.toggleStar || 's')) {
+                toggleCurrentEntryAsStar();
+            }
+        });
 }
 
 function toggleCurrentEntryAsStar(_entryRow) {
@@ -619,13 +793,47 @@ function toggleCurrentEntryAsStar(_entryRow) {
     toggleEntryStar(currentEntry);
 }
 
+function bindBackFunctions() {
+    $(window)
+        .off('hashchange.g2tt')
+        .on('hashchange.g2tt', function () {
+            const route = normalizeRoute(window.location.hash || '#');
+            if (!route) {
+                return;
+            }
+
+            const lastEntry =
+                globalThis.appState.historylist[
+                    globalThis.appState.historylist.length - 1
+                ];
+            if (lastEntry && lastEntry !== route) {
+                const existingIndex =
+                    globalThis.appState.historylist.indexOf(route);
+                if (existingIndex >= 0) {
+                    globalThis.appState.historylist.length = existingIndex + 1;
+                } else {
+                    globalThis.appState.historylist.push(route);
+                }
+            }
+
+            applyRoute(route);
+        });
+}
+
 $(document).ready(function () {
+    const initialPage = normalizeRoute(window.location.hash || '#');
+    history.replaceState(
+        { page: initialPage },
+        '',
+        buildHistoryUrl(initialPage)
+    );
     bindGlobalUi();
     bindLoginForm();
     bindNavigation();
     bindSearchUi();
     bindSubscriptionUi();
     bindKeyboardShortcuts();
+    bindBackFunctions(); // TODO - this needs more examination while sober...
     load();
 });
 
@@ -637,8 +845,8 @@ function refreshCats(countersOnly = false) {
     const request = apiCall(data);
 
     request.done(function (counters) {
-        appState.cCats = [];
-        appState.cFeeds = [];
+        appState.cCats.length = 0;
+        appState.cFeeds.length = 0;
 
         for (let i = 0; i < counters.length; i += 1) {
             if (counters[i].kind == 'cat') {
@@ -975,20 +1183,23 @@ function finaliseHeadlines(headlines) {
     const { isCategory, feedId, cCats, cFeeds } = appState;
     let total =
         isCategory ?
-            (cCats[feedId]?.counter ?? 'undef')
-        :   (cFeeds[feedId]?.counter ?? 'undef');
-    if (total > 50) {
+            (cCats[feedId]?.counter ?? '??')
+        :   (cFeeds[feedId]?.counter ?? '??');
+    if (total === 0) {
+        total = '';
+    } else if (total > 50) {
         // hacky - TTRSS counter totals don't necessarily match up with the
         // actual number of rows displayed. Don't know why.
-        total = `<abbr title="Totals may be inaccurate">~${Math.ceil(total / 10) * 10}</abbr>`;
+        total = `<abbr title="Totals may be inaccurate">/~${Math.ceil(total / 10) * 10}</abbr>`;
+    } else {
+        total = `/${total}`;
     }
-    entriesCount.html(`Showing ${entryRows.length}/${total} items`);
+
+    entriesCount.html(`Showing ${entryRows.length}${total} items`);
     keepUnread.clean(appState.itemIds);
 }
 
-function getHeadlinesRequest(since) {
-    if (typeof since === 'undefined') since = 0;
-
+function getHeadlinesRequest(since = 0) {
     const search = $('#search-input').val();
     const data = {
         op: 'getHeadlines',
@@ -1003,13 +1214,11 @@ function getHeadlinesRequest(since) {
         order_by: appState.orderBy,
         search: search,
     };
-
     if (appState.orderBy == 'date_reverse') {
         data.since_id = since;
     } else {
         data.skip = since;
     }
-
     return apiCall(data);
 }
 
@@ -1115,51 +1324,68 @@ function getTopCategories() {
     const navTitle = $('#nav-title');
     const subListBack = $('#sub-list-back');
     const loadingArea = $('#loading-area-container');
+    const existingSubRoot = $('#sub--4');
 
     navTitle.html('');
     subListBack.addClass('hidden');
-    if ($('#sub--4').length != 0) {
+    if (existingSubRoot.length != 0) {
         subscriptionsList.children().addClass('hidden');
-        $('#sub--4').removeClass('hidden');
+        existingSubRoot.removeClass('hidden');
         appState.parentId = '-4';
-    } else {
-        $('body').addClass('loading').addClass('sub-tree');
-        loadingArea.removeClass('hidden');
-
-        subscriptionsList.append("<div id='sub--4'></div>");
-        const subRoot = $('#sub--4');
-
-        let data = {
-            op: 'getUnread',
-        };
-        const unread = apiCall(data);
-        unread.done(function (content) {
-            content.id = -4;
-            content.title = 'All articles';
-            subRoot.prepend(buildAllArticlesRow(content));
-        });
-
-        data = {
-            op: 'getCategories',
-            enable_nested: true,
-        };
-        const cats = apiCall(data);
-
-        cats.done(function (cats) {
-            cats.sort(compareBySortMode);
-            const categoryHtml = [];
-            for (let index = 0; index < cats.length; index += 1) {
-                categoryHtml.push(buildCategoryRow(cats[index]));
-            }
-            subRoot.append(categoryHtml.join(''));
-            appState.parentId = '-4';
-            $('body').removeClass('loading').addClass('loaded');
-            loadingArea.addClass('hidden');
-        });
+        $('body').removeClass('loading').addClass('loaded');
+        navTitle.html('All articles');
+        loadingArea.addClass('hidden');
+        return;
     }
+
+    $('body').addClass('loading').addClass('sub-tree');
+    loadingArea.removeClass('hidden');
+
+    // create container if it wasn't created by a concurrent call
+    if ($('#sub--4').length === 0) {
+        subscriptionsList.append("<div id='sub--4'></div>");
+    }
+    const subRoot = $('#sub--4');
+
+    let data = {
+        op: 'getUnread',
+    };
+    const unread = apiCall(data);
+    unread.done(function (content) {
+        content.id = -4;
+        content.title = 'All articles';
+        // avoid double-prepend if the All Articles row already exists
+        if (subRoot.find('#tree-item--4').length === 0) {
+            subRoot.prepend(buildAllArticlesRow(content));
+        }
+    });
+
+    data = {
+        op: 'getCategories',
+        enable_nested: true,
+    };
+    const cats = apiCall(data);
+
+    cats.done(function (cats) {
+        cats.sort(compareBySortMode);
+        const categoryHtml = [];
+        for (let index = 0; index < cats.length; index += 1) {
+            categoryHtml.push(buildCategoryRow(cats[index]));
+        }
+        // avoid appending duplicate category lists if another call already populated
+        if (subRoot.children().length <= 1) {
+            subRoot.append(categoryHtml.join(''));
+        }
+        appState.parentId = '-4';
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+    });
 }
 
 function getFeeds(parent_id, parent_title, parent_unread) {
+    if (!(parent_id in appState.parentList) && parent_title != undefined) {
+        appState.parentList[parent_id] = parent_title;
+    }
     appState.parentId = parent_id;
     const parent = {
         id: parent_id,
@@ -1177,39 +1403,54 @@ function getFeeds(parent_id, parent_title, parent_unread) {
     const addNewSubscription = $('#add-new-subscription');
     const loadingArea = $('#loading-area-container');
 
-    navTitle.html('');
+    navTitle.html(appState.parentList[parent_id] || '--');
     subListBack.removeClass('hidden');
     //added to show + for adding new subscriptions
     addNewSubscription.addClass('hidden');
 
     const containerId = '#sub-' + parent.id;
-    if ($(containerId).length != 0) {
+    const existingSubRoot = $(containerId);
+    if (existingSubRoot.length != 0) {
         subscriptionsList.children().addClass('hidden');
-        $(containerId).removeClass('hidden');
-    } else {
-        $('body').addClass('loading').addClass('sub-tree');
-        loadingArea.removeClass('hidden');
+        existingSubRoot.removeClass('hidden');
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+        return;
+    }
 
-        const data = {
-            op: 'getFeeds',
-            cat_id: parent.id,
-            include_nested: true,
-        };
-        const feeds = apiCall(data);
+    $('body').addClass('loading').addClass('sub-tree');
+    loadingArea.removeClass('hidden');
 
-        feeds.done(function (feeds) {
-            feeds.sort(compareBySortMode);
+    const data = {
+        op: 'getFeeds',
+        cat_id: parent.id,
+        include_nested: true,
+    };
+    const feeds = apiCall(data);
+    feeds.done(function (feeds) {
+        feeds.sort(compareBySortMode);
+        // If another concurrent call already created this subtree, reuse it
+        const containerSelector = '#sub-' + parent.id;
+        const existing = $(containerSelector);
+        const rowHtml = [buildParentFolderRow(parent)];
+        for (let index = 0; index < feeds.length; index += 1) {
+            rowHtml.push(buildFeedRow(feeds[index]));
+        }
+
+        if (existing.length === 0) {
             const subRoot = $('<div id="sub-' + parent.id + '"></div>');
-            const rowHtml = [buildParentFolderRow(parent)];
-            for (let index = 0; index < feeds.length; index += 1) {
-                rowHtml.push(buildFeedRow(feeds[index]));
-            }
             subscriptionsList.append(subRoot);
             subRoot.append(rowHtml.join(''));
-            $('body').removeClass('loading').addClass('loaded');
-            loadingArea.addClass('hidden');
-        });
-    }
+        } else {
+            // avoid appending duplicate rows if already populated
+            if (existing.children().length <= 1) {
+                existing.append(rowHtml.join(''));
+            }
+        }
+
+        $('body').removeClass('loading').addClass('loaded');
+        loadingArea.addClass('hidden');
+    });
 }
 
 function getTitle() {
@@ -1233,19 +1474,77 @@ function getTitle() {
     });
 }
 
+function parseRoute(route = null) {
+    if (route === null) {
+        route = window.location.hash || '#';
+    }
+
+    const normalized = normalizeRoute(route);
+    const parts = normalized.split('/');
+    const type = parts[0];
+    const id = parts[1];
+
+    if (type === 'category') {
+        appState.isCategory = true;
+        appState.feedId = id;
+        appState.parentId = id;
+        return { type, id };
+    }
+
+    if (type === 'feed') {
+        appState.isCategory = false;
+        appState.feedId = id;
+        return { type, id };
+    }
+
+    if (type === 'categoryfeed') {
+        appState.isCategory = true;
+        appState.feedId = id;
+        return { type, id };
+    }
+
+    return null;
+}
+
+function applyRoute(route) {
+    const parsedRoute = parseRoute(route);
+    if (!parsedRoute) {
+        return;
+    }
+
+    if (parsedRoute.type === 'category') {
+        refreshCats(true);
+        showFeeds();
+        if (parsedRoute.id === '-4') {
+            getTopCategories();
+        } else {
+            getFeeds(parsedRoute.id);
+        }
+        return;
+    }
+
+    refreshCats(true);
+    appState.feedId = parsedRoute.id;
+    appState.isCategory = parsedRoute.type === 'categoryfeed';
+    getData();
+}
+
 function load() {
     if (typeof $.cookie('g2tt_sid') === 'undefined') {
         $('#main').addClass('hidden');
         $('.login').removeClass('hidden');
-    } else if (appState.startCategory == '1') {
-        refreshCats(true);
-        showFeeds();
-        getTopCategories();
     } else {
-        refreshCats(true);
-        getTitle();
-        getHeadlines();
-        getTopCategories();
+        const route = parseRoute();
+        if (route) {
+            applyRoute(route.type + '/' + route.id);
+        } else {
+            applyRoute('category/-4');
+        }
+        history.replaceState(
+            { page: normalizeRoute(window.location.hash || '#') },
+            '',
+            buildHistoryUrl(normalizeRoute(window.location.hash || '#'))
+        );
     }
 }
 
@@ -1254,7 +1553,7 @@ function getData() {
     $('body').removeClass('loaded').addClass('loading');
     $('.load-more-message').html('Marking as read...');
     $('#entries').empty();
-    appState.itemIds = [];
+    appState.itemIds.length = 0;
     getTitle();
     getHeadlines();
 }
@@ -1340,10 +1639,9 @@ function subscribe(feedurl, categoryID) {
         const status = content.status;
         const _message = status.message;
         const statusCode = status.code;
-        //let feeds = [];
         const feeds = status.feeds;
-        const feedUrls = [];
-        const feedUrlsTitles = [];
+        let feedUrls = [];
+        let feedUrlsTitles = [];
 
         for (let key in feeds) {
             if (Object.hasOwn(feeds, 'key')) {
