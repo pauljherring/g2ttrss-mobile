@@ -47,15 +47,40 @@ if (globalThis.appState) {
     globalThis.appState.feedLimit = 50;
 
     /* Keyboard shortcuts can be customized here. Use lowercase letters.
-     * Example:
-     * globalThis.appState.keyboardShortcuts = {
-     *     nextEntry: 'j',
-     *     previousEntry: 'k',
-     *     nextPage: 'n',
-     *     previousPage: 'p',
-     *     toggleExpand: 'o',
-     *     toggleRead: 'm',
-     *     toggleStar: 's'
-     * };
+     * Example: */
+    /*
+     globalThis.appState.keyboardShortcuts = {
+         nextEntry: 'j',
+         previousEntry: 'k',
+         nextPage: 'n',
+         previousPage: 'p',
+         toggleExpand: 'o',
+         toggleRead: 'm',
+         toggleStar: 's'
+     };
      */
+
+    /* Which set of colors to use for the category backgrounds. Default is 'none'
+     * (no colors, just white), but you can set it to 'pastel' or 'vibrant' if
+     * you want to use different pre-defined color schemes. */
+    // globalThis.appState.categoryColors = 'none';
+    globalThis.appState.categoryColors = 'vibrant';
+
+    /* You can also define your own set of colors here. Just add a new key to the
+     * categoryColorSet object (called 'myColors' in the example), and set it
+     * to an array of colors. You should use at least 1 color, but you can use
+     * as many as you want. The colors will be used 'randomly' bur unless you
+     * change the number, the same color will be used for the same category each time.
+     *
+     * For example:
+     */
+    /*
+    globalThis.appState.categoryColorSet['myColors'] = [
+        '#ff9999',
+        '#99ff99',
+        '#9999ff',
+        '#ffff99',
+        '#ff99ff',
+    ];
+    */
 }

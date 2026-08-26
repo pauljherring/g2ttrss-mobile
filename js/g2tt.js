@@ -22,6 +22,8 @@ const C_UA_PUBLISH = 1;
 const C_UA_UNREAD = 2;
 const C_UA_ARTICLE = 3;
 
+globalThis.appState.cssColorItems = new Set();
+
 if (!Array.prototype.peek) {
     Object.defineProperty(Array.prototype, 'peek', {
         value: function (p = 1) {
@@ -1038,6 +1040,171 @@ function headlineContentHtml(content) {
     return container[0].outerHTML;
 }
 
+// A standard, fast 32-bit MurmurHash3 mix function
+function murmurHash3_32(str) {
+    let h1 = 0x811c9dc5; // Seed constant
+    for (let i = 0; i < str.length; i++) {
+        let k1 = str.charCodeAt(i);
+        // Bitwise mix steps
+        k1 = Math.imul(k1, 0xcc9e2d51);
+        k1 = (k1 << 15) | (k1 >>> 17);
+        k1 = Math.imul(k1, 0x1b873593);
+
+        h1 ^= k1;
+        h1 = (h1 << 13) | (h1 >>> 19);
+        h1 = Math.imul(h1, 5) + 0xe6546b64;
+    }
+    // Finalization avalanche shifts
+    h1 ^= str.length;
+    h1 ^= h1 >>> 16;
+    h1 = Math.imul(h1, 0x85ebca6b);
+    h1 ^= h1 >>> 13;
+    h1 = Math.imul(h1, 0xc2b2ae35);
+    h1 ^= h1 >>> 16;
+
+    return h1 >>> 0; // Force conversion to 32-bit unsigned integer
+}
+
+// Unbiased range mapping utilizing deterministic input hashing
+function getDeterministicUnbiasedValue(inputString, min, max) {
+    const range = max - min + 1;
+    const totalStates = 4294967296; // 2^32
+    const remainder = totalStates % range;
+
+    let nonce = 0;
+    while (true) {
+        // Append an incrementing nonce if rejection happens
+        const deterministicSeed = inputString + '_' + nonce;
+        const s = murmurHash3_32(deterministicSeed);
+
+        // Unbiased check: reject values in the biased zone
+        if (s >= remainder) {
+            return (s % range) + min;
+        }
+        nonce++;
+    }
+}
+
+function cssColorToHex(colorStr) {
+    // 1. Validate the syntax first using CSS.supports
+    if (!CSS.supports('color', colorStr)) {
+        return null;
+    }
+
+    // 2. Use a 1x1 canvas to resolve the color
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.fillStyle = colorStr;
+    const resolvedColor = ctx.fillStyle; // Browsers automatically return #rrggbb or rgba()
+
+    // 3. If the browser returned hex directly, return it
+    if (resolvedColor.startsWith('#')) {
+        return resolvedColor;
+    }
+
+    // 4. Parse rgb() or rgba() string into hex numbers
+    const rgba = resolvedColor.match(/\d+(\.\d+)?/g).map(Number);
+
+    const r = rgba[0].toString(16).padStart(2, '0');
+    const g = rgba[1].toString(16).padStart(2, '0');
+    const b = rgba[2].toString(16).padStart(2, '0');
+
+    // 5. Handle alpha channel if present and less than 1
+    let a = '';
+    if (rgba[3] !== undefined) {
+        // Canvas alpha scales from 0 to 1
+        a = Math.round(rgba[3] * 255)
+            .toString(16)
+            .padStart(2, '0');
+    }
+
+    return `#${r}${g}${b}${a}`;
+}
+
+function useWhiteFont(bgHex) {
+    // 1. Clean the hex string and ignore any trailing alpha channels (8-digit hex)
+    let hex = bgHex.replace('#', '');
+    if (hex.length === 8) {
+        hex = hex.substring(0, 6);
+    }
+
+    // 2. Convert 3-digit shorthand (e.g. "03f") to 6-digit (e.g. "0033ff")
+    if (hex.length === 3) {
+        hex = hex
+            .split('')
+            .map((char) => char + char)
+            .join('');
+    }
+
+    // 3. Parse RGB integer values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    // 4. Calculate sRGB values according to WCAG formula
+    const getSRGB = (val) => {
+        const s = val / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const sR = getSRGB(r);
+    const sG = getSRGB(g);
+    const sB = getSRGB(b);
+
+    // 5. Calculate relative luminance (Green contributes the most to human perception)
+    const luminance = 0.2126 * sR + 0.7152 * sG + 0.0722 * sB;
+
+    // 6. Compare contrast ratios. The standard threshold midpoint is 0.179.
+    // If the background is darker than this threshold, use white text.
+    return luminance <= 0.179;
+}
+
+function renderColorItems() {
+    let set;
+    if (!(set = globalThis.appState.categoryColors) === 'none') {
+        return;
+    }
+    if (globalThis.appState.categoryColorSet[set] === undefined) {
+        return;
+    }
+    if (
+        !globalThis.appState.cssColorItems ||
+        globalThis.appState.cssColorItems.size === 0
+    ) {
+        return;
+    }
+    const colors = globalThis.appState.categoryColorSet[set];
+    globalThis.appState.cssColorItems.forEach((selector) => {
+        let id;
+        let hyphen;
+        if (selector.lastIndexOf('--') !== -1) {
+            id = selector.substring((hyphen = selector.lastIndexOf('--') + 1));
+        } else {
+            id = selector.substring((hyphen = selector.lastIndexOf('-') + 1));
+        }
+        const prefix = selector.substring(0, hyphen - 1);
+        if (id !== 0) {
+            const offset = getDeterministicUnbiasedValue(
+                id,
+                0,
+                colors.length - 1
+            );
+            const color = cssColorToHex(colors[offset]);
+            if (color !== null) {
+                $(selector).css('background-color', color);
+                $(`.sub-item-${id}`).css(
+                    'color',
+                    useWhiteFont(color) ? '#ffffff !important' : '#000000'
+                );
+            } else {
+                console.error(
+                    `Invalid color value for selector ${selector}: ${color}`
+                );
+            }
+        }
+    });
+    globalThis.appState.cssColorItems.clear();
+}
+
 function buildHeadlinesEntry(headline) {
     const contentHtml = headlineContentHtml(headline.content);
     const excerpt = headlineExcerpt(headline);
@@ -1045,8 +1212,12 @@ function buildHeadlinesEntry(headline) {
     const starClass = headline.marked ? 'starActive' : 'starNotActive';
     const formattedDate = new Date(headline.updated * 1000).toLocaleString();
 
+    const feedId = headline.feed_id || 0;
+
+    globalThis.appState.cssColorItems.add(`.feed-${feedId}`);
+
     return `
-<div id='${headline.id}' class='entry-row whisper${readClass}'>
+<div id='${headline.id}' class='feed-${feedId} entry-row whisper${readClass}'>
     <div class='entry-container'>
         <div class='entry-top-bar'>
             <span class='link entry-next'>
@@ -1067,12 +1238,12 @@ function buildHeadlinesEntry(headline) {
             </div>
             <div class='entry-header-body'>
                 <div class='text'>
-                    <span class='item-title-collapsed'>${headline.title}</span>
+                    <span class='item-title-collapsed sub-item-${feedId}'>${headline.title}</span>
                     <a href='${headline.link}' class='item-title item-title-link' target='_blank'>
                         ${headline.title}
                     </a>
-                    <span class='item-source-title'>&nbsp;-&nbsp;${headline.feed_title}</span>
-                    <div class='item-snippet'>${excerpt}</div>
+                    <span class='item-source-title sub-item-${feedId}'>&nbsp;-&nbsp;${headline.feed_title}</span>
+                    <div class='item-snippet sub-item-${feedId}'>${excerpt}</div>
                 </div>
                 <div class='entry-sub-header'>by ${headline.author}  on ${formattedDate} + "</div>
             </div>
@@ -1121,6 +1292,7 @@ function renderHeadlines(headlines) {
     if (html) {
         entries.append(html);
     }
+    renderColorItems();
 }
 
 function bindHeadlineEvents() {
@@ -1289,14 +1461,16 @@ function buildTreeRow(row) {
         .filter(Boolean)
         .join(' ');
 
+    globalThis.appState.cssColorItems.add(`.tree-item-${row.obj.id}`);
+
     return `
-<div class='${classes}' id='tree-item-${row.obj.id}'>
+<div class='${classes} tree-item-${row.obj.id}' id='tree-item-${row.obj.id}'>
     <div class='icon-cell'>
         <i class='fa ${icon} fa-lg'></i>
     </div>
-    <div class='text sub-item'> ${row.obj.title} </div>
+    <div class='text sub-item sub-item-${row.obj.id}'> ${row.obj.title} </div>
     <div class='item-count larger whisper'>
-        <span class='item-count-value' id='tree-item-${row.obj.id}-unread-count'>
+        <span class='item-count-value sub-item-${row.obj.id}' id='tree-item-${row.obj.id}-unread-count'>
             ${row.obj.unread}
         </span>
     </div>
@@ -1335,8 +1509,11 @@ function getTopCategories() {
         $('body').removeClass('loading').addClass('loaded');
         navTitle.html('All articles');
         loadingArea.addClass('hidden');
+        renderColorItems();
         return;
     }
+    subscriptionsList.children().addClass('hidden');
+    loadingArea.addClass('hidden');
 
     $('body').addClass('loading').addClass('sub-tree');
     loadingArea.removeClass('hidden');
@@ -1379,6 +1556,7 @@ function getTopCategories() {
         appState.parentId = '-4';
         $('body').removeClass('loading').addClass('loaded');
         loadingArea.addClass('hidden');
+        renderColorItems();
     });
 }
 
@@ -1450,6 +1628,7 @@ function getFeeds(parent_id, parent_title, parent_unread) {
 
         $('body').removeClass('loading').addClass('loaded');
         loadingArea.addClass('hidden');
+        renderColorItems();
     });
 }
 

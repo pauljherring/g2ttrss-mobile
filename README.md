@@ -140,3 +140,37 @@ Options:
     - `toggleExpand` - `o` toggle expansion of current article
     - `toggleRead` - `m` toggle read status
     - `toggleStar` - `s` toggle star status
+
+* **globalThis.appstate.categoryColors.**
+
+    Which color set to use to differentiate categories, and category feeds (useful
+    for when you have feeds from more than one category displayed).
+
+    - `none` - default; don't colorize categories
+    - `pastel` - set of 20 lighter colors
+    - `vibrant` - set of 20 darker colors
+    - `[user-defined-name]` - user-defined name of another set of colors - defined below
+
+* **globalThis.appState.categoryColorSet['[user-defined-name]']
+
+    A user-defined set of colors to use. List at least one, in `css` format; either
+    a `#rrggbb` (or `#rgb`) format and/or actual css-recognised names of colors.
+
+    The same color will be used for the same category each time, unless you change
+    the number of colors used.
+
+    Example format:
+
+```
+    globalThis.appState.categoryColorSet['myColors'] = [
+        '#ff9999',
+        '#99ff99',
+        '#9999ff',
+        '#ffff99',
+        '#ff99ff',
+    ];
+```
+
+    Where `myColors` is a user-defined name, and is what should be passed to
+    `categoryColors` above. Colors that are darker should automatically change
+    the text color to white for sufficient contrast.
