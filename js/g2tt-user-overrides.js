@@ -16,7 +16,6 @@ if (globalThis.appState) {
      *       0 and above are feed/category IDs.
      */
     // globalThis.appState.feedId = '-4';
-    globalThis.appState.feedId = '140';
 
     /* View mode: 'unread' or 'all'
      */
@@ -37,14 +36,12 @@ if (globalThis.appState) {
      *     true (show feed list instead of articles when pref_feed is a category)
      */
     // globalThis.appState.startCategory = false;
-    globalThis.appState.startCategory = false;
 
     /* How many articles to load at once when scrolling down. Default is 25, but you
      * can set it higher if you have a fast connection and want to load more items at
      * once.
      */
     // globalThis.appState.feedLimit = 25;
-    globalThis.appState.feedLimit = 50;
 
     /* Keyboard shortcuts can be customized here. Use lowercase letters.
      * Example: */
@@ -64,7 +61,6 @@ if (globalThis.appState) {
      * (no colors, just white), but you can set it to 'pastel' or 'vibrant' if
      * you want to use different pre-defined color schemes. */
     // globalThis.appState.categoryColors = 'none';
-    globalThis.appState.categoryColors = 'vibrant';
 
     /* You can also define your own set of colors here. Just add a new key to the
      * categoryColorSet object (called 'myColors' in the example), and set it
