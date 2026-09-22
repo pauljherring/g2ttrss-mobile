@@ -148,10 +148,16 @@ Options:
 
     - `none` - default; don't colorize categories
     - `pastel` - set of 20 lighter colors
+      - <img width="459" height="718" alt="image" src="https://github.com/user-attachments/assets/9a1460ce-4617-49ea-b8fb-750d619eaf21" />
+      - <img width="459" height="718" alt="image" src="https://github.com/user-attachments/assets/43ce3569-3005-4465-9905-89d694a88e0c" />
     - `vibrant` - set of 20 darker colors
+      - <img width="459" height="718" alt="image" src="https://github.com/user-attachments/assets/44c472aa-6fa1-4b6a-b025-c936191c22f0" />
+      - <img width="459" height="718" alt="image" src="https://github.com/user-attachments/assets/cee8745d-5f32-49cc-b3b4-11879c182eb2" />
+
+
     - `[user-defined-name]` - user-defined name of another set of colors - defined below
 
-* **globalThis.appState.categoryColorSet['[user-defined-name]']
+* **globalThis.appState.categoryColorSet['[user-defined-name]']**
 
     A user-defined set of colors to use. List at least one, in `css` format; either
     a `#rrggbb` (or `#rgb`) format and/or actual css-recognised names of colors.
@@ -171,6 +177,6 @@ Options:
     ];
 ```
 
-    Where `myColors` is a user-defined name, and is what should be passed to
+Where `myColors` is a user-defined name, and is what should be passed to
     `categoryColors` above. Colors that are darker should automatically change
     the text color to white for sufficient contrast.
