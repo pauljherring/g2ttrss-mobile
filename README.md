@@ -69,6 +69,7 @@ Current features
 * load more articles (25, default, at a time)
 * search for keywords in feeds
 * Google Reader style hotkeys (`j`, `k`, `n`, `p`, `o`, `m`)
+* Optional background colors for different feeds to aid differentiating them in grouped feeds.
 
 Default Hotkeys
 ---------------
@@ -92,42 +93,42 @@ Options:
 * **globalThis.appState.url** (Default: `/tt-rss`)
 
     The path to your TT-RSS installation relative to your domain. It accesses the
-    `/api` endpoint on the end of that URL.
+    `/api` endpoint on the end of that URL. Do not include `/api` or a trailing `/`.
 
 * **globalThis.appState.feedId** (String, default: `-4`, all items)
 
     The default feed to display. Available values:
     * \>0 - A specific feed
-    * 0 - Uncategorized
-    * -1 - Special (e.g. Starred, Published, Archived, etc.)
-    * -2 - Labels
-    * -3 - All feeds, excluding virtual feeds (e.g. Labels and such)
-    * -4 - All feeds, including virtual feeds
+    * `0` - Uncategorized
+    * `-1` - Special (e.g. Starred, Published, Archived, etc.)
+    * `-2` - Labels
+    * `-3` - All feeds, excluding virtual feeds (e.g. Labels and such)
+    * `-4` - All feeds, including virtual feeds
 
 * **globalThis.appState.viewMode** (Default: `unread`, unread articles only)
 
     Show unread or all articles? Available values:
-    * unread - show unread articles only
-    * all - show all articles
+    * `unread` - show unread articles only
+    * `all` - show all articles
 
 * **globalThis.appState.orderBy** (Default: `date_reverse`, oldest first)
 
     Sort order of the articles/items. Available values:
-    * date_reverse - oldest first
-    * feed_dates - newest first, goes by feed date
+    * `date_reverse` - oldest first
+    * `feed_dates` - newest first, goes by feed date
     * (nothing) - TT-RSS's default (whatever that is)
 
 * **globalThis.appState.feedSort** (Default: `0`, do not sort feeds)
 
     Sort the feeds (categories) in alphabetical order or not. Availables values:
-    * 0 - do not sort feeds, display in the order TT-RSS returns them
-    * 1 - sort the feeds in alphabetical order (A-Z)
+    * `0` - do not sort feeds, display in the order TT-RSS returns them
+    * `1` - sort the feeds in alphabetical order (A-Z)
 
 * **globalThis.appState.startCategory** (Default: `false` start showing articles)
 
     Start showing the feeds (categories) or articles (items)
-    * false - start showing articles
-    * true - start showing feeds
+    * `false - start showing articles
+    * `true` - start showing feeds
 
 * **globalThis.appState.keyboardShortcuts.**
 
