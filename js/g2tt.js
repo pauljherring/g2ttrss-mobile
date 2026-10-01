@@ -253,6 +253,8 @@ function bindLoginForm() {
         const loginForm = $(this);
         const inputs = loginForm.find('input');
         let values = {};
+
+        clearState();
         inputs.each(function () {
             values[this.name] = $(this).val();
         });
@@ -279,7 +281,6 @@ function bindLoginForm() {
                 );
                 logoutToHomepage();
             }
-            clearCookies();
             setCookie('g2tt_sid', loggedIn.session_id, 7);
             load();
         });
@@ -525,6 +526,12 @@ function bindMarkRead() {
     });
 }
 
+function clearState() {
+    clearCookies();
+    clearCaches();
+    resetHistory();
+}
+
 function clearCookies() {
     delCookie('g2tt_feed');
     delCookie('g2tt_feedSort');
@@ -536,9 +543,18 @@ function clearCookies() {
     delCookie('g2tt_history');
 }
 
+function clearCaches() {
+    appState.itemIds = [];
+    appState.feedId = -4;
+    appState.isCategory = false;
+    appState.cCats = [];
+    appState.cFeeds = [];
+    appState.tCats = [];
+    appState.historylist = ['category/-4'];
+    appState.parentList = { '-4': 'All articles' };
+}
 function logoutToHomepage() {
-    clearCookies();
-    resetHistory();
+    clearState();
     location.reload(true);
 }
 
@@ -550,7 +566,6 @@ function bindLogout() {
         const request = apiCall(data);
 
         request.done(function (_content) {
-            resetHistory();
             logoutToHomepage();
         });
     });
