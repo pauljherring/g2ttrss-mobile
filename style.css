@@ -893,9 +893,9 @@ a:visited,
 }
 
 .item-snippet {
-    overflow: hidden;
+    overflow: auto;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: break-spaces;
 }
 
 .sub-row .icon-cell {
