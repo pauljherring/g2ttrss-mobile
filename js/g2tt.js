@@ -195,7 +195,7 @@ function JSONSafeParse(str) {
                 str.substring(Math.max(0, pos - 20), pos + 20)
             );
         }
-        return [];
+        return null;
     }
 }
 
@@ -1165,7 +1165,7 @@ function useWhiteFont(bgHex) {
 
 function renderColorItems() {
     let set;
-    if (!(set = globalThis.appState.categoryColors) === 'none') {
+    if ((set = globalThis.appState.categoryColors) === 'none') {
         return;
     }
     if (globalThis.appState.categoryColorSet[set] === undefined) {
@@ -1248,7 +1248,7 @@ function buildHeadlinesEntry(headline) {
                     <span class='item-source-title sub-item-${feedId}'>&nbsp;-&nbsp;${headline.feed_title}</span>
                     <div class='item-snippet sub-item-${feedId}'>${excerpt}</div>
                 </div>
-                <div class='entry-sub-header'>by ${headline.author}  on ${formattedDate} + "</div>
+                <div class='entry-sub-header'>by ${headline.author} on ${formattedDate} </div>
             </div>
         </div>
         <div class='entry'>
@@ -1266,7 +1266,7 @@ function buildHeadlinesEntry(headline) {
                         </span>
                         <span class='link unselectable' title='Send by mail'>
                             <i class='fa fa-envelope' style='vertical-align:top;'></i>
-                            <span class='createmail link'>E-Mail</a>
+                            <span class='createmail link'>E-Mail</span>
                         </span>
                         <wbr />
                     </div>
@@ -1863,7 +1863,7 @@ function subscribe(feedurl, categoryID) {
         let feedUrlsTitles = [];
 
         for (let key in feeds) {
-            if (Object.hasOwn(feeds, 'key')) {
+            if (Object.hasOwn(feeds, key)) {
                 feedUrls.push(key);
                 feedUrlsTitles.push(feeds[key]);
             }
