@@ -43,6 +43,11 @@ if (globalThis.appState) {
      */
     // globalThis.appState.feedLimit = 25;
 
+    /**
+     * Excerpt length for article previews. Default is 100 characters.
+     */
+    // globalThis.appState.excerptLength = 100;
+
     /* Keyboard shortcuts can be customized here. Use lowercase letters.
      * Example: */
     /*
