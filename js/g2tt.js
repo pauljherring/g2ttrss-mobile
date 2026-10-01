@@ -1021,7 +1021,12 @@ function headlineExcerpt(headline) {
     if (headline.excerpt && headline.excerpt !== '&hellip;') {
         return headline.excerpt;
     }
-    return $(headline.content).text().substr(0, 100) + '&hellip;';
+    return (
+        $(headline.content)
+            .text()
+            .replace(/\s+/g, ' ')
+            .substr(0, appState.excerptLength) + '&hellip;'
+    );
 }
 
 function headlineContentHtml(content) {
@@ -1175,14 +1180,12 @@ function renderColorItems() {
     const colors = globalThis.appState.categoryColorSet[set];
     globalThis.appState.cssColorItems.forEach((selector) => {
         let id;
-        let hyphen;
         if (selector.lastIndexOf('--') !== -1) {
-            id = selector.substring((hyphen = selector.lastIndexOf('--') + 1));
+            id = selector.substring(selector.lastIndexOf('--') + 1);
         } else {
-            id = selector.substring((hyphen = selector.lastIndexOf('-') + 1));
+            id = selector.substring(selector.lastIndexOf('-') + 1);
         }
-        const prefix = selector.substring(0, hyphen - 1);
-        if (id !== 0) {
+        if (Number(id) !== 0) {
             const offset = getDeterministicUnbiasedValue(
                 id,
                 0,
@@ -1426,6 +1429,13 @@ const TREE_ROW_ICON_MAP = Object.freeze({
 });
 
 function buildAllArticlesRow(content) {
+    if (
+        content.title === undefined ||
+        content.title === null ||
+        content.title === ''
+    ) {
+        console.log('Undefined all articles row');
+    }
     return buildTreeRow({
         obj: content,
         sub: 'open-sub-folder',
@@ -1433,6 +1443,9 @@ function buildAllArticlesRow(content) {
 }
 
 function buildCategoryRow(cat) {
+    if (cat.title === undefined || cat.title === null || cat.title === '') {
+        console.log('Undefined category');
+    }
     return buildTreeRow({
         obj: cat,
         sub: 'closed-sub-folder',
@@ -1441,6 +1454,17 @@ function buildCategoryRow(cat) {
 }
 
 function buildParentFolderRow(parent) {
+    if (
+        parent.title === undefined ||
+        parent.title === null ||
+        parent.title === ''
+    ) {
+        parent.title = appState.tCats[parent.id]?.title ?? '(No title cached)';
+        parent.title += ' *';
+        if (parent.unread === undefined || parent.unread === null) {
+            parent.unread = appState.tCats[parent.id]?.unread ?? -1;
+        }
+    }
     return buildTreeRow({
         obj: parent,
         sub: 'open-sub-folder',
@@ -1448,6 +1472,9 @@ function buildParentFolderRow(parent) {
 }
 
 function buildFeedRow(feed) {
+    if (feed.title === undefined || feed.title === null || feed.title === '') {
+        console.log('Undefined feed');
+    }
     return buildTreeRow({
         obj: feed,
         sub: feed.is_cat ? 'closed-sub-folder' : 'sub',
@@ -1455,8 +1482,18 @@ function buildFeedRow(feed) {
 }
 
 function buildTreeRow(row) {
+    if (
+        row.obj.title === undefined ||
+        row.obj.title === null ||
+        row.obj.title === ''
+    ) {
+        row.obj.title = '(No title)';
+        if (row.obj.unread === undefined || row.obj.unread === null) {
+            row.obj.unread = -1;
+        }
+    }
     const icon = TREE_ROW_ICON_MAP[row.sub] || 'fa-question-circle';
-    const unread = row.obj.unread > 0 ? 'unread-sub' : 'no-unread-sub-row';
+    const unread = row.obj.unread !== 0 ? 'unread-sub' : 'no-unread-sub-row';
     const classes = ['row', 'whisper', 'sub-row', row.sub, unread, row.nested]
         .filter(Boolean)
         .join(' ');
@@ -1545,10 +1582,13 @@ function getTopCategories() {
 
     cats.done(function (cats) {
         cats.sort(compareBySortMode);
-        const categoryHtml = [];
-        for (let index = 0; index < cats.length; index += 1) {
-            categoryHtml.push(buildCategoryRow(cats[index]));
-        }
+
+        cats.forEach((cat) => {
+            appState.tCats[cat.id] = cat;
+        });
+
+        const categoryHtml = cats.map(buildCategoryRow);
+
         // avoid appending duplicate category lists if another call already populated
         if (subRoot.children().length <= 1) {
             subRoot.append(categoryHtml.join(''));

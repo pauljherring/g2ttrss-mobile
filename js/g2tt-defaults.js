@@ -13,6 +13,7 @@ globalThis.appState = {
     orderBy: 'date_reverse', // was pref-OrderBy
     feedSort: 0, // was pref_FeedSort
     feedLimit: 25, // was pref_Feed_Limit
+    excerptLength: 100,
     keyboardShortcuts: {
         nextEntry: 'j',
         previousEntry: 'k',
@@ -31,6 +32,7 @@ globalThis.appState = {
     backCat: [],
     cCats: [],
     cFeeds: [],
+    tCats: [],
     historylist: ['category/-4'],
     parentList: {
         '-4': 'All articles',
